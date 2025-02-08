@@ -1,0 +1,33 @@
+{
+  "/api/buscar-lugares-cercanos?lat=numero&lon=numero&dist=metros": {
+    "method": "GET",
+    "body": {
+      "latitude": "number",
+      "longitude": "number",
+      "radius": "number",
+      "user_key": "string"
+    }
+  },
+  "/api/recuperar-datos-de-un-lugar?id=numero": {
+    "method": "GET",
+    "body": {
+      "id_location": "number",
+      "user_key": "string"
+    }
+  },
+  "/api/user/signup": {
+    "method": "POST",
+    "body": {
+      "email": "string",
+      "password": "string",
+      "name": "string"
+    }
+  },
+  "/api/user/login": {
+    "method": "POST",
+    "body": {
+      "email": "string",
+      "password": "string"
+    }
+  }
+}
