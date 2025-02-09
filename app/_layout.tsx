@@ -16,6 +16,7 @@ export default function _layout() {
       <Stack.Screen name="index" />
       <Stack.Screen name="login" />
       <Stack.Screen name="signup" />
+      <Stack.Screen name="mainpage" />
     </Stack>
     // </View>
   );

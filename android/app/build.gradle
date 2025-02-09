@@ -60,6 +60,11 @@ react {
 
     /* Autolinking */
     autolinkLibrariesWithApp()
+    //
+    // Added by install-expo-modules
+    entryFile = file(["node", "-e", "require('expo/scripts/resolveAppEntry')", rootDir.getAbsoluteFile().getParentFile().getAbsolutePath(), "android", "absolute"].execute(null, rootDir).text.trim())
+    cliFile = new File(["node", "--print", "require.resolve('@expo/cli')"].execute(null, rootDir).text.trim())
+    bundleCommand = "export:embed"
 }
 
 /**
@@ -93,6 +98,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0.0"
+        manifestPlaceholders = [appAuthRedirectScheme: 'com.redirectAnonymous.proyecto2']
     }
     signingConfigs {
         debug {
@@ -123,6 +129,15 @@ android {
     }
     androidResources {
         ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~'
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.14"
+    }
+    kotlinOptions {
+        jvmTarget = "19"
+    }
+    buildFeatures {
+        compose = true
     }
 }
 

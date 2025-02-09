@@ -34,9 +34,10 @@ const styles = StyleSheet.create({
   textInput: {
     backgroundColor: Colors.white,
     width: "100%",
-    height: 35,
     borderRadius: 4,
     paddingLeft: 15,
+    paddingTop: 12,
+    paddingBottom: 12,
     paddingRight: 15,
   },
 });
@@ -44,6 +45,10 @@ const styles = StyleSheet.create({
 export default function Login() {
   const navigate = useRouter();
   const [verContraseña, setVerContraseña] = React.useState(false);
+
+  const Signup = () => {
+    navigate.push("mainpage");
+  };
 
   return (
     <View
@@ -74,9 +79,7 @@ export default function Login() {
         />
       </View>
       <View style={styles.container}>
-        <View
-          style={{ flexDirection: "column", gap: 15, flex: 1, width: "100%" }}
-        >
+        <View style={{ flexDirection: "column", gap: 15, width: "100%" }}>
           <TextInput
             placeholderTextColor={"#acacac"}
             style={styles.textInput}
@@ -84,9 +87,8 @@ export default function Login() {
           />
           <View
             style={{
-              flexDirection: "row",
               width: "100%",
-              alignItems: "center",
+              justifyContent: "center",
             }}
           >
             <TextInput
@@ -152,6 +154,7 @@ export default function Login() {
                 backgroundColor: pressed ? Colors.lightGray : Colors.white,
               },
             ]}
+            onPress={() => Signup()}
           >
             <Text style={styles.textButton}>Aceptar</Text>
           </Pressable>

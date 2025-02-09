@@ -34,16 +34,21 @@ const styles = StyleSheet.create({
   textInput: {
     backgroundColor: Colors.white,
     width: "100%",
-    height: 35,
     borderRadius: 4,
     paddingLeft: 15,
     paddingRight: 15,
+    paddingTop: 12,
+    paddingBottom: 12,
   },
 });
 
 export default function Signup() {
   const navigate = useRouter();
   const [verContraseña, setVerContraseña] = React.useState(false);
+
+  const Signup = () => {
+    navigate.push('mainpage');
+  }
 
   return (
     <View
@@ -74,25 +79,27 @@ export default function Signup() {
         />
       </View>
       <View style={styles.container}>
-        <View
-          style={{ flexDirection: "column", gap: 15, flex: 1, width: "100%" }}
-        >
+        <View style={{ flexDirection: "column", gap: 15, width: "100%" }}>
           <TextInput
             placeholderTextColor={"#acacac"}
             style={styles.textInput}
-            placeholder="usuario o correo"
+            placeholder="Nombre Del Usuario"
+          />
+          <TextInput
+            placeholderTextColor={"#acacac"}
+            style={styles.textInput}
+            placeholder="Correo"
           />
           <View
             style={{
-              flexDirection: "row",
               width: "100%",
-              alignItems: "center",
+              justifyContent: "center",
             }}
           >
             <TextInput
               placeholderTextColor={"#acacac"}
               style={{ ...styles.textInput, paddingRight: 40 }}
-              placeholder="contraseña"
+              placeholder="Contraseña"
               secureTextEntry={!verContraseña}
             />
             {verContraseña ? (
@@ -111,18 +118,33 @@ export default function Signup() {
               </Pressable>
             )}
           </View>
-          <View style={{ paddingRight: 15 }}>
-            <Link
-              style={{
-                fontSize: 11,
-                color: Colors.white,
-                textDecorationLine: "underline",
-                textAlign: "right",
-              }}
-              href={"/"}
-            >
-              Olvidaste Tu Contraseña?
-            </Link>
+          <View
+            style={{
+              width: "100%",
+              justifyContent: "center",
+            }}
+          >
+            <TextInput
+              placeholderTextColor={"#acacac"}
+              style={{ ...styles.textInput, paddingRight: 40 }}
+              placeholder="Confirmar Contraseña"
+              secureTextEntry={!verContraseña}
+            />
+            {verContraseña ? (
+              <Pressable
+                onPress={() => setVerContraseña(false)}
+                style={{ position: "absolute", right: 10 }}
+              >
+                <Entypo name="eye-with-line" size={24} color="black" />
+              </Pressable>
+            ) : (
+              <Pressable
+                onPress={() => setVerContraseña(true)}
+                style={{ position: "absolute", right: 10 }}
+              >
+                <Entypo name="eye" size={24} color="black" />
+              </Pressable>
+            )}
           </View>
         </View>
         <View
@@ -152,6 +174,7 @@ export default function Signup() {
                 backgroundColor: pressed ? Colors.lightGray : Colors.white,
               },
             ]}
+            onPress={() => Signup()}
           >
             <Text style={styles.textButton}>Aceptar</Text>
           </Pressable>
