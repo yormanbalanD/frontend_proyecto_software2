@@ -93,9 +93,6 @@ export default function ListaMeGusta() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>
-        Lista de me gusta
-      </Text>
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         onMomentumScrollBegin={handleScrollBegin}

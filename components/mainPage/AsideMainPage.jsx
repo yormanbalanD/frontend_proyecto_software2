@@ -6,14 +6,18 @@ import {
   TouchableOpacity,
   Image,
   Animated,
-  useAnimatedValue
+  useAnimatedValue,
+  Pressable,
+  Easing,
 } from "react-native";
+
+import Icon from "@expo/vector-icons/Feather";
 import Colors from "../../constants/Colors";
 // import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 // import { withSpring, useSharedValue } from "react-native-reanimated";
 
-const WIDTH_ASIDE = 275
+const WIDTH_ASIDE = 275;
 
 const styles = StyleSheet.create({
   iconButton: {
@@ -36,7 +40,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     width: WIDTH_ASIDE, // Usar porcentaje en lugar de dvw
     height: "100%",
-    paddingTop: 60,
+    paddingTop: 80,
     flexDirection: "column",
     borderWidth: 1,
     borderTopColor: "transparent",
@@ -44,6 +48,9 @@ const styles = StyleSheet.create({
     borderLeftColor: "transparent",
     borderRightColor: Colors.whiteTransparent,
     zIndex: 10,
+    position: "absolute",
+    top: 0,
+    left: 0,
   },
   textAsideContainer: {
     padding: 15,
@@ -58,7 +65,7 @@ const styles = StyleSheet.create({
   },
 });
 
-export default function AsideMainPage({ visible }) {
+export default function AsideMainPage({ visible, setVisible }) {
   const animation = useRef(new Animated.Value(-WIDTH_ASIDE)).current;
   const navigation = useRouter();
   const [pressedItem, setPressedItem] = useState(null); // Estado para el item presionado
@@ -77,14 +84,15 @@ export default function AsideMainPage({ visible }) {
 
   //----------------------------AQUI LAS RUTAS DEL ASIDE
   const menuItems = [
-    { label: "Historial", route: "historial" },
-    { label: "Me gusta", route: "likes" },
+    { label: "Historial", route: "/historial" },
+    { label: "Me gusta", route: "/megusta" },
   ];
 
   const showAside = () => {
     Animated.timing(animation, {
       toValue: 0,
       duration: 200,
+      easing: Easing.in(Easing.ease),
       useNativeDriver: true,
     }).start();
   };
@@ -92,7 +100,8 @@ export default function AsideMainPage({ visible }) {
   const hideAside = () => {
     Animated.timing(animation, {
       toValue: -WIDTH_ASIDE,
-      duration: 100,
+      duration: 200,
+      easing: Easing.out(Easing.ease),
       useNativeDriver: true,
     }).start();
   };
@@ -108,27 +117,57 @@ export default function AsideMainPage({ visible }) {
   }, [visible]);
 
   return (
-    <Animated.View
-      style={[styles.aside, { transform: [{ translateX: animation }] }]}
-    >
-      <Image
-        source={require("@/assets/images/logo.jpg")}
-        style={styles.image}
-      />
-      {menuItems.map((item) => (
-        <TouchableOpacity
-          key={item.label}
-          style={[
-            styles.textAsideContainer,
-            pressedItem === item.label && styles.textAsidePressed, // Estilo al presionar
-          ]}
-          onPressIn={() => handlePressIn(item.label)}
-          onPressOut={handlePressOut}
-          onPress={() => handlePress(item.route)} // Navegación al presionar
+    <>
+      {visible && (
+        <Pressable
+          onPress={() => {
+            setVisible(false);
+            hideAside();
+          }}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+          }}
+        />
+      )}
+      <Animated.View
+        style={[styles.aside, { transform: [{ translateX: animation }] }]}
+      >
+        <Pressable
+          style={{
+            position: "absolute",
+            top: 30,
+            right: 20,
+          }}
+          onPress={() => {
+            setVisible(!visible);
+          }}
         >
-          <Text style={styles.textAside}>{item.label}</Text>
-        </TouchableOpacity>
-      ))}
-    </Animated.View>
+          <Icon name="x" size={40} color="white" />
+        </Pressable>
+
+        <Image
+          source={require("@/assets/images/logo.jpg")}
+          style={styles.image}
+        />
+        {menuItems.map((item) => (
+          <TouchableOpacity
+            key={item.label}
+            style={[
+              styles.textAsideContainer,
+              pressedItem === item.label && styles.textAsidePressed, // Estilo al presionar
+            ]}
+            onPressIn={() => handlePressIn(item.label)}
+            onPressOut={handlePressOut}
+            onPress={() => handlePress(item.route)} // Navegación al presionar
+          >
+            <Text style={styles.textAside}>{item.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </Animated.View>
+    </>
   );
 }

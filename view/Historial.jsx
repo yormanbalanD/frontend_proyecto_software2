@@ -1,5 +1,5 @@
-import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react';
+import { StatusBar } from "expo-status-bar";
+import React, { useState } from "react";
 import {
   StyleSheet,
   View,
@@ -8,11 +8,11 @@ import {
   ScrollView,
   Dimensions,
   TouchableOpacity,
-} from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
+} from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
 
 // Obtener dimensiones de la pantalla para el diseño responsivo
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 export default function Historial() {
   /*
@@ -22,26 +22,25 @@ export default function Historial() {
   */
   const data = [
     {
-      name: 'Nombre del Local seleccionado',
-      address: 'Av. cualquiera, calle 22, centro comercial X, local 002.',
-      image: 'https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg', // Reemplazar con URL real
+      name: "Nombre del Local seleccionado",
+      address: "Av. cualquiera, calle 22, centro comercial X, local 002.",
+      image: "https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg", // Reemplazar con URL real
     },
     {
-      name: 'Nombre del Local seleccionado',
-      address: 'Av. cualquiera, calle 22, centro comercial X, local 002.',
-      image: 'https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg', // Reemplazar con URL real
+      name: "Nombre del Local seleccionado",
+      address: "Av. cualquiera, calle 22, centro comercial X, local 002.",
+      image: "https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg", // Reemplazar con URL real
     },
     {
-      name: 'Nombre del Local seleccionado',
-      address: 'Av. cualquiera, calle 22, centro comercial X, local 002.',
-      image: 'https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg', // Reemplazar con URL real
+      name: "Nombre del Local seleccionado",
+      address: "Av. cualquiera, calle 22, centro comercial X, local 002.",
+      image: "https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg", // Reemplazar con URL real
     },
     {
-      name: 'Nombre del Local seleccionado',
-      address: 'Av. cualquiera, calle 22, centro comercial X, local 002.',
-      image: 'https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg', // Reemplazar con URL real
+      name: "Nombre del Local seleccionado",
+      address: "Av. cualquiera, calle 22, centro comercial X, local 002.",
+      image: "https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg", // Reemplazar con URL real
     },
-   
   ];
 
   // Estados para controlar los iconos de like y star, al presionar estos iconos se cambia su estado de activo a inactivo
@@ -63,15 +62,15 @@ export default function Historial() {
 
   // Funciones para manejar los eventos de presionar los iconos de like, comment y share
   const handleCommentPress = () => {
-    console.log('Comment pressed');
+    console.log("Comment pressed");
   };
 
   const handleSharePress = () => {
-    console.log('Share pressed');
+    console.log("Share pressed");
   };
 
   const handleCardPress = () => {
-    console.log('Card pressed');
+    console.log("Card pressed");
   };
 
   // Variable para controlar el estado de desplazamiento del scroll
@@ -93,9 +92,6 @@ export default function Historial() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>
-        Historial
-      </Text>
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         onMomentumScrollBegin={handleScrollBegin}
@@ -103,18 +99,19 @@ export default function Historial() {
       >
         {data.map((item, index) => (
           <View key={index} style={styles.card}>
-            <TouchableOpacity style={styles.cardContent} onPress={handleCardPressWrapper}>
+            <TouchableOpacity
+              style={styles.cardContent}
+              onPress={handleCardPressWrapper}
+            >
               <Image source={{ uri: item.image }} style={styles.cardImage} />
               <View style={styles.textContainer}>
                 <Text style={styles.cardTitle}>{item.name}</Text>
-                <Text style={styles.cardAddress}>
-                  {item.address}
-                </Text>
+                <Text style={styles.cardAddress}>{item.address}</Text>
                 <View style={styles.icons}>
                   <TouchableOpacity onPress={() => toggleLike(index)}>
                     <FontAwesome
                       name={liked[index] ? "heart" : "heart-o"}
-                      size={24} 
+                      size={24}
                       color="red"
                     />
                   </TouchableOpacity>
@@ -127,7 +124,7 @@ export default function Historial() {
                   <TouchableOpacity onPress={() => toggleStar(index)}>
                     <FontAwesome
                       name={starred[index] ? "star" : "star-o"}
-                      size={24} 
+                      size={24}
                       color="gold"
                     />
                   </TouchableOpacity>
@@ -144,70 +141,70 @@ export default function Historial() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#034752', 
+    backgroundColor: "#034752",
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
     marginVertical: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   scrollContainer: {
     paddingHorizontal: 10,
     paddingBottom: 20,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 10,
     marginVertical: 10,
     padding: 10,
-    flexDirection: 'row',
-    shadowColor: '#000',
+    flexDirection: "row",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 5,
-    width: width * 0.9, 
-    alignSelf: 'center', 
-    minHeight: 150, 
+    width: width * 0.9,
+    alignSelf: "center",
+    minHeight: 150,
   },
   cardContent: {
-    flexDirection: 'row',
-    alignItems: 'center', 
-    flexWrap: 'nowrap', 
-    flex: 1, 
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "nowrap",
+    flex: 1,
   },
   textContainer: {
     flex: 1,
-    flexDirection: 'column', 
-    alignItems: 'flex-start', 
-    justifyContent: 'center', 
+    flexDirection: "column",
+    alignItems: "flex-start",
+    justifyContent: "center",
     marginRight: 10,
   },
   cardTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000',
+    fontWeight: "bold",
+    color: "#000",
   },
   cardAddress: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     marginVertical: 5,
-    flexShrink: 1, 
-    flexWrap: 'wrap', 
-    width: '100%',
-    overflow: 'hidden',
+    flexShrink: 1,
+    flexWrap: "wrap",
+    width: "100%",
+    overflow: "hidden",
   },
   icons: {
-    flexDirection: 'row',
-    justifyContent: 'space-around', 
+    flexDirection: "row",
+    justifyContent: "space-around",
     marginTop: 10,
-    width: '90%',
+    width: "90%",
   },
   cardImage: {
     width: width * 0.25,
-    height: width * 0.25, 
+    height: width * 0.25,
     borderRadius: 10,
     marginRight: 10,
   },

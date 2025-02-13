@@ -25,7 +25,7 @@ const BotonBurguer = ({ onPress }) => {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    top: 20,
+    top: 30,
     left: 20,
     padding: 10,
   },
