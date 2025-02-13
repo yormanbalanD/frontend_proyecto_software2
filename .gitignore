@@ -5,8 +5,6 @@ node_modules/
 
 .idea
 
-app/index.tsx
-
 # Expo
 .expo/
 dist/
