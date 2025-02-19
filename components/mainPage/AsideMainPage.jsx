@@ -16,7 +16,7 @@ export default function AsideMainPage({ visible, setVisible }) {
   return (
     <Modal transparent visible={visible} animationType="fade">
       <View style={styles.overlay}>
-        <TouchableOpacity style={styles.background} onPress={() => setVisible(false)} />
+        <TouchableOpacity style={styles.background}/>
         <View style={styles.menu}>
           <View style={styles.header}>
             <Image source={require("@/assets/images/logo_recortado.png")} style={styles.logo} />
@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.7)", // Fondo semitransparente negro
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
   },
   background: {
     position: "absolute",
@@ -57,8 +57,8 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   menu: {
-    width: "45%",
-    marginTop: 30,
+    width: "80%",
+    marginTop: 5,
     padding: 20,
     borderRadius: 10,
     alignItems: "center",
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     height: 40,
   },
   menuItem: {
-    width: "100%",
+    width: "60%",
     padding: 8,
     borderWidth: 2,
     borderColor: "#FFF",
