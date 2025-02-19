@@ -18,8 +18,8 @@ const BotonConfiguracion = ({ onPress }) => {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    top: 30,
-    right: 10,
+    top: 45,
+    right: 25,
     padding: 10,
   },
 });

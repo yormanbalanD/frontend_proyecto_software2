@@ -10,7 +10,7 @@ export default function BotonRedondoCamara({ tomarFoto }) {
       style={({ pressed }) => {
         return {
           ...styles.container,
-          opacity: pressed ? 0.7 : 0.8,
+          opacity: pressed ? 0.7 : 0.9,
         };
       }}
     >
@@ -19,14 +19,17 @@ export default function BotonRedondoCamara({ tomarFoto }) {
   );
 }
 
+const TAMAÑO_BOTON = 90;
+const TAMAÑO_CENTRO_BOTON = TAMAÑO_BOTON - 15;
+
 const styles = StyleSheet.create({
   container: {
-    width: 100,
-    height: 100,
+    width: TAMAÑO_BOTON,
+    height: TAMAÑO_BOTON,
     position: "absolute",
     bottom: 30,
     left: "50%",
-    transform: [{ translateX: -50 }],
+    transform: [{ translateX: -(TAMAÑO_BOTON / 2) }],
     padding: 10,
     borderRadius: 90,
     borderColor: "#fff",
@@ -36,8 +39,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   circuloInterior: {
-    height: 85,
-    width: 85,
+    height: TAMAÑO_CENTRO_BOTON,
+    width: TAMAÑO_CENTRO_BOTON,
     backgroundColor: "#fff",
     borderRadius: 90,
   },
