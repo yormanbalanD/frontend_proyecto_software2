@@ -12,5 +12,5 @@ export default function index() {
   //
   <StatusBar style="auto" />;
 
-  return <InitPage />;
+  return <ListaMeGusta />;
 }

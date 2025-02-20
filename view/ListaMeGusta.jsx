@@ -24,6 +24,7 @@ const restaurants = [
 
 export default function App() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
+  const [liked, setLiked] = useState(restaurants.map(() => true)); // Set initial state to true for all items
 
   useEffect(() => {
     async function loadFonts() {
@@ -31,12 +32,20 @@ export default function App() {
         'League_Gothic': require('../assets/fonts/LeagueGothic-Regular.ttf'),
         'Helios': require('../assets/fonts/SpaceMono-Regular.ttf'),
         'Open_Sans': require('../assets/fonts/OpenSans-Regular.ttf'),
-        'Mont serrat': require('../assets/fonts/Montserrat-Regular.ttf'),
+        'Montserrat': require('../assets/fonts/Montserrat-Regular.ttf'),
       });
       setFontsLoaded(true);
     }
     loadFonts();
   }, []);
+
+  const toggleLike = (index) => {
+    setLiked((prevLiked) => {
+      const newLiked = [...prevLiked];
+      newLiked[index] = !newLiked[index];
+      return newLiked;
+    });
+  };
 
   if (!fontsLoaded) {
     return null; // or a loading spinner
@@ -59,14 +68,14 @@ export default function App() {
         <FlatList
           data={restaurants}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
+          renderItem={({ item, index }) => (
             <View style={styles.card}>
               <View style={styles.info}>
                 <Text style={styles.name}>{item.name}</Text>
                 <Text style={styles.address}>{item.address}</Text>
                 <View style={styles.row}>
-                  <TouchableOpacity style={styles.icon}>
-                    <Ionicons name="heart" size={24} color="red" />
+                  <TouchableOpacity style={styles.icon} onPress={() => toggleLike(index)}>
+                    <Ionicons name={liked[index] ? "heart" : "heart-outline"} size={24} color="red" />
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.icon}>
                     <Ionicons name="chatbubble" size={20} color="#019eed" />
