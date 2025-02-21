@@ -14,7 +14,7 @@ export default function AsideMainPage({ visible, setVisible }) {
   }
 
   return (
-    <Modal transparent visible={visible} animationType="fade">
+    <Modal transparent visible={visible} animationType="slide">
       <View style={styles.overlay}>
         <TouchableOpacity style={styles.background}/>
         <View style={styles.menu}>
