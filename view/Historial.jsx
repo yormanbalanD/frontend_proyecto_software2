@@ -1,137 +1,120 @@
-import { StatusBar } from "expo-status-bar";
-import React, { useState } from "react";
-import {
-  StyleSheet,
-  View,
-  Image,
-  Text,
-  ScrollView,
-  Dimensions,
-  TouchableOpacity,
-} from "react-native";
-import { FontAwesome } from "@expo/vector-icons";
+import React from 'react';
+import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { useFonts } from "expo-font";
 
-// Obtener dimensiones de la pantalla para el diseño responsivo
-const { width } = Dimensions.get("window");
+const restaurants = [
+  {
+    name: "Arturo's",
+    address: "C.C. Santo Tome IV planta baja local #13, Av Guayana, Ciudad Guayana 8050, Bolívar.",
+    comments: 18,
+    rating: 3.7,
+    image: require('@/assets/images/tomar foto (2).png'),
+  },
+  {
+    name: "Restaurant Manos Criollas",
+    address: "77JH+5CF, C. Argelia, Ciudad Guayana 8050, Bolívar.",
+    comments: 29,
+    rating: 4.8,
+    image: require('@/assets/images/tomar foto (2).png'),
+  },
+  {
+    name: "Prosciutto Restaurant",
+    address: "Amazonia Parque Comercial, C. Neverí, Ciudad Guayana 8050, Bolívar.",
+    comments: 15,
+    rating: 4.2,
+    image: require('@/assets/images/tomar foto (2).png'),
+  },
+  {
+    name: "Nur Palace Restaurante",
+    address: "Centro Comercial Costa América, Ciudad Guayana 8050, Bolívar.",
+    comments: 10,
+    rating: 3.5,
+    image: require('@/assets/images/tomar foto (2).png'),
+  },
+  {
+    name: "Nur Palace Restaurante 2",
+    address: "Centro Comercial Costa América, Ciudad Guayana 8050, Bolívar.",
+    comments: 10,
+    rating: 3.5,
+    image: require('@/assets/images/tomar foto (2).png'),
+  },
+  {
+    name: "Nur Palace Restaurante 3",
+    address: "Centro Comercial Costa América, Ciudad Guayana 8050, Bolívar.",
+    comments: 10,
+    rating: 3.5,
+    image: require('@/assets/images/tomar foto (2).png'),
+  },
+  {
+    name: "Nur Palace Restaurante 4",
+    address: "Centro Comercial Costa América, Ciudad Guayana 8050, Bolívar.",
+    comments: 10,
+    rating: 3.5,
+    image: require('@/assets/images/tomar foto (2).png'),
+  },
+  {
+    name: "Nur Palace Restaurante 5",
+    address: "Centro Comercial Costa América, Ciudad Guayana 8050, Bolívar.",
+    comments: 10,
+    rating: 3.5,
+    image: require('@/assets/images/tomar foto (2).png'),
+  },
+  {
+    name: "Nur Palace Restaurante 6",
+    address: "Centro Comercial Costa América, Ciudad Guayana 8050, Bolívar.",
+    comments: 10,
+    rating: 3.5,
+    image: require('@/assets/images/tomar foto (2).png'),
+  }
+];
 
 export default function Historial() {
-  /*
-  Aqui se deberia implementar una logica con un ciclo for para obtener los datos de la base de datos
-  y asi mostrar los locales que ha visitado el usuario en base a las variables predefinidas,
-  por ahora se muestra un arreglo de objetos insertados manualmente. 
-  */
-  const data = [
-    {
-      name: "Nombre del Local seleccionado",
-      address: "Av. cualquiera, calle 22, centro comercial X, local 002.",
-      image: "https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg", // Reemplazar con URL real
-    },
-    {
-      name: "Nombre del Local seleccionado",
-      address: "Av. cualquiera, calle 22, centro comercial X, local 002.",
-      image: "https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg", // Reemplazar con URL real
-    },
-    {
-      name: "Nombre del Local seleccionado",
-      address: "Av. cualquiera, calle 22, centro comercial X, local 002.",
-      image: "https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg", // Reemplazar con URL real
-    },
-    {
-      name: "Nombre del Local seleccionado",
-      address: "Av. cualquiera, calle 22, centro comercial X, local 002.",
-      image: "https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg", // Reemplazar con URL real
-    },
-  ];
-
-  // Estados para controlar los iconos de like y star, al presionar estos iconos se cambia su estado de activo a inactivo
-  // Es decir Corazon vacio corazon lleno, Estrella Vacia Estrella Llena
-  const [liked, setLiked] = useState(Array(data.length).fill(false));
-  const [starred, setStarred] = useState(Array(data.length).fill(false));
-
-  const toggleLike = (index) => {
-    const newLiked = [...liked];
-    newLiked[index] = !newLiked[index];
-    setLiked(newLiked);
-  };
-
-  const toggleStar = (index) => {
-    const newStarred = [...starred];
-    newStarred[index] = !newStarred[index];
-    setStarred(newStarred);
-  };
-
-  // Funciones para manejar los eventos de presionar los iconos de like, comment y share
-  const handleCommentPress = () => {
-    console.log("Comment pressed");
-  };
-
-  const handleSharePress = () => {
-    console.log("Share pressed");
-  };
-
-  const handleCardPress = () => {
-    console.log("Card pressed");
-  };
-
-  // Variable para controlar el estado de desplazamiento del scroll
-  let isScrolling = false;
-
-  const handleScrollBegin = () => {
-    isScrolling = true;
-  };
-
-  const handleScrollEnd = () => {
-    isScrolling = false;
-  };
-
-  const handleCardPressWrapper = () => {
-    if (!isScrolling) {
-      handleCardPress();
+   const [fontsLoaded] = useFonts({
+      "League-Gothic": require("../assets/fonts/LeagueGothic-Regular.ttf"),
+      "Open-Sans": require("../assets/fonts/OpenSans-Regular.ttf"),
+      "OpenSans-Bold": require ("../assets/fonts/OpenSans-Bold.ttf"),
+      "Helios-Bold": require ("../assets/fonts/HeliosExtC-Bold.ttf"),
+    });
+  
+    if (!fontsLoaded) {
+      return null;
     }
-  };
+
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        onMomentumScrollBegin={handleScrollBegin}
-        onMomentumScrollEnd={handleScrollEnd}
-      >
-        {data.map((item, index) => (
-          <View key={index} style={styles.card}>
-            <TouchableOpacity
-              style={styles.cardContent}
-              onPress={handleCardPressWrapper}
-            >
-              <Image source={{ uri: item.image }} style={styles.cardImage} />
-              <View style={styles.textContainer}>
-                <Text style={styles.cardTitle}>{item.name}</Text>
-                <Text style={styles.cardAddress}>{item.address}</Text>
-                <View style={styles.icons}>
-                  <TouchableOpacity onPress={() => toggleLike(index)}>
-                    <FontAwesome
-                      name={liked[index] ? "heart" : "heart-o"}
-                      size={24}
-                      color="red"
-                    />
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={handleCommentPress}>
-                    <FontAwesome name="comment" size={24} color="blue" />
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={handleSharePress}>
-                    <FontAwesome name="share" size={24} color="green" />
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => toggleStar(index)}>
-                    <FontAwesome
-                      name={starred[index] ? "star" : "star-o"}
-                      size={24}
-                      color="gold"
-                    />
-                  </TouchableOpacity>
-                </View>
+      <Image source={require('@/assets/images/historial (2).png')} style={styles.background} />
+      <View style={styles.header}>
+        <TouchableOpacity>
+          <Image source={require('@/assets/images/icono_atras.png')} style={styles.iconBack} />
+        </TouchableOpacity>
+        <Image source={require('@/assets/images/logo_recortado.png')} style={styles.logo} />
+        <Text style={styles.title}>FOODIGO</Text>
+      </View>
+      
+      <ScrollView style={styles.list}>
+      <Text style={styles.historialTitle}>HISTORIAL</Text>
+        {restaurants.map((restaurant, index) => (
+          <TouchableOpacity key={index} style={styles.card}>
+            <View style={styles.cardContent}>
+              <Text style={styles.cardTitle}>{restaurant.name}</Text>
+              <Text style={styles.cardAddress}>{restaurant.address}</Text>
+              <View style={styles.cardFooter}> 
+              <TouchableOpacity>
+                <Image source={require('@/assets/images/icono_me_gusta-removebg-preview.png')} style={styles.icon} />
+                </TouchableOpacity>
+                <Image source={require('@/assets/images/icono_comentario-removebg-preview.png')} style={styles.icon} />
+                <Text style={styles.cardAddress}>{restaurant.comments}</Text>
+                <Image source={require('@/assets/images/icono_de_calificacion-removebg-preview.png')} style={styles.icon} />
+                <Text style={styles.cardAddress}>{restaurant.rating}</Text>
               </View>
-            </TouchableOpacity>
-          </View>
+            </View>
+            <View style={styles.boxImage}>
+              <Image source={restaurant.image} style={styles.cardImage} />
+              <View style={styles.borderImage}></View>
+            </View>
+            
+          </TouchableOpacity>
         ))}
       </ScrollView>
     </View>
@@ -141,71 +124,91 @@ export default function Historial() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#034752",
+  },
+  background: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+  },
+  header: {
+    marginLeft: 30,
+    marginTop: 40,
+    marginBottom: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconBack: {
+    width: 40,
+    height: 40,
+    marginRight: 15,
+  },
+  icon: {
+    width: 18,
+    height: 18,
+    marginHorizontal: 3,
+  },
+  logo: {
+    width: 20,
+    height: 30,
+    marginRight: 2,
   },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#fff",
-    marginVertical: 20,
-    textAlign: "center",
+    fontFamily: 'League-Gothic',
+    fontSize: 32,
+    color: '#fff',
   },
-  scrollContainer: {
-    paddingHorizontal: 10,
-    paddingBottom: 20,
+  historialTitle: {
+    fontFamily: 'Helios-Bold', 
+    fontSize: 24,
+    color: "#fff",
+    marginVertical: 15,
+    marginLeft: 20,
+  },
+  list: {
+    paddingHorizontal: 25,
+    marginBottom: 10,
   },
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    marginVertical: 10,
+    backgroundColor: '#fff',
+    borderRadius: 5,
+    marginVertical: 7,
+    overflow: 'hidden',
+    flexDirection: 'row',
     padding: 10,
-    flexDirection: "row",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
-    width: width * 0.9,
-    alignSelf: "center",
-    minHeight: 150,
-  },
-  cardContent: {
-    flexDirection: "row",
     alignItems: "center",
-    flexWrap: "nowrap",
-    flex: 1,
-  },
-  textContainer: {
-    flex: 1,
-    flexDirection: "column",
-    alignItems: "flex-start",
     justifyContent: "center",
-    marginRight: 10,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#000",
-  },
-  cardAddress: {
-    fontSize: 14,
-    color: "#666",
-    marginVertical: 5,
-    flexShrink: 1,
-    flexWrap: "wrap",
-    width: "100%",
-    overflow: "hidden",
-  },
-  icons: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginTop: 10,
-    width: "90%",
   },
   cardImage: {
-    width: width * 0.25,
-    height: width * 0.25,
-    borderRadius: 10,
-    marginRight: 10,
+    width: 80,
+    height: 80,
+  },
+  boxImage: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  borderImage: {
+    width: "90%",
+    height: "90%",
+    position: "absolute",
+    borderWidth: 4,
+    borderColor: "#FFF",
+  },
+  cardContent: {
+    width: "65%",
+    marginRight: 20,
+  },
+  cardTitle: {
+    fontFamily: 'OpenSans-Bold',
+    fontSize: 14,
+    marginBottom: 5
+  },
+  cardAddress: {
+    fontFamily: 'Open-Sans',
+    fontSize: 9,
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
   },
 });

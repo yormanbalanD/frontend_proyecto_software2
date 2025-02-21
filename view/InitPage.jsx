@@ -1,89 +1,92 @@
 import React from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
-import { Image } from "expo-image";
-import { Link, router, useRouter } from "expo-router";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  ImageBackground,
+  ScrollView,
+} from "react-native";
+import { router } from "expo-router";
 import Colors from "@/constants/Colors";
-import BotonLogin from "@/components/BotonLogin";
+import Arrow from "@/components/Arrow";
+import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
 
 const styles = StyleSheet.create({
   button: {
+    justifyContent: "center",
     backgroundColor: Colors.white,
-    borderRadius: 4,
-    paddingLeft: 40,
-    paddingRight: 40,
-    paddingTop: 13,
-    paddingBottom: 13,
+    borderRadius: 6,
     width: "100%",
+    height: 35,
+    borderWidth: 1.5,
+    borderColor: Colors.white,
+    borderStyle: "dashed",
   },
   textButton: {
-    textAlign: "center",
-    color: Colors.primary,
+    color: Colors.white,
     textTransform: "uppercase",
-    fontSize: 12,
-    fontWeight: 600,
+    fontSize: 13,
+    fontWeight: "700",
+    letterSpacing: 0.7,
   },
   container: {
-    flexDirection: "column",
+    margin: 0,
+    padding: 0,
+    width: "100%",
+    height: "100%",
     alignItems: "center",
-    gap: 25,
-    width: "60%",
+    position: "absolute",
+  },
+  containerButton: {
+    margin: 0,
+    padding: 0,
+    width: 150,
+    height: "100%",
+    gap: 18,
+    justifyContent: "flex-end",
+    alignItems: "center",
+    paddingVertical: 70,
   },
 });
 
 export default function Login() {
-  const navigate = useRouter();
   return (
-    <View
-      style={{
-        backgroundColor: Colors.primary,
-        height: "100%",
-        flex: 1,
-        width: "100%",
-        gap: 15,
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-          width: "100%",
-          height: 150,
-        }}
-      >
-        {/* Logo De La APP */}
-        <Image
-          source={require("@/assets/images/logo.jpg")}
-          style={{ width: "70%", height: "100%" }}
-          contentFit="cover"
-        />
-      </View>
-      <View style={styles.container}>
-        <Pressable
-          onPress={() => router.push("login")}
-          style={({ pressed }) => [
-            styles.button,
-            {
-              backgroundColor: pressed ? Colors.lightGray : Colors.white,
-            },
-          ]}
-        >
-          <Text style={styles.textButton}>INICIAR SESION</Text>
-        </Pressable>
-        <Pressable
-        onPress={() => router.push("signup")}
-          style={({ pressed }) => [
-            styles.button,
-            {
-              backgroundColor: pressed ? Colors.lightGray : Colors.white,
-            },
-          ]}
-        >
-          <Text style={styles.textButton}>REGISTRARSE</Text>
-        </Pressable>
-      </View>
-    </View>
+    <SafeAreaProvider>
+      <SafeAreaView style={{ flex: 1, height: "100%" }}>
+          <View style={{ flex: 1, height: "100%" }}>
+            <ImageBackground
+              source={require("../assets/images/pantalla_principal.png")}
+              resizeMode="stretch"
+              style={styles.container}
+            >
+              <View style={styles.containerButton}>
+                <Pressable
+                  onPress={() => router.push("login")}
+                  style={{ ...styles.button, backgroundColor: "#850901" }}
+                >
+                  <Text style={{ ...styles.textButton, marginHorizontal: 10 }}>
+                    INICIAR SESIÓN
+                  </Text>
+                  <View style={{ right: 5, position: "absolute" }}>
+                    <Arrow />
+                  </View>
+                </Pressable>
+                <Pressable
+                  onPress={() => router.push("signup")}
+                  style={{ ...styles.button, backgroundColor: "#5a1a11" }}
+                >
+                  <Text style={{ ...styles.textButton, marginHorizontal: 15 }}>
+                    REGISTRARSE
+                  </Text>
+                  <View style={{ right: 5, position: "absolute" }}>
+                    <Arrow />
+                  </View>
+                </Pressable>
+              </View>
+            </ImageBackground>
+          </View>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
