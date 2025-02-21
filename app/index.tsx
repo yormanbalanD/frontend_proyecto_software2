@@ -5,6 +5,7 @@ import InitPage from "@/view/InitPage";
 import MainPage from "@/view/MainPage";
 import ListaMeGusta from "@/view/ListaMeGusta";
 import Local from "@/view/Local";
+import Perfil from "@/view/Perfil"
 
 export default function index() {
   // Comprobar si el usuario ya esta logeado
