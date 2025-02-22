@@ -1,165 +1,207 @@
 import React from "react";
-import { View, Text, StyleSheet, Pressable, TextInput } from "react-native";
+import { View, Text, StyleSheet, Pressable, TextInput, ImageBackground } from "react-native";
 import { Image } from "expo-image";
-import { Link, router, useRouter } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import Colors from "@/constants/Colors";
-import BotonLogin from "@/components/BotonLogin";
-
 import Entypo from "@expo/vector-icons/Entypo";
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: Colors.white,
-    borderRadius: 4,
-    paddingTop: 12,
-    paddingBottom: 12,
-    paddingLeft: 20,
-    paddingRight: 20,
-    boxShadow: "6px 6px 10px rgba(0, 0, 0, 0.5)",
+    backgroundColor: "#8c0e03",
+    borderRadius: 9999,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
   textButton: {
-    textAlign: "center",
-    color: Colors.primary,
+    color: Colors.white,
     textTransform: "uppercase",
     fontSize: 12,
-    fontWeight: 600,
-    width: "70px",
+    fontWeight: "bold",
+    fontFamily: "Heebo",
   },
   container: {
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
     flexDirection: "column",
     alignItems: "center",
     gap: 25,
+    padding: 30,
     width: "75%",
   },
   textInput: {
-    backgroundColor: Colors.white,
+    color: Colors.white,
+    backgroundColor: "transparent",
     width: "100%",
-    borderRadius: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.white,
     paddingLeft: 15,
     paddingTop: 12,
     paddingBottom: 12,
     paddingRight: 15,
+    fontFamily: "Open Sans",
+    outline: "none",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: Colors.white,
+    fontFamily: "Heebo",
+    textAlign: "left",
+    width: "100%",
+  },
+  logoText: {
+    fontSize: 50,
+    fontWeight: "bold",
+    color: Colors.white,
+    fontFamily: "League Gothic",
+  },
+  logoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+  },
+  logoImage: {
+    height: 80,
+    width: 60,
+  },
+  backgroundImage: {
+    flex: 1,
+    resizeMode: "cover",
+    justifyContent: "center",
+    alignItems: "center",
+    height: "100%",
+    width: "100%"
   },
 });
 
 export default function Login() {
   const navigate = useRouter();
   const [verContraseña, setVerContraseña] = React.useState(false);
+  const [correoFocused, setCorreoFocused] = React.useState(false);
+  const [PasswordFocused, setPasswordFocused] = React.useState(false);
 
   const Signup = () => {
     navigate.push("mainpage");
   };
 
   return (
-    <View
-      style={{
-        backgroundColor: Colors.primary,
-        height: "100%",
-        flex: 1,
-        width: "100%",
-        gap: 15,
-        alignItems: "center",
-        justifyContent: "center",
-      }}
+    <ImageBackground
+      source={require("@/assets/images/iniciar sesion (2).png")}
+      style={styles.backgroundImage}
     >
       <View
-        style={{
-          flexDirection: "row",
+        style={{          
+          height: "100%",
+          flex: 1,
+          width: "100%",
+          gap: 15,
           alignItems: "center",
           justifyContent: "center",
-          width: "100%",
-          height: 150,
         }}
       >
-        {/* Logo De La APP */}
-        <Image
-          source={require("@/assets/images/logo.jpg")}
-          style={{ width: "70%", height: "100%" }}
-          contentFit="cover"
-        />
-      </View>
-      <View style={styles.container}>
-        <View style={{ flexDirection: "column", gap: 15, width: "100%" }}>
-          <TextInput
-            placeholderTextColor={"#acacac"}
-            style={styles.textInput}
-            placeholder="usuario o correo"
+        <View style={styles.logoContainer}>
+          <Image
+            source={require("@/assets/images/logo_recortado.png")}
+            style={styles.logoImage}
+            contentFit="contain"
           />
-          <View
-            style={{
-              width: "100%",
-              justifyContent: "center",
-            }}
-          >
+          <Text style={styles.logoText}>FOODIGO</Text>
+        </View>
+        <View style={styles.container}>
+          <Text style={styles.title}>INICIAR SESIÓN</Text>
+          <View style={{ flexDirection: "column", gap: 15, width: "100%" }}>
             <TextInput
               placeholderTextColor={"#acacac"}
-              style={{ ...styles.textInput, paddingRight: 40 }}
-              placeholder="contraseña"
-              secureTextEntry={!verContraseña}
+              style={[styles.textInput, 
+                correoFocused && {outline: "none"}
+              ]}
+              placeholder="Correo electrónico"
+              onFocus={()=>{setCorreoFocused(true)}}
+              onBlur={()=>{setCorreoFocused(false)}}
             />
-            {verContraseña ? (
-              <Pressable
-                onPress={() => setVerContraseña(false)}
-                style={{ position: "absolute", right: 10 }}
-              >
-                <Entypo name="eye-with-line" size={24} color="black" />
-              </Pressable>
-            ) : (
-              <Pressable
-                onPress={() => setVerContraseña(true)}
-                style={{ position: "absolute", right: 10 }}
-              >
-                <Entypo name="eye" size={24} color="black" />
-              </Pressable>
-            )}
-          </View>
-          <View style={{ paddingRight: 15 }}>
-            <Link
+            <View
               style={{
-                fontSize: 11,
-                color: Colors.white,
-                textDecorationLine: "underline",
-                textAlign: "right",
+                width: "100%",
+                justifyContent: "center",
               }}
-              href={"/"}
             >
-              Olvidaste Tu Contraseña?
-            </Link>
+              <TextInput
+                placeholderTextColor={"#acacac"}
+                style={[styles.textInput, {paddingRight: 40},
+                  PasswordFocused && {outline: "none"}
+                 ]}
+                placeholder="Contraseña"
+                onFocus={()=>{setPasswordFocused(true)}}
+                onBlur={()=>{setPasswordFocused(false)}}
+                secureTextEntry={!verContraseña}
+              />
+              {verContraseña ? (
+                <Pressable
+                  onPress={() => setVerContraseña(false)}
+                  style={{ position: "absolute", right: 10 }}
+                >
+                  <Entypo name="eye-with-line" size={24} color="white" />
+                </Pressable>
+              ) : (
+                <Pressable
+                  onPress={() => setVerContraseña(true)}
+                  style={{ position: "absolute", right: 10 }}
+                >
+                  <Entypo name="eye" size={24} color="white" />
+                </Pressable>
+              )}
+            </View>
+            <View style={{ paddingRight: 15 }}>
+              <Link
+                style={{
+                  fontSize: 11,
+                  color: Colors.white,
+                  textDecorationLine: "underline",
+                  textAlign: "right",
+                }}
+                href={"/"}
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </View>
           </View>
-        </View>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "center",
-            gap: 25,
-            width: "100%",
-          }}
-        >
-          <Pressable
-            onPress={() => router.push("/")}
-            style={({ pressed }) => [
-              styles.button,
-              {
-                backgroundColor: pressed ? Colors.lightGray : Colors.white,
-              },
-            ]}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "center",
+              gap: 25,
+              width: "100%",
+            }}
           >
-            <Text style={styles.textButton}>Volver</Text>
-          </Pressable>
+            <Pressable
+              onPress={() => navigate.push("/")}
+              style={({ pressed }) => [
+                styles.button,
+                {
+                  backgroundColor: pressed ? Colors.lightGray : "#8c0e03",
+                },
+              ]}
+            >
+              <Text style={styles.textButton}>VOLVER</Text>
+            </Pressable>
 
-          <Pressable
-            style={({ pressed }) => [
-              styles.button,
-              {
-                backgroundColor: pressed ? Colors.lightGray : Colors.white,
-              },
-            ]}
-            onPress={() => Signup()}
-          >
-            <Text style={styles.textButton}>Aceptar</Text>
-          </Pressable>
+            <Pressable
+              style={({ pressed }) => [
+                styles.button,
+                {
+                  backgroundColor: pressed ? Colors.lightGray : "#8c0e03",
+                },
+              ]}
+              onPress={() => Signup()}
+            >
+              <Text style={styles.textButton}>SIGUIENTE</Text>
+            </Pressable>
+          </View>
         </View>
       </View>
-    </View>
+    </ImageBackground>
   );
 }
