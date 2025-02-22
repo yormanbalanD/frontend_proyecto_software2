@@ -26,7 +26,7 @@ export default function ListaMeGusta() {
       "League-Gothic": require("../assets/fonts/LeagueGothic-Regular.ttf"),
       "Open-Sans": require("../assets/fonts/OpenSans-Regular.ttf"),
       "OpenSans-Bold": require ("../assets/fonts/OpenSans-Bold.ttf"),
-      "Helios-Bold": require ("../assets/fonts/HeliosExtC-Bold.ttf"),
+      "HeliosExt-Regular": require ("../assets/fonts/HeliosExt-Regular.otf"),
     });
   
     if (!fontsLoaded) {
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   meGustaTitle: {
-    fontFamily: 'Helios-Bold', 
+    fontFamily: 'HeliosExt-Regular', 
     fontSize: 24,
     color: "#fff",
     marginVertical: 15,
