@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   TouchableOpacity,
@@ -10,8 +10,14 @@ import {
 import Icon from "@expo/vector-icons/Entypo";
 import Colors from "@/constants/Colors";
 import { Image } from "expo-image";
+import ModalOpcionesAvanzadas from "../components/Perfil/ModalOpcionesAvanzadas";
+import { useRouter } from "expo-router";
 
 export default function Perfil() {
+  const router = useRouter();
+  const [modalOpcionesAvanzadasVisible, setModalOpcionesAvanzadasVisile] =
+    useState(false);
+
   return (
     <View
       style={{
@@ -50,7 +56,7 @@ export default function Perfil() {
           opacity: 0.75,
         }}
       />
-      <View style={styles.container}>
+      <View style={styles.header}>
         <Pressable
           style={({ pressed }) => [
             {
@@ -59,7 +65,7 @@ export default function Perfil() {
             },
           ]}
           onPress={() => {
-            onPress();
+            router.push("/mainpage");
           }}
         >
           <Icon
@@ -71,6 +77,11 @@ export default function Perfil() {
             color="white"
           />
         </Pressable>
+        <Image
+          source={require("@/assets/images/logo_recortado.png")}
+          style={styles.logo}
+        />
+        <Text style={styles.title}>FOODIGO</Text>
       </View>
       <View style={{ alignItems: "center" }}>
         <View style={styles.containerFotoPerfil}>
@@ -108,29 +119,33 @@ export default function Perfil() {
           bottom: 15,
           width: "100%",
           flex: 1,
-          alignItems: "center"
+          alignItems: "center",
         }}
       >
         <Pressable
           style={({ pressed }) => [
             {
+              alignItems: "center",
               opacity: pressed ? 0.8 : 1,
+              marginBottom: 15,
             },
           ]}
           onPress={() => {
-            onPress();
+            setModalOpcionesAvanzadasVisile(false);
           }}
         >
           <Icon
             name="chevron-thin-down"
-            size={20}
+            size={22}
             style={{
               transform: [{ rotate: "180deg" }],
             }}
             color="red"
           />
+          <Text style={styles.opcionesAvanzadas}>Opciones Avanzadas</Text>
         </Pressable>
       </View>
+      <ModalOpcionesAvanzadas setVisible={setModalOpcionesAvanzadasVisile} visible={modalOpcionesAvanzadasVisible} />
     </View>
   );
 }
@@ -138,13 +153,28 @@ export default function Perfil() {
 const styles = StyleSheet.create({
   boton: {
     padding: 8,
-    backgroundColor: Colors.whiteTransparent,
+    backgroundColor: Colors.darkRed,
     borderRadius: 50,
+    marginRight: 15,
   },
-  container: {
+  logo: {
+    width: 25,
+    height: 40,
+    marginRight: 5,
+  },
+  header: {
     position: "absolute",
     top: 55,
     left: 30,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  title: {
+    fontFamily: "League-Gothic",
+    fontSize: 39,
+    lineHeight: 45,
+    color: "#fff",
   },
   input: {
     width: "80%",
@@ -155,9 +185,16 @@ const styles = StyleSheet.create({
     paddingRight: 12,
     borderRadius: 8,
     backgroundColor: "#fff",
-    borderColor: "#ea7060",
+    borderColor: Colors.darkRed,
     borderWidth: 1,
     textAlign: "center",
+  },
+  opcionesAvanzadas: {
+    textAlign: "center",
+    fontWeight: 800,
+    fontSize: 15,
+    textTransform: "uppercase",
+    letterSpacing: 1.1,
   },
   containerFotoPerfil: {
     width: 110,

@@ -100,13 +100,13 @@ export default function Signup() {
         />
         <Text
           style={{
-            fontSize: 90,
+            fontSize: 60,
             color: "#FFF",
             fontFamily: "League-Gothic",
             width: "auto"}}
           >FOODIGO</Text>
       </View>
-      <View style={styles.container}> {/*Input Container*/}
+      <View style={styles.container}>
         <View style={{ flexDirection: "column", width: "100%" }}>
           <Text style={styles.titulo}>
             Registrarse

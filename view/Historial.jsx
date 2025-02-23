@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { useFonts } from "expo-font";
+import { useRouter } from "expo-router";
 
 const restaurants = [
   {
@@ -69,23 +70,13 @@ const restaurants = [
 ];
 
 export default function Historial() {
-   const [fontsLoaded] = useFonts({
-      "League-Gothic": require("../assets/fonts/LeagueGothic-Regular.ttf"),
-      "Open-Sans": require("../assets/fonts/OpenSans-Regular.ttf"),
-      "OpenSans-Bold": require ("../assets/fonts/OpenSans-Bold.ttf"),
-      "Helios-Bold": require ("../assets/fonts/HeliosExtC-Bold.ttf"),
-    });
-  
-    if (!fontsLoaded) {
-      return null;
-    }
-
+    const router = useRouter();
 
   return (
     <View style={styles.container}>
       <Image source={require('@/assets/images/historial (2).png')} style={styles.background} />
       <View style={styles.header}>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push("/mainpage")}>
           <Image source={require('@/assets/images/icono_atras.png')} style={styles.iconBack} />
         </TouchableOpacity>
         <Image source={require('@/assets/images/logo_recortado.png')} style={styles.logo} />

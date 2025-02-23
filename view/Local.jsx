@@ -15,45 +15,61 @@ import Comment from "@/components/reactions/Comment";
 import Shared from "@/components/reactions/Shared";
 import Start from "@/components/reactions/Stars";
 import NextInputIcon from "@/components/NextInputIcon";
-import IconMenu from "@/components/IconMenu";
-import { Shadow } from "react-native-shadow-2";
+// import { Shadow } from "react-native-shadow-2";
 import { useState } from "react";
 import { Image } from "expo-image";
 import Svg, { Path } from "react-native-svg";
-import { Rating } from "@rneui/themed";
+// import { Rating } from "@rneui/themed";
+import Icon from "@expo/vector-icons/Entypo";
+import { useRouter } from "expo-router";
 
 const Local = () => {
+  const router = useRouter();
   const [inputShow, setInputShow] = useState(false);
   const [showStartTotal, setshowStartTotal] = useState(false);
 
   const ratingCompleted = (rating) => {
     console.log("Rating is: " + rating);
   };
+
   return (
     <SafeAreaView style={{ flex: 1, width: "100%" }}>
+      <View style={{
+        position: "absolute",
+        top: 55,
+        left: 30,
+        zIndex: 10,
+      }}>
+        <Pressable
+          style={({ pressed }) => [
+            {
+              padding: 8,
+              borderRadius: 50,
+              backgroundColor: Colors.whiteTransparent,
+              opacity: pressed ? 0.8 : 1,
+            },
+          ]}
+          onPress={() => {
+            router.push("/mainpage");
+          }}
+        >
+          <Icon
+            name="chevron-thin-down"
+            size={17}
+            style={{
+              transform: [{ rotate: "90deg" }],
+            }}
+            color="white"
+          />
+        </Pressable>
+      </View>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.coverPage}>
           <ImageBackground
             source={require("./../assets/images/cover-page.png")}
             style={styles.coverPageImage}
             imageStyle={styles.coverPageImage}
-          >
-            <View style={{ position: "relative", left: 5 }}>
-              <Shadow
-                distance={19}
-                startColor={"rgba(0,0,0,0.15)"}
-                finalColor={"transparent"}
-                radius={-4}
-                offset={[0, 0]}
-              >
-                <IconMenu
-                  style={{
-                    margin: 20,
-                  }}
-                />
-              </Shadow>
-            </View>
-          </ImageBackground>
+          />
         </View>
 
         <View style={styles.containerContent}>
@@ -86,18 +102,18 @@ const Local = () => {
                       flexDirection: "row",
                       position: "absolute",
                       bottom: 20,
-                      transform: [{ scale: 0.45 }] 
+                      transform: [{ scale: 0.45 }],
                     }}
                   >
                     <Rating
                       type="heart"
-                      ratingCount={5} 
+                      ratingCount={5}
                       fractions={2}
                       startingValue={1}
-                      imageSize={20} 
+                      imageSize={20}
                       onFinishRating={ratingCompleted}
                       showRating
-                      style={{transform: [{ scale: 0.1 }] }}
+                      style={{ transform: [{ scale: 0.1 }] }}
                     />
                   </View>
                 )}

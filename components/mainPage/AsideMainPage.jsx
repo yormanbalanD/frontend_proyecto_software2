@@ -2,8 +2,10 @@ import React from "react";
 import { View, Text, TouchableOpacity, Modal, StyleSheet } from "react-native";
 import { useFonts } from "expo-font";
 import { Image } from "expo-image";
+import { useRouter } from "expo-router";
 
 export default function AsideMainPage({ visible, setVisible }) {
+  const router = useRouter();
   const [fontsLoaded] = useFonts({
     "League-Gothic": require("../../assets/fonts/LeagueGothic-Regular.ttf"),
     "Open-Sans": require("../../assets/fonts/OpenSans-Regular.ttf"),
@@ -16,27 +18,61 @@ export default function AsideMainPage({ visible, setVisible }) {
   return (
     <Modal transparent visible={visible} animationType="slide">
       <View style={styles.overlay}>
-        <TouchableOpacity style={styles.background}/>
+        <TouchableOpacity style={styles.background} />
         <View style={styles.menu}>
           <View style={styles.header}>
-            <Image source={require("@/assets/images/logo_recortado.png")} style={styles.logo} />
+            <Image
+              source={require("@/assets/images/logo_recortado.png")}
+              style={styles.logo}
+            />
             <Text style={styles.title}>FOODIGO</Text>
           </View>
-          
-          <TouchableOpacity style={styles.backButton} onPress={() => setVisible(false)}>
-            <Image source={require("@/assets/images/asidemainbutton.png")} style={styles.backImage} />
+
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => setVisible(false)}
+          >
+            <Image
+              source={require("@/assets/images/asidemainbutton.png")}
+              style={styles.backImage}
+            />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem} onPress={() => setVisible(false)}>
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => {
+              setVisible(false);
+              router.push("/perfil");
+            }}
+          >
             <Text style={styles.menuText}>Perfil</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem} onPress={() => setVisible(false)}>
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => {
+              setVisible(false);
+              router.push("/historial");
+            }}
+          >
             <Text style={styles.menuText}>Historial</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem} onPress={() => setVisible(false)}>
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => {
+              setVisible(false);
+              router.push("/megusta");
+            }}
+          >
             <Text style={styles.menuText}>Me gusta</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem} onPress={() => setVisible(false)}>
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => {
+              setVisible(false)
+              router.push("/local");
+
+            }}
+          >
             <Text style={styles.menuText}>Local</Text>
           </TouchableOpacity>
         </View>
@@ -69,7 +105,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   logo: {
-    width: 60,  
+    width: 60,
     height: 100,
     marginRight: 10,
   },
@@ -82,7 +118,7 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   backImage: {
-    width: 40, 
+    width: 40,
     height: 40,
   },
   menuItem: {
