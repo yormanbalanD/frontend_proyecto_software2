@@ -5,6 +5,7 @@ import { StatusBar } from "expo-status-bar";
 import Colors from "../constants/Colors";
 import { useFonts } from "expo-font";
 // import { StatusBar } from "react-native-web";
+import { CookiesProvider } from "react-cookie";
 
 export default function _layout() {
   const [fontsLoaded] = useFonts({
@@ -14,7 +15,7 @@ export default function _layout() {
     "Helios-Bold": require("../assets/fonts/HeliosExtC-Bold.ttf"),
   });
   return (
-    <>
+    <CookiesProvider defaultSetOptions={{ path: "/" }}>
       <Stack
         screenOptions={{
           headerShown: false,
@@ -28,6 +29,6 @@ export default function _layout() {
         <Stack.Screen name="megusta" />
       </Stack>
       <StatusBar style="auto" />
-    </>
+    </CookiesProvider>
   );
 }
