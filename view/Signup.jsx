@@ -41,8 +41,9 @@ export default function Signup() {
   const [modalSuccess, setModalSuccess] = useState(false); // Éxito del modal
 
   const { data, loading, error, fetchData } = useFetch();
+  const { data: emailValidationData, loading: emailValidationLoading, error: emailValidationError, fetchData: validateEmail } = useFetch();
 
-  const validarFormulario = () => {
+  const validarFormulario = async () => {
     if (!userData.name) {
       setModalMessage("El nombre de usuario es obligatorio.");
       setModalSuccess(false);
@@ -72,7 +73,33 @@ export default function Signup() {
       setModalVisible(true);
       return false;
     }
-  
+
+    if (userData.email.length > 50) {
+      setModalMessage("El correo electrónico debe tener menos de 50 caracteres.");
+      setModalSuccess(false);
+      setModalVisible(true);
+      return false;
+    }
+
+    const emailValidationUrl = `https://emailverification.whoisxmlapi.com/api/v3?apiKey=at_iFCVm77T67rg3vK28nnSUdCUNkpwW&emailAddress=${userData.email}`;
+    const emailValidationOptions = { method: 'GET', headers: { accept: 'application/json' } };
+
+    await validateEmail(emailValidationUrl, emailValidationOptions); // Llama a useFetch
+
+    if (emailValidationError) {
+      setModalMessage("Error al validar el correo electrónico: " + (emailValidationError.message || "Error desconocido"));
+      setModalSuccess(false);
+      setModalVisible(true);
+      return false;
+    }
+
+    if (emailValidationData && emailValidationData.smtpCheck !== "true") {
+      setModalMessage("El correo electrónico no existe o no es válido.");
+      setModalSuccess(false);
+      setModalVisible(true);
+      return false;
+    }
+
     if (!userData.password) {
       setModalMessage("La contraseña es obligatoria.");
       setModalSuccess(false);
@@ -87,6 +114,13 @@ export default function Signup() {
       setModalVisible(true);
       return false;
     }
+
+    if (userData.password.length > 15) {
+      setModalMessage("La contraseña debe tener menos de 15 caracteres.");
+      setModalSuccess(false);
+      setModalVisible(true);
+      return false;
+    }
   
     if (userData.password !== userData.confirmPassword) {
       setModalMessage("Las contraseñas no coinciden.");
@@ -94,17 +128,16 @@ export default function Signup() {
       setModalVisible(true);
       return false;
     }
-    return true
+    return true;
   }
 
-
   const handleSignup = async () => {
-    if (!validarFormulario()) {
+    if (!await validarFormulario()) {
       return;
-    }
-    console.log("not")
+    }    
+
     await fetchData(
-      "https://backend-swii.vercel.app/api/createUser'",
+      "https://backend-swii.vercel.app/api/createUser",
       {
         method: "POST",
         headers: {
@@ -199,6 +232,7 @@ export default function Signup() {
             onFocus={()=> setNombreFocused(true)}
             onBlur={()=> setNombreFocused(false)}
             onChangeText={(value) => handleInputChange("name", value)}
+            maxLength={20}
           />
           <TextInput
             placeholderTextColor={"#acacac"}
@@ -210,6 +244,7 @@ export default function Signup() {
             onFocus={()=> setCorreoFocused(true)}
             onBlur={()=> setCorreoFocused(false)}
             onChangeText={(value) => handleInputChange("email", value)}
+            maxLength={20}
           />
           <View
             style={{
@@ -229,6 +264,7 @@ export default function Signup() {
               onFocus={()=> setPasswordFocused(true)}
               onBlur={()=> setPasswordFocused(false)}
               onChangeText={(value) => handleInputChange("password", value)}
+              maxLength={20}
             />
             {verPassword ? (
               <Pressable
@@ -264,6 +300,7 @@ export default function Signup() {
               onFocus={()=> setConfirmarPasswordFocused(true)}
               onBlur={()=> setConfirmarPasswordFocused(false)}
               onChangeText={(value) => handleInputChange("confirmPassword", value)}
+              maxLength={20}
             />
             {verConfirmarPassword ? (
               <Pressable
