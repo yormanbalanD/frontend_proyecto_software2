@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
     paddingVertical: 30,
     paddingHorizontal: 30,
     width: "75%",
-    backgroundColor: "rgba(0,0,0, 0.6)"
+    backgroundColor: "rgba(0,0,0, 0.6)",
   },
   textInput: {
     fontFamily: "Open-sans",
@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.white,
     borderBottomWidth: 1,
     backgroundColor: "transparent",
-    color: Colors.white
+    color: Colors.white,
   },
 });
 
@@ -65,11 +65,31 @@ export default function Signup() {
   const [nombreFocused, setNombreFocused] = React.useState(false);
   const [correoFocused, setCorreoFocused] = React.useState(false);
   const [PasswordFocused, setPasswordFocused] = React.useState(false);
-  const [confirmarPasswordFocused, setConfirmarPasswordFocused] = React.useState(false);
+  const [confirmarPasswordFocused, setConfirmarPasswordFocused] =
+    React.useState(false);
 
-  const Signup = () => {
-    navigate.push('mainpage');
-  }
+  const Signup = async () => {
+    const res = await fetch("https://backend-swii.vercel.app/api/createUser", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        "name": "Yorman",
+        "email": "yormna@gmail.com",
+        "password": "12345678",
+      }),
+      mode: "cors",
+    });
+
+    if(res.status !== 200) {
+      return;
+    }
+
+    console.log(await res.json());
+    return;
+    navigate.push("mainpage");
+  };
 
   return (
     <ImageBackground //Main page
@@ -78,7 +98,7 @@ export default function Signup() {
         height: "100%",
         width: "100%",
         alignItems: "center",
-        justifyContent: "center",        
+        justifyContent: "center",
       }}
     >
       <View // Logo Container
@@ -95,7 +115,8 @@ export default function Signup() {
           source={require("@/assets/images/logo_recortado.png")}
           style={{
             height: 80,
-            width: 60,}}
+            width: 60,
+          }}
           contentFit="contain"
         />
         <Text
@@ -103,31 +124,28 @@ export default function Signup() {
             fontSize: 60,
             color: "#FFF",
             fontFamily: "League-Gothic",
-            width: "auto"}}
-          >FOODIGO</Text>
+            width: "auto",
+          }}
+        >
+          FOODIGO
+        </Text>
       </View>
       <View style={styles.container}>
         <View style={{ flexDirection: "column", width: "100%" }}>
-          <Text style={styles.titulo}>
-            Registrarse
-          </Text>            
+          <Text style={styles.titulo}>Registrarse</Text>
           <TextInput
             placeholderTextColor={"#acacac"}
-            style={[styles.textInput, 
-              nombreFocused && {outline: "none"}
-            ]}
+            style={[styles.textInput, nombreFocused && { outline: "none" }]}
             placeholder="Nombre Del Usuario"
-            onFocus={()=> setNombreFocused(true)}
-            onBlur={()=> setNombreFocused(false)}
+            onFocus={() => setNombreFocused(true)}
+            onBlur={() => setNombreFocused(false)}
           />
           <TextInput
             placeholderTextColor={"#acacac"}
-            style={[styles.textInput, 
-              correoFocused && {outline: "none"}
-            ]}
+            style={[styles.textInput, correoFocused && { outline: "none" }]}
             placeholder="Correo"
-            onFocus={()=> setCorreoFocused(true)}
-            onBlur={()=> setCorreoFocused(false)}
+            onFocus={() => setCorreoFocused(true)}
+            onBlur={() => setCorreoFocused(false)}
           />
           <View
             style={{
@@ -137,14 +155,15 @@ export default function Signup() {
           >
             <TextInput
               placeholderTextColor={"#acacac"}
-              style={[styles.textInput, 
-                {paddingRight: 40},
-                PasswordFocused && {outline: "none"}
+              style={[
+                styles.textInput,
+                { paddingRight: 40 },
+                PasswordFocused && { outline: "none" },
               ]}
               placeholder="Contraseña"
               secureTextEntry={!verPassword}
-              onFocus={()=> setPasswordFocused(true)}
-              onBlur={()=> setPasswordFocused(false)}
+              onFocus={() => setPasswordFocused(true)}
+              onBlur={() => setPasswordFocused(false)}
             />
             {verPassword ? (
               <Pressable
@@ -170,19 +189,20 @@ export default function Signup() {
           >
             <TextInput
               placeholderTextColor={"#acacac"}
-              style={[styles.textInput, 
-                {paddingRight: 40},
-                confirmarPasswordFocused && {outline: "none"}
-               ]}
-              placeholder="Confirmar Contraseña"             
+              style={[
+                styles.textInput,
+                { paddingRight: 40 },
+                confirmarPasswordFocused && { outline: "none" },
+              ]}
+              placeholder="Confirmar Contraseña"
               secureTextEntry={!verConfirmarPassword}
-              onFocus={()=> setConfirmarPasswordFocused(true)}
-              onBlur={()=> setConfirmarPasswordFocused(false)}
+              onFocus={() => setConfirmarPasswordFocused(true)}
+              onBlur={() => setConfirmarPasswordFocused(false)}
             />
             {verConfirmarPassword ? (
               <Pressable
                 onPress={() => setVerConfirmarPassword(false)}
-                style={{ position: "absolute", right: 10,}}
+                style={{ position: "absolute", right: 10 }}
               >
                 <Entypo name="eye-with-line" size={24} color="#fff" />
               </Pressable>
@@ -205,12 +225,17 @@ export default function Signup() {
               backgroundColor: pressed ? Colors.lightGray : Colors.white,
               display: "flex",
               flexDirection: "row",
-              alignItems: "center"
+              alignItems: "center",
             },
           ]}
         >
           <Text style={styles.textButton}>Subir foto</Text>
-          <Entypo name="camera" size={24} color="#000" style={{paddingLeft: 5}}/>
+          <Entypo
+            name="camera"
+            size={24}
+            color="#000"
+            style={{ paddingLeft: 5 }}
+          />
         </Pressable>
 
         <View

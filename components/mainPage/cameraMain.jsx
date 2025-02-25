@@ -14,6 +14,34 @@ import { MediaLibrary } from "expo-media-library";
 import BotonRedondoCamara from "./BotonRedondoCamara";
 import { set } from "react-hook-form";
 import * as Location from "expo-location";
+import * as geolib from "geolib";
+import TargetaCamara from "./TargetaCamara";
+
+const negociosMinifinca = [
+  {
+    latitud: 8.25217693739277,
+    longitud: -62.74120469516385,
+    nombre: "Restaurante Manos Criollas",
+  },
+  {
+    latitud: 8.252016694798241,
+    longitud: -62.7412507498899,
+    nombre: "Restaurante Manos no Criollas",
+  },
+  {
+    latitud: 8.25177169365717,
+    longitud: -62.74125455857067,
+    nombre: "Restaurante daniel",
+  },
+];
+
+const negociosRioAro = [
+  {
+    latitud: 8.273658194401143,
+    longitud: -62.74665134535704,
+    nombre: "Restaurante Manos Criollas",
+  },
+];
 
 export default function CameraScreen() {
   const [facing, setFacing] = useState("back");
@@ -21,6 +49,14 @@ export default function CameraScreen() {
   const cameraRef = useRef(null);
   const [tomandoFoto, setTomandoFoto] = useState(false);
   const [angulo, setAngulo] = useState(null);
+  const [restaurantes, setRestaurantes] = useState([
+    {
+      latitud: 0,
+      longitud: 0,
+      nombre: "",
+      distancia: 0,
+    },
+  ]);
 
   useEffect(() => {
     if (permission && !permission.granted) {
@@ -28,13 +64,46 @@ export default function CameraScreen() {
     }
   });
 
+  const getCoordenadas = async () => {
+    const location = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Highest,
+    });
+
+    return location.coords;
+  };
+
+  const fetchRestaurantes = async ({ angulo, base64 }) => {
+    const coords = await getCoordenadas();
+
+    setRestaurantes(
+      negociosMinifinca.map((negocio) => {
+        return {
+          ...negocio,
+          distancia: geolib.getDistance(
+            {
+              latitude: coords.latitude,
+              longitude: coords.longitude,
+            },
+            {
+              longitude: negocio.longitud,
+              latitude: negocio.latitud,
+            }
+          ),
+        };
+      })
+    );
+  };
   const tomarFoto = async () => {
     if (tomandoFoto) return;
     setTomandoFoto(true);
 
-    cameraRef.current.takePictureAsync().then(() => {
+    cameraRef.current.takePictureAsync().then(({ base64, width, height }) => {
       console.log("angulo", angulo);
       setTomandoFoto(false);
+      fetchRestaurantes({
+        angulo,
+        base64,
+      });
     });
   };
 
@@ -59,6 +128,7 @@ export default function CameraScreen() {
     return <View />;
   }
 
+
   return (
     <View style={styles.container}>
       <CameraView
@@ -68,6 +138,9 @@ export default function CameraScreen() {
         }}
         ref={cameraRef}
       ></CameraView>
+      {/* {restaurantes[0].nombre != "" && restaurantes.map((restaurante) => {
+        return <TargetaCamara restaurante={restaurante} />;
+      })} */}
       <BotonRedondoCamara tomarFoto={tomarFoto} />
     </View>
   );

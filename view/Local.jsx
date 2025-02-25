@@ -245,9 +245,8 @@ const Local = () => {
                   color="#8c0e03"
                 />
                 <Text style={styles.descripcion}>
-                  Ciudad Guayana 8050, Bolivar.
-                  <br />
-                  Ubicado en: Centro Comercial Costa America.
+                  Ciudad Guayana 8050, Bolivar. Ubicado en: Centro Comercial
+                  Costa America.
                 </Text>
               </View>
               <View style={styles.descripcion}>

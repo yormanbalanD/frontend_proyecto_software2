@@ -5,7 +5,7 @@ import Colors from "@/constants/Colors";
 
 export default function ModalOpcionesAvanzadas({ visible, setVisible }) {
   return (
-    <Modal visible={!visible} transparent>
+    <Modal visible={visible} transparent>
       <Pressable
         onPress={() => {
           setVisible(true);
@@ -21,7 +21,7 @@ export default function ModalOpcionesAvanzadas({ visible, setVisible }) {
               left: 5,
             }}
             onPress={() => {
-              setVisible(!visible);
+              setVisible(visible);
             }}
           >
             <Icon name="x" size={25} color="black" />
