@@ -146,7 +146,6 @@ export default function Login() {
         setModalMessage("Inicio de sesión exitoso."); // Mensaje de éxito
         setModalSuccess(true); // Indicar que la operación fue exitosa
         setModalVisible(true);
-        navigate.push("/mainpage"); // Redirigir a la página principal
       } else {
         const errorData = await response.json();
         console.error("Error en el login:", errorData);
