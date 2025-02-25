@@ -1,9 +1,18 @@
-import React from "react";
-import { View, Text, StyleSheet, Pressable, TextInput, ImageBackground } from "react-native";
+import React, { useEffect, useState } from "react"; // Asegúrate de importar useState
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  TextInput,
+  ImageBackground,
+} from "react-native";
 import { Image } from "expo-image";
 import { Link, useRouter } from "expo-router";
 import Colors from "@/constants/Colors";
 import Entypo from "@expo/vector-icons/Entypo";
+import { useCookies } from "react-cookie";
+import ModalNotificacion from "@/components/ModalNotificacion";
 
 const styles = StyleSheet.create({
   button: {
@@ -73,7 +82,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     height: "100%",
-    width: "100%"
+    width: "100%",
   },
 });
 
@@ -82,10 +91,72 @@ export default function Login() {
   const [verContraseña, setVerContraseña] = React.useState(false);
   const [correoFocused, setCorreoFocused] = React.useState(false);
   const [PasswordFocused, setPasswordFocused] = React.useState(false);
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [cookies, setCookie] = useCookies(["token"]);
+  const [modalVisible, setModalVisible] = React.useState(false); // Estado para el modal
+  const [modalMessage, setModalMessage] = React.useState(""); // Mensaje del modal
+  const [modalSuccess, setModalSuccess] = React.useState(false); // Éxito del modal
 
-  const Signup = () => {
-    navigate.push("mainpage");
+  const validateEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Expresión regular para validar el correo
+    return re.test(String(email).toLowerCase());
   };
+
+  const iniciarSesion = async () => {
+    // Validaciones
+    if (!email || !validateEmail(email)) {
+      setModalMessage("Por favor, ingresa un correo electrónico válido.");
+      setModalSuccess(false);
+      setModalVisible(true);
+      return;
+    }
+
+    if (!password) {
+      setModalMessage("La contraseña no puede estar vacía.");
+      setModalSuccess(false);
+      setModalVisible(true);
+      return;
+    }
+
+    try {
+      const response = await fetch("https://backend-swii.vercel.app/api/login", {
+        method: "POST",
+        body: JSON.stringify({
+          email: email, // Usar el email ingresado
+          password: password, // Usar la contraseña ingresada
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setCookie("token", data.token); // Guardar el token en la cookie
+        console.log(data);
+        setModalMessage("Inicio de sesión exitoso."); // Mensaje de éxito
+        setModalSuccess(true); // Indicar que la operación fue exitosa
+        setModalVisible(true);
+        navigate.push("/mainpage"); // Redirigir a la página principal
+      } else {
+        const errorData = await response.json();
+        console.error("Error en el login:", errorData);
+        setModalMessage("Error en el inicio de sesión."); // Mensaje de error
+        setModalSuccess(false); // Indicar que hubo un error
+        setModalVisible(true);
+      }
+    } catch (error) {
+      console.error("Error de red:", error);
+      setModalMessage("Error de red. Por favor, intenta de nuevo."); // Mensaje de error
+      setModalSuccess(false); // Indicar que hubo un error
+      setModalVisible(true);
+    }
+  };
+
+  useEffect(() => {
+    console.log(email);
+  }, [email]);
 
   return (
     <ImageBackground
@@ -93,7 +164,7 @@ export default function Login() {
       style={styles.backgroundImage}
     >
       <View
-        style={{          
+        style={{
           height: "100%",
           flex: 1,
           width: "100%",
@@ -115,12 +186,16 @@ export default function Login() {
           <View style={{ flexDirection: "column", gap: 15, width: "100%" }}>
             <TextInput
               placeholderTextColor={"#acacac"}
-              style={[styles.textInput, 
-                correoFocused && {outline: "none"}
-              ]}
+              style={[styles.textInput, correoFocused && { outline: "none" }]}
               placeholder="Correo electrónico"
-              onFocus={()=>{setCorreoFocused(true)}}
-              onBlur={()=>{setCorreoFocused(false)}}
+              onFocus={() => {
+                setCorreoFocused(true);
+              }}
+              onBlur={() => {
+                setCorreoFocused(false);
+              }}
+              value={email}
+              onChangeText={(value) => setEmail(value)}
             />
             <View
               style={{
@@ -130,13 +205,21 @@ export default function Login() {
             >
               <TextInput
                 placeholderTextColor={"#acacac"}
-                style={[styles.textInput, {paddingRight: 40},
-                  PasswordFocused && {outline: "none"}
-                 ]}
+                style={[
+                  styles.textInput,
+                  { paddingRight: 40 },
+                  PasswordFocused && { outline: "none" },
+                ]}
                 placeholder="Contraseña"
-                onFocus={()=>{setPasswordFocused(true)}}
-                onBlur={()=>{setPasswordFocused(false)}}
+                onFocus={() => {
+                  setPasswordFocused(true);
+                }}
+                onBlur={() => {
+                  setPasswordFocused(false);
+                }}
                 secureTextEntry={!verContraseña}
+                value={password}
+                onChangeText={(value) => setPassword(value)}
               />
               {verContraseña ? (
                 <Pressable
@@ -177,7 +260,9 @@ export default function Login() {
             }}
           >
             <Pressable
-              onPress={() => navigate.push("/")}
+              onPress={() => {
+                navigate.push("/");
+              }}
               style={({ pressed }) => [
                 styles.button,
                 {
@@ -195,13 +280,24 @@ export default function Login() {
                   backgroundColor: pressed ? Colors.lightGray : "#8c0e03",
                 },
               ]}
-              onPress={() => Signup()}
+              onPress={() => iniciarSesion()}
             >
               <Text style={styles.textButton}>SIGUIENTE</Text>
             </Pressable>
           </View>
         </View>
       </View>
+      <ModalNotificacion
+        isVisible={modalVisible}
+        isSuccess={modalSuccess}
+        message={modalMessage}
+        onClose={() => {
+          setModalVisible(false);
+          if (modalSuccess) {
+            navigate.push("/mainpage"); // Redirigir solo si la autenticación fue exitosa
+          }
+        }}
+      />
     </ImageBackground>
   );
 }
