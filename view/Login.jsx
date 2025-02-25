@@ -148,13 +148,13 @@ export default function Login() {
         setModalVisible(true);
       } else {
         const errorData = await response.json();
-        console.error("Error en el login:", errorData);
+        //console.error("Error en el login:", errorData);
         setModalMessage("Error en el inicio de sesión."); // Mensaje de error
         setModalSuccess(false); // Indicar que hubo un error
         setModalVisible(true);
       }
     } catch (error) {
-      console.error("Error de red:", error);
+      //console.error("Error de red:", error);
       setModalMessage("Error de red. Por favor, intenta de nuevo."); // Mensaje de error
       setModalSuccess(false); // Indicar que hubo un error
       setModalVisible(true);
