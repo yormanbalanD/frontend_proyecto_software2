@@ -1,9 +1,18 @@
-import React from "react";
-import { View, Text, StyleSheet, Pressable, TextInput, ImageBackground } from "react-native";
+import React, { useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  TextInput,
+  ImageBackground,
+} from "react-native";
 import { Image } from "expo-image";
 import { Link, useRouter } from "expo-router";
 import Colors from "@/constants/Colors";
 import Entypo from "@expo/vector-icons/Entypo";
+import { useCookies } from "react-cookie";
+import ModalNotificacion from "@/components/ModalNotificacion";
 
 const styles = StyleSheet.create({
   button: {
@@ -73,7 +82,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     height: "100%",
-    width: "100%"
+    width: "100%",
   },
 });
 
@@ -82,10 +91,39 @@ export default function Login() {
   const [verContraseña, setVerContraseña] = React.useState(false);
   const [correoFocused, setCorreoFocused] = React.useState(false);
   const [PasswordFocused, setPasswordFocused] = React.useState(false);
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [cookies, setCookie] = useCookies(["token"]);
 
-  const Signup = () => {
-    navigate.push("mainpage");
+  const iniciarSesion = async () => {
+    const response = await fetch("https://backend-swii.vercel.app/api/login", {
+      method: "POST",
+      body: JSON.stringify({
+        email: "abrahan@gmail.com", //email,
+        password: "123456", //password,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log({
+      email: email,
+      password: password,
+    });
+
+    console.log(response);
+
+    if (response.status === 200) {
+      const data = await response.json();
+      setCookie("token", data.token);
+      console.log(data);
+    }
   };
+
+  useEffect(() => {
+    console.log(email);
+  }, [email]);
 
   return (
     <ImageBackground
@@ -93,7 +131,7 @@ export default function Login() {
       style={styles.backgroundImage}
     >
       <View
-        style={{          
+        style={{
           height: "100%",
           flex: 1,
           width: "100%",
@@ -115,12 +153,16 @@ export default function Login() {
           <View style={{ flexDirection: "column", gap: 15, width: "100%" }}>
             <TextInput
               placeholderTextColor={"#acacac"}
-              style={[styles.textInput, 
-                correoFocused && {outline: "none"}
-              ]}
+              style={[styles.textInput, correoFocused && { outline: "none" }]}
               placeholder="Correo electrónico"
-              onFocus={()=>{setCorreoFocused(true)}}
-              onBlur={()=>{setCorreoFocused(false)}}
+              onFocus={() => {
+                setCorreoFocused(true);
+              }}
+              onBlur={() => {
+                setCorreoFocused(false);
+              }}
+              value={email}
+              onChangeText={(value) => setEmail(value)}
             />
             <View
               style={{
@@ -130,13 +172,21 @@ export default function Login() {
             >
               <TextInput
                 placeholderTextColor={"#acacac"}
-                style={[styles.textInput, {paddingRight: 40},
-                  PasswordFocused && {outline: "none"}
-                 ]}
+                style={[
+                  styles.textInput,
+                  { paddingRight: 40 },
+                  PasswordFocused && { outline: "none" },
+                ]}
                 placeholder="Contraseña"
-                onFocus={()=>{setPasswordFocused(true)}}
-                onBlur={()=>{setPasswordFocused(false)}}
+                onFocus={() => {
+                  setPasswordFocused(true);
+                }}
+                onBlur={() => {
+                  setPasswordFocused(false);
+                }}
                 secureTextEntry={!verContraseña}
+                value={password}
+                onChangeText={(value) => setPassword(value)}
               />
               {verContraseña ? (
                 <Pressable
@@ -177,7 +227,9 @@ export default function Login() {
             }}
           >
             <Pressable
-              onPress={() => navigate.push("/")}
+              onPress={() => {
+                navigate.push("/");
+              }}
               style={({ pressed }) => [
                 styles.button,
                 {
@@ -195,13 +247,24 @@ export default function Login() {
                   backgroundColor: pressed ? Colors.lightGray : "#8c0e03",
                 },
               ]}
-              onPress={() => Signup()}
+              onPress={() => iniciarSesion()}
             >
               <Text style={styles.textButton}>SIGUIENTE</Text>
             </Pressable>
           </View>
         </View>
       </View>
+      <ModalNotificacion
+        {...{
+          isVisible: true,
+          isSuccess: true,
+          message: "Usuario creado correctamente.",
+          onClose: () => {
+            setModalVisible(false);
+            navigate.push("/mainpage");
+          },
+        }}
+      />
     </ImageBackground>
   );
 }
