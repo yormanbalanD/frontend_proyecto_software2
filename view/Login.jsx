@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react"; // Asegúrate de importar useState
+
 import {
   View,
   Text,
@@ -153,7 +154,7 @@ export default function Login() {
       setModalVisible(true);
     }
   };
-
+  
   useEffect(() => {
     console.log(email);
   }, [email]);

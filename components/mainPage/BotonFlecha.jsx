@@ -17,7 +17,9 @@ const BotonBurguer = ({ onPress }) => {
           onPress();
         }}
       >
-        <Icon name="chevron-thin-down" size={17} color="white" />
+        <Icon name="chevron-thin-down" size={17} style={{
+          transform: [{ rotateX: "180deg"}]
+        }} color="white" />
       </Pressable>
     </View>
   );
@@ -37,3 +39,4 @@ const styles = StyleSheet.create({
 });
 
 export default BotonBurguer;
+

@@ -1,39 +1,38 @@
-import React, { useState } from 'react';
-import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  Image,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
 import { useFonts } from "expo-font";
-import { FontAwesome } from '@expo/vector-icons';
+import { FontAwesome } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 const restaurants = [
   {
     name: "Arturo's",
-    address: "C.C. Santo Tome IV planta baja local #13, Av Guayana, Ciudad Guayana 8050, Bolívar.",
+    address:
+      "C.C. Santo Tome IV planta baja local #13, Av Guayana, Ciudad Guayana 8050, Bolívar.",
     comments: 18,
     rating: 3.7,
-    image: require('@/assets/images/tomar foto (2).png'),
+    image: require("@/assets/images/tomar foto (2).png"),
   },
   {
     name: "Restaurant Manos Criollas",
     address: "77JH+5CF, C. Argelia, Ciudad Guayana 8050, Bolívar.",
     comments: 29,
     rating: 4.8,
-    image: require('@/assets/images/tomar foto (2).png'),
+    image: require("@/assets/images/tomar foto (2).png"),
   },
-  
 ];
 
 export default function ListaMeGusta() {
-   const [fontsLoaded] = useFonts({
-      "League-Gothic": require("../assets/fonts/LeagueGothic-Regular.ttf"),
-      "Open-Sans": require("../assets/fonts/OpenSans-Regular.ttf"),
-      "OpenSans-Bold": require ("../assets/fonts/OpenSans-Bold.ttf"),
-      "Helios-Bold": require ("../assets/fonts/HeliosExtC-Bold.ttf"),
-    });
-  
-    if (!fontsLoaded) {
-      return null;
-    }
+  const router = useRouter();
 
-  const [liked, setLiked] = useState(restaurants.map(() => true));
+  const [liked, setLiked] = useState(restaurants);
 
   const toggleLike = (index) => {
     setLiked((prevLiked) => {
@@ -45,34 +44,49 @@ export default function ListaMeGusta() {
 
   return (
     <View style={styles.container}>
-      <Image source={require('@/assets/images/historial (2).png')} style={styles.background} />
+      <Image
+        source={require("@/assets/images/historial (2).png")}
+        style={styles.background}
+      />
       <View style={styles.header}>
-        <TouchableOpacity>
-          <Image source={require('@/assets/images/icono_atras.png')} style={styles.iconBack} />
+        <TouchableOpacity onPress={() => router.push("/mainpage")}>
+          <Image
+            source={require("@/assets/images/icono_atras.png")}
+            style={styles.iconBack}
+          />
         </TouchableOpacity>
-        <Image source={require('@/assets/images/logo_recortado.png')} style={styles.logo} />
+        <Image
+          source={require("@/assets/images/logo_recortado.png")}
+          style={styles.logo}
+        />
         <Text style={styles.title}>FOODIGO</Text>
       </View>
-      
+
       <ScrollView style={styles.list}>
-      <Text style={styles.meGustaTitle}>ME GUSTA</Text>
-        {restaurants.map((restaurant, index) => (
+        <Text style={styles.meGustaTitle}>ME GUSTA</Text>
+        {liked.map((restaurant, index) => (
           <TouchableOpacity key={index} style={styles.card}>
             <View style={styles.cardContent}>
               <Text style={styles.cardTitle}>{restaurant.name}</Text>
               <Text style={styles.cardAddress}>{restaurant.address}</Text>
-              <View style={styles.cardFooter}> 
-              <TouchableOpacity onPress={() => toggleLike(index)}>
-                <FontAwesome
-                  name={liked[index] ? 'heart' : 'heart-o'} // corazon lleno o corazon vacio
-                  size={18}
-                  color="red"
+              <View style={styles.cardFooter}>
+                <TouchableOpacity onPress={() => toggleLike(index)}>
+                  <FontAwesome
+                    name={liked[index] ? "heart" : "heart-o"} // corazon lleno o corazon vacio
+                    size={18}
+                    color="red"
+                    style={styles.icon}
+                  />
+                </TouchableOpacity>
+                <Image
+                  source={require("@/assets/images/icono_comentario-removebg-preview.png")}
                   style={styles.icon}
                 />
-              </TouchableOpacity>
-                <Image source={require('@/assets/images/icono_comentario-removebg-preview.png')} style={styles.icon} />
                 <Text style={styles.cardAddress}>{restaurant.comments}</Text>
-                <Image source={require('@/assets/images/icono_de_calificacion-removebg-preview.png')} style={styles.icon} />
+                <Image
+                  source={require("@/assets/images/icono_de_calificacion-removebg-preview.png")}
+                  style={styles.icon}
+                />
                 <Text style={styles.cardAddress}>{restaurant.rating}</Text>
               </View>
             </View>
@@ -80,7 +94,6 @@ export default function ListaMeGusta() {
               <Image source={restaurant.image} style={styles.cardImage} />
               <View style={styles.borderImage}></View>
             </View>
-            
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -93,16 +106,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   background: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
+    position: "absolute",
+    width: "100%",
+    height: "100%",
   },
   header: {
     marginLeft: 30,
     marginTop: 40,
     marginBottom: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   iconBack: {
     width: 40,
@@ -120,12 +133,12 @@ const styles = StyleSheet.create({
     marginRight: 2,
   },
   title: {
-    fontFamily: 'League-Gothic',
+    fontFamily: "League-Gothic",
     fontSize: 32,
-    color: '#fff',
+    color: "#fff",
   },
   meGustaTitle: {
-    fontFamily: 'Helios-Bold', 
+    fontFamily: "Helios-Bold",
     fontSize: 24,
     color: "#fff",
     marginVertical: 15,
@@ -136,11 +149,11 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 5,
     marginVertical: 7,
-    overflow: 'hidden',
-    flexDirection: 'row',
+    overflow: "hidden",
+    flexDirection: "row",
     padding: 10,
     alignItems: "center",
     justifyContent: "center",
@@ -165,17 +178,17 @@ const styles = StyleSheet.create({
     marginRight: 20,
   },
   cardTitle: {
-    fontFamily: 'OpenSans-Bold',
+    fontFamily: "OpenSans-Bold",
     fontSize: 14,
-    marginBottom: 5
+    marginBottom: 5,
   },
   cardAddress: {
-    fontFamily: 'Open-Sans',
+    fontFamily: "Open-Sans",
     fontSize: 9,
   },
   cardFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 10,
   },
 });
