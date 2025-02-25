@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react"; // Asegúrate de importar useState
+
 import {
   View,
   Text,
@@ -95,34 +96,65 @@ export default function Login() {
   const [password, setPassword] = React.useState("");
   const [cookies, setCookie] = useCookies(["token"]);
   const [modalVisible, setModalVisible] = React.useState(false); // Estado para el modal
+  const [modalMessage, setModalMessage] = React.useState(""); // Mensaje del modal
+  const [modalSuccess, setModalSuccess] = React.useState(false); // Éxito del modal
+
+  const validateEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Expresión regular para validar el correo
+    return re.test(String(email).toLowerCase());
+  };
 
   const iniciarSesion = async () => {
-    const response = await fetch("https://backend-swii.vercel.app/api/login", {
-      method: "POST",
-      body: JSON.stringify({
-        email: "abrahan@gmail.com", //email,
-        password: "123456", //password,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    // Validaciones
+    if (!email || !validateEmail(email)) {
+      setModalMessage("Por favor, ingresa un correo electrónico válido.");
+      setModalSuccess(false);
+      setModalVisible(true);
+      return;
+    }
 
-    console.log({
-      email: email,
-      password: password,
-    });
+    if (!password) {
+      setModalMessage("La contraseña no puede estar vacía.");
+      setModalSuccess(false);
+      setModalVisible(true);
+      return;
+    }
 
-    console.log(response);
+    try {
+      const response = await fetch("https://backend-swii.vercel.app/api/login", {
+        method: "POST",
+        body: JSON.stringify({
+          email: email, // Usar el email ingresado
+          password: password, // Usar la contraseña ingresada
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-    if (response.status === 200) {
-      const data = await response.json();
-      setCookie("token", data.token);
-      console.log(data);
+      if (response.ok) {
+        const data = await response.json();
+        setCookie("token", data.token); // Guardar el token en la cookie
+        console.log(data);
+        setModalMessage("Inicio de sesión exitoso."); // Mensaje de éxito
+        setModalSuccess(true); // Indicar que la operación fue exitosa
+        setModalVisible(true);
+        navigate.push("/mainpage"); // Redirigir a la página principal
+      } else {
+        const errorData = await response.json();
+        console.error("Error en el login:", errorData);
+        setModalMessage("Error en el inicio de sesión."); // Mensaje de error
+        setModalSuccess(false); // Indicar que hubo un error
+        setModalVisible(true);
+      }
+    } catch (error) {
+      console.error("Error de red:", error);
+      setModalMessage("Error de red. Por favor, intenta de nuevo."); // Mensaje de error
+      setModalSuccess(false); // Indicar que hubo un error
       setModalVisible(true);
     }
   };
-
+  
   useEffect(() => {
     console.log(email);
   }, [email]);
@@ -257,14 +289,14 @@ export default function Login() {
         </View>
       </View>
       <ModalNotificacion
-        {...{
-          isVisible: modalVisible,
-          isSuccess: true,
-          message: "Usuario creado correctamente.",
-          onClose: () => {
-            setModalVisible(false);
-            navigate.push("/mainpage");
-          },
+        isVisible={modalVisible}
+        isSuccess={modalSuccess}
+        message={modalMessage}
+        onClose={() => {
+          setModalVisible(false);
+          if (modalSuccess) {
+            navigate.push("/mainpage"); // Redirigir solo si la autenticación fue exitosa
+          }
         }}
       />
     </ImageBackground>
