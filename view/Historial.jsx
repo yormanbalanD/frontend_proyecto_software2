@@ -36,7 +36,7 @@ export default function Historial() {
     if (response.status === 200) {
       const data = await response.json();
       console.log(data);
-      setRestaurants(data);
+      setRestaurants(data.restaurants);
     }
   };
 
@@ -70,7 +70,7 @@ export default function Historial() {
           <TouchableOpacity key={index} style={styles.card}>
             <View style={styles.cardContent}>
               <Text style={styles.cardTitle}>{restaurant.name}</Text>
-              <Text style={styles.cardAddress}>{restaurant.address}</Text>
+              <Text style={styles.cardAddress}>{restaurant.address.latitude}, {restaurant.address.longitude}</Text>
               <View style={styles.cardFooter}>
                 <TouchableOpacity>
                   <Image
@@ -82,16 +82,16 @@ export default function Historial() {
                   source={require("@/assets/images/icono_comentario-removebg-preview.png")}
                   style={styles.icon}
                 />
-                <Text style={styles.cardAddress}>{restaurant.comments}</Text>
+                {/* <Text style={styles.cardAddress}>{restaurant.comments}</Text> */}
                 <Image
                   source={require("@/assets/images/icono_de_calificacion-removebg-preview.png")}
                   style={styles.icon}
                 />
-                <Text style={styles.cardAddress}>{restaurant.rating}</Text>
+                {/* <Text style={styles.cardAddress}>{restaurant.rating}</Text> */}
               </View>
             </View>
             <View style={styles.boxImage}>
-              <Image source={restaurant.image} style={styles.cardImage} />
+              {/* <Image source={restaurant.image} style={styles.cardImage} /> */}
               <View style={styles.borderImage}></View>
             </View>
           </TouchableOpacity>

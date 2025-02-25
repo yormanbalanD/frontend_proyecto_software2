@@ -4,59 +4,10 @@ import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import Colors from "@/constants/Colors";
 import Entypo from "@expo/vector-icons/Entypo";
-<<<<<<< HEAD
 
-const styles = StyleSheet.create({
-  titulo: {
-    color: Colors.white,
-    fontFamily: "HeliosExt-Regular",
-    fontSize: 26,
-  },
-  button: {
-    backgroundColor: Colors.white,
-    borderRadius: 4,
-    paddingTop: 12,
-    paddingBottom: 12,
-    paddingLeft: 20,
-    paddingRight: 20,
-    boxShadow: "6px 6px 10px rgba(0, 0, 0, 0.6)",
-  },
-  textButton: {
-    fontFamily: "Open-sans",
-    textAlign: "center",
-    color: Colors.primary,
-    textTransform: "uppercase",
-    fontSize: 12,
-    fontWeight: 600,
-    width: 70,
-  },
-  container: {
-    flexDirection: "column",
-    alignItems: "center",
-    gap: 35,
-    paddingVertical: 30,
-    paddingHorizontal: 30,
-    width: "75%",
-    backgroundColor: "rgba(0,0,0, 0.6)",
-  },
-  textInput: {
-    fontFamily: "Open-sans",
-    width: "100%",
-    paddingLeft: 15,
-    paddingRight: 15,
-    paddingTop: 12,
-    paddingBottom: 12,
-    borderBottomColor: Colors.white,
-    borderBottomWidth: 1,
-    backgroundColor: "transparent",
-    color: Colors.white,
-  },
-});
-=======
 import Notificacion from "@/components/ModalNotificacion";
 import { useFetch } from "../utils/fetch/useFetch"; // Asegúrate de usar la importación con llaves
 import endpoints from "../utils/fetch/endpoints-importantes.json";
->>>>>>> develop
 
 export default function Signup() {
   const router = useRouter();
@@ -66,40 +17,11 @@ export default function Signup() {
   const [verConfirmarPassword, setVerConfirmarPassword] = useState(false);
 
   //Handle onfocus
-<<<<<<< HEAD
   const [nombreFocused, setNombreFocused] = React.useState(false);
   const [correoFocused, setCorreoFocused] = React.useState(false);
   const [PasswordFocused, setPasswordFocused] = React.useState(false);
   const [confirmarPasswordFocused, setConfirmarPasswordFocused] =
     React.useState(false);
-
-  const Signup = async () => {
-    const res = await fetch("https://backend-swii.vercel.app/api/createUser", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        "name": "Yorman",
-        "email": "yormna@gmail.com",
-        "password": "12345678",
-      }),
-      mode: "cors",
-    });
-
-    if(res.status !== 200) {
-      return;
-    }
-
-    console.log(await res.json());
-    return;
-    navigate.push("mainpage");
-  };
-=======
-  const [nombreFocused, setNombreFocused] = useState(false);
-  const [correoFocused, setCorreoFocused] = useState(false);
-  const [PasswordFocused, setPasswordFocused] = useState(false);
-  const [confirmarPasswordFocused, setConfirmarPasswordFocused] = useState(false);
 
   // Estados para el formulario y userData
   const [userData, setUserData] = useState({
@@ -254,7 +176,6 @@ export default function Signup() {
   const Signup = () => {
     router.push('mainpage');
   }
->>>>>>> develop
 
   const closeModal = () => {
     setModalVisible(false);
@@ -309,17 +230,6 @@ export default function Signup() {
             placeholderTextColor={"#acacac"}
             style={[styles.textInput, nombreFocused && { outline: "none" }]}
             placeholder="Nombre Del Usuario"
-<<<<<<< HEAD
-            onFocus={() => setNombreFocused(true)}
-            onBlur={() => setNombreFocused(false)}
-          />
-          <TextInput
-            placeholderTextColor={"#acacac"}
-            style={[styles.textInput, correoFocused && { outline: "none" }]}
-            placeholder="Correo"
-            onFocus={() => setCorreoFocused(true)}
-            onBlur={() => setCorreoFocused(false)}
-=======
             value={userData.name}
             onFocus={()=> setNombreFocused(true)}
             onBlur={()=> setNombreFocused(false)}
@@ -337,7 +247,6 @@ export default function Signup() {
             onBlur={()=> setCorreoFocused(false)}
             onChangeText={(value) => handleInputChange("email", value)}
             maxLength={20}
->>>>>>> develop
           />
           <View
             style={{
@@ -354,16 +263,11 @@ export default function Signup() {
               ]}
               placeholder="Contraseña"
               secureTextEntry={!verPassword}
-<<<<<<< HEAD
-              onFocus={() => setPasswordFocused(true)}
-              onBlur={() => setPasswordFocused(false)}
-=======
               value={userData.password}
               onFocus={()=> setPasswordFocused(true)}
               onBlur={()=> setPasswordFocused(false)}
               onChangeText={(value) => handleInputChange("password", value)}
               maxLength={20}
->>>>>>> develop
             />
             {verPassword ? (
               <Pressable
@@ -396,16 +300,11 @@ export default function Signup() {
               ]}
               placeholder="Confirmar Contraseña"
               secureTextEntry={!verConfirmarPassword}
-<<<<<<< HEAD
-              onFocus={() => setConfirmarPasswordFocused(true)}
-              onBlur={() => setConfirmarPasswordFocused(false)}
-=======
               value={userData.confirmPassword}
               onFocus={()=> setConfirmarPasswordFocused(true)}
               onBlur={()=> setConfirmarPasswordFocused(false)}
               onChangeText={(value) => handleInputChange("confirmPassword", value)}
               maxLength={20}
->>>>>>> develop
             />
             {verConfirmarPassword ? (
               <Pressable

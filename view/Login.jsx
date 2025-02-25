@@ -94,6 +94,7 @@ export default function Login() {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [cookies, setCookie] = useCookies(["token"]);
+  const [modalVisible, setModalVisible] = React.useState(false); // Estado para el modal
 
   const iniciarSesion = async () => {
     const response = await fetch("https://backend-swii.vercel.app/api/login", {
@@ -118,6 +119,7 @@ export default function Login() {
       const data = await response.json();
       setCookie("token", data.token);
       console.log(data);
+      setModalVisible(true);
     }
   };
 
@@ -256,7 +258,7 @@ export default function Login() {
       </View>
       <ModalNotificacion
         {...{
-          isVisible: true,
+          isVisible: modalVisible,
           isSuccess: true,
           message: "Usuario creado correctamente.",
           onClose: () => {
