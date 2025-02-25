@@ -9,24 +9,35 @@ import {
 } from "react-native";
 import { useFonts } from "expo-font";
 import { useRouter } from "expo-router";
-// import jwt from "jsonwebtoken";
 import { useCookies } from "react-cookie";
+import {jwtDecode as decode} from "jwt-decode";
 
 export default function Historial() {
   const router = useRouter();
-  const [cookies, setCookie] = useCookies(["token"]);
   const [restaurants, setRestaurants] = useState([]);
+  const [cookies] = useCookies(["token"]);
+
+  const getToken = () => {
+    return cookies.token;
+  };
+
+  const getUserId = () => {
+    const token = getToken();
+    if (!token) return null;
+
+    const decoded = decode(token);
+    return decoded.sub;
+  }
 
   const getHistorial = async () => {
     const response = await fetch(
       "https://backend-swii.vercel.app/api/getRestaurantsShowed/" +
-        "67bbe1b3575ffe57c6747974",
+        getUserId(),
       {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization:
-            "Bearer " + cookies.token,
+          Authorization: "Bearer " + getToken(),
         },
       }
     );
@@ -42,6 +53,7 @@ export default function Historial() {
 
   useEffect(() => {
     getHistorial();
+    console.log(getUserId());
   }, []);
 
   return (
@@ -70,7 +82,9 @@ export default function Historial() {
           <TouchableOpacity key={index} style={styles.card}>
             <View style={styles.cardContent}>
               <Text style={styles.cardTitle}>{restaurant.name}</Text>
-              <Text style={styles.cardAddress}>{restaurant.address.latitude}, {restaurant.address.longitude}</Text>
+              <Text style={styles.cardAddress}>
+                {restaurant.address.latitude}, {restaurant.address.longitude}
+              </Text>
               <View style={styles.cardFooter}>
                 <TouchableOpacity>
                   <Image
