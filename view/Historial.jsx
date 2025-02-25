@@ -10,7 +10,7 @@ import {
 import { useFonts } from "expo-font";
 import { useRouter } from "expo-router";
 import { useCookies } from "react-cookie";
-import {jwtDecode as decode} from "jwt-decode";
+import { jwtDecode as decode } from "jwt-decode";
 
 export default function Historial() {
   const router = useRouter();
@@ -27,12 +27,11 @@ export default function Historial() {
 
     const decoded = decode(token);
     return decoded.sub;
-  }
+  };
 
   const getHistorial = async () => {
     const response = await fetch(
-      "https://backend-swii.vercel.app/api/getRestaurantsShowed/" +
-        getUserId(),
+      "https://backend-swii.vercel.app/api/getRestaurantsShowed/" + getUserId(),
       {
         method: "GET",
         headers: {
@@ -105,7 +104,7 @@ export default function Historial() {
               </View>
             </View>
             <View style={styles.boxImage}>
-              {/* <Image source={restaurant.image} style={styles.cardImage} /> */}
+              <Image source={{ uri: `data:image/png;base64,${restaurant.fotoPerfil}` }} style={styles.cardImage} />
               <View style={styles.borderImage}></View>
             </View>
           </TouchableOpacity>
