@@ -5,18 +5,16 @@ import {
   Image,
   ScrollView,
   StyleSheet,
-  TouchableOpacity, 
-  ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
-import { useFonts } from "expo-font";
-import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import ModalCrearLocal from "../components/ModalCrearLocal";
 import { useCookies } from "react-cookie";
 import { jwtDecode as decode } from "jwt-decode";
 
-export default function Historial() {
-  const router = useRouter();
+export default function LocalesPropios() {
+  const [modalVisible, setModalVisible] = useState(false);
   const [restaurants, setRestaurants] = useState([]);
-  const [loading, setLoading] = useState(true);  
   const [cookies] = useCookies(["token"]);
 
   const getToken = () => {
@@ -31,13 +29,12 @@ export default function Historial() {
     return decoded.sub;
   };
 
-  const getHistorial = async () => {
-    setLoading(true);
+  const getLocalesPropios = async () => {
     const response = await fetch(
-      "https://backend-swii.vercel.app/api/getRestaurantsShowed/" + getUserId(),
+      "https://backend-swii.vercel.app/api/getRestaurants/",
       {
         method: "GET",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + getToken(),
         },
@@ -50,31 +47,37 @@ export default function Historial() {
       const data = await response.json();
       //console.log(data);
       // Procesamos los datos para agregar promedio de calificación y cantidad de comentarios
-      const processedRestaurants = data.restaurants.map((restaurant) => {
+      const processedRestaurants = data.restaurantsFound.map((restaurant) => {
         const reviews = restaurant.reviews || []; // Si no tiene reviews, ponemos un array vacío
         const totalReviews = reviews.length;
-        
+
         // Calcular promedio de calificación
-        console.log("Datos del restaurante:", restaurant.name, restaurant.reviews);
+        console.log(
+          "Datos del restaurante:",
+          restaurant.name,
+          restaurant.reviews
+        );
         const totalCalification = restaurant.reviews.reduce((sum, review) => {
-          const calification = Number(review.calification); 
-          return !isNaN(calification) ? sum + calification : sum;  
+          const calification = Number(review.calification); // Convertir a número
+          return !isNaN(calification) ? sum + calification : sum; // Sumar solo si es número válido
         }, 0);
 
-        const avgCalification = totalReviews > 0 ? (totalCalification / totalReviews).toFixed(1) : "N/A";
-      return { 
-        ...restaurant, 
-        avgCalification, 
-        totalReviews 
-      };
-    }); 
-    setRestaurants(processedRestaurants);
+        const avgCalification =
+          totalReviews > 0
+            ? (totalCalification / totalReviews).toFixed(1)
+            : "N/A";
+        return {
+          ...restaurant,
+          avgCalification,
+          totalReviews,
+        };
+      });
+      setRestaurants(processedRestaurants);
     }
-    setLoading(false); 
   };
 
   useEffect(() => {
-    getHistorial();
+    getLocalesPropios();
     console.log(getUserId());
   }, []);
 
@@ -97,55 +100,89 @@ export default function Historial() {
         />
         <Text style={styles.title}>FOODIGO</Text>
       </View>
-
-      {/* Mostrar indicador de carga si los datos aún se están cargando */}
-      <Text style={styles.historialTitle}>HISTORIAL</Text>
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FFF" />
-        </View>
-      ): restaurants.length === 0 ? ( 
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No has visto ningún restaurante aún.</Text>
-        </View>
-      ) : (
-        <ScrollView style={styles.list}>
-          
-          {restaurants.map((restaurant, index) => (
+      <View style={styles.titleContainer}>
+        <Text style={styles.localTitle}>LOCAL</Text>
+        <TouchableOpacity style={styles.createButton}>
+          <Text
+            style={styles.createButtonText}
+            onPress={() => setModalVisible(true)}
+          >
+            Crear
+          </Text>
+          <Ionicons name="add-circle-outline" size={22} color="#fff" />
+        </TouchableOpacity>
+      </View>
+      <ScrollView style={styles.list}>
+        {restaurants.length > 0 ? (
+          restaurants.map((restaurant, index) => (
             <TouchableOpacity key={index} style={styles.card}>
               <View style={styles.cardContent}>
                 <Text style={styles.cardTitle}>{restaurant.name}</Text>
                 <Text style={styles.cardAddress}>{restaurant.address}</Text>
+                <Text style={styles.cardAddress}>
+                  {restaurant.latitude}, {restaurant.longitude}
+                </Text>
                 <View style={styles.cardFooter}>
                   <TouchableOpacity>
-                    <Image source={require("@/assets/images/icono_me_gusta-removebg-preview.png")} style={styles.icon} />
+                    <Image
+                      source={require("@/assets/images/icono_me_gusta-removebg-preview.png")}
+                      style={styles.icon}
+                    />
                   </TouchableOpacity>
-                  <Image source={require("@/assets/images/icono_comentario-removebg-preview.png")} style={styles.icon} />
-                  <Text style={styles.cardAddress}>{restaurant.totalReviews}</Text>
-                  <Image source={require("@/assets/images/icono_de_calificacion-removebg-preview.png")} style={styles.icon} />
-                  <Text style={styles.cardAddress}>{restaurant.avgCalification}</Text>
+                  <Image
+                    source={require("@/assets/images/icono_comentario-removebg-preview.png")}
+                    style={styles.icon}
+                  />
+                  {
+                    <Text style={styles.cardAddress}>
+                      {restaurant.totalReviews}
+                    </Text>
+                  }
+                  <Image
+                    source={require("@/assets/images/icono_de_calificacion-removebg-preview.png")}
+                    style={styles.icon}
+                  />
+                  {
+                    <Text style={styles.cardAddress}>
+                      {restaurant.avgCalification}
+                    </Text>
+                  }
                 </View>
               </View>
-              <View style={[styles.boxImage, !restaurant.fotoPerfil && styles.placeholder]}>
-                {restaurant.fotoPerfil ? (
+              <View
+                style={[
+                  styles.boxImage,
+                  !(
+                    restaurant.fotoPerfil &&
+                    restaurant.fotoPerfil.startsWith("data:image")
+                  ) && styles.placeholder,
+                ]}
+              >
+                {restaurant.fotoPerfil &&
+                restaurant.fotoPerfil.startsWith("data:image") ? (
                   <Image
-                    source={{
-                      uri: restaurant.fotoPerfil.startsWith("data:image")
-                        ? restaurant.fotoPerfil
-                        : `data:image/png;base64,${restaurant.fotoPerfil}`,
-                    }}
+                    source={{ uri: restaurant.fotoPerfil }}
                     style={styles.cardImage}
                   />
                 ) : (
                   <Text style={styles.placeholderText}>Sin foto</Text>
                 )}
+
                 <View style={styles.borderImage}></View>
               </View>
             </TouchableOpacity>
-          ))}
-        </ScrollView>
-      )}
-    </View>  
+          ))
+        ) : (
+          <Text style={{ textAlign: "center", marginTop: 20, color: "#fff" }}>
+            No tienes locales aún.
+          </Text>
+        )}
+      </ScrollView>
+      <ModalCrearLocal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+      />
+    </View>
   );
 }
 
@@ -185,12 +222,33 @@ const styles = StyleSheet.create({
     fontSize: 32,
     color: "#fff",
   },
-  historialTitle: {
+  titleContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginHorizontal: 20,
+  },
+  localTitle: {
     fontFamily: "Helios-Bold",
     fontSize: 24,
     color: "#fff",
     marginVertical: 15,
-    marginLeft: 40,
+    marginLeft: 20,
+  },
+  createButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#00bf62",
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 5,
+    marginRight: 20,
+  },
+  createButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    marginRight: 5,
+    fontFamily: "OpenSans-Bold",
   },
   list: {
     paddingHorizontal: 25,
@@ -242,26 +300,12 @@ const styles = StyleSheet.create({
   placeholder: {
     width: 80,
     height: 80,
-    backgroundColor: "#ccc", 
+    backgroundColor: "#ccc", // Fondo gris
     justifyContent: "center",
     alignItems: "center",
-    
   },
   placeholderText: {
     fontSize: 10,
     color: "#666",
-  },  
-
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 20,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: "#fff",
-    textAlign: "center",
-    fontWeight: "bold",
   },
 });
