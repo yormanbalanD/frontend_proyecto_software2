@@ -5,7 +5,8 @@ import {
   Image,
   ScrollView,
   StyleSheet,
-  TouchableOpacity,
+  TouchableOpacity, 
+  ActivityIndicator,
 } from "react-native";
 import { useFonts } from "expo-font";
 import { useRouter } from "expo-router";
@@ -15,6 +16,7 @@ import { jwtDecode as decode } from "jwt-decode";
 export default function Historial() {
   const router = useRouter();
   const [restaurants, setRestaurants] = useState([]);
+  const [loading, setLoading] = useState(true);  
   const [cookies] = useCookies(["token"]);
 
   const getToken = () => {
@@ -30,11 +32,12 @@ export default function Historial() {
   };
 
   const getHistorial = async () => {
+    setLoading(true);
     const response = await fetch(
       "https://backend-swii.vercel.app/api/getRestaurantsShowed/" + getUserId(),
       {
         method: "GET",
-        headers: {
+        headers: { 
           "Content-Type": "application/json",
           Authorization: "Bearer " + getToken(),
         },
@@ -45,9 +48,29 @@ export default function Historial() {
 
     if (response.status === 200) {
       const data = await response.json();
-      console.log(data);
-      setRestaurants(data.restaurants);
+      //console.log(data);
+      // Procesamos los datos para agregar promedio de calificación y cantidad de comentarios
+      const processedRestaurants = data.restaurants.map((restaurant) => {
+        const reviews = restaurant.reviews || []; // Si no tiene reviews, ponemos un array vacío
+        const totalReviews = reviews.length;
+        
+        // Calcular promedio de calificación
+        console.log("Datos del restaurante:", restaurant.name, restaurant.reviews);
+        const totalCalification = restaurant.reviews.reduce((sum, review) => {
+          const calification = Number(review.calification); 
+          return !isNaN(calification) ? sum + calification : sum;  
+        }, 0);
+
+        const avgCalification = totalReviews > 0 ? (totalCalification / totalReviews).toFixed(1) : "N/A";
+      return { 
+        ...restaurant, 
+        avgCalification, 
+        totalReviews 
+      };
+    }); 
+    setRestaurants(processedRestaurants);
     }
+    setLoading(false); 
   };
 
   useEffect(() => {
@@ -75,42 +98,54 @@ export default function Historial() {
         <Text style={styles.title}>FOODIGO</Text>
       </View>
 
-      <ScrollView style={styles.list}>
-        <Text style={styles.historialTitle}>HISTORIAL</Text>
-        {restaurants.map((restaurant, index) => (
-          <TouchableOpacity key={index} style={styles.card}>
-            <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>{restaurant.name}</Text>
-              <Text style={styles.cardAddress}>
-                {restaurant.address.latitude}, {restaurant.address.longitude}
-              </Text>
-              <View style={styles.cardFooter}>
-                <TouchableOpacity>
-                  <Image
-                    source={require("@/assets/images/icono_me_gusta-removebg-preview.png")}
-                    style={styles.icon}
-                  />
-                </TouchableOpacity>
-                <Image
-                  source={require("@/assets/images/icono_comentario-removebg-preview.png")}
-                  style={styles.icon}
-                />
-                {/* <Text style={styles.cardAddress}>{restaurant.comments}</Text> */}
-                <Image
-                  source={require("@/assets/images/icono_de_calificacion-removebg-preview.png")}
-                  style={styles.icon}
-                />
-                {/* <Text style={styles.cardAddress}>{restaurant.rating}</Text> */}
+      {/* Mostrar indicador de carga si los datos aún se están cargando */}
+      <Text style={styles.historialTitle}>HISTORIAL</Text>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FFF" />
+        </View>
+      ): restaurants.length === 0 ? ( 
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No has visto ningún restaurante aún.</Text>
+        </View>
+      ) : (
+        <ScrollView style={styles.list}>
+          
+          {restaurants.map((restaurant, index) => (
+            <TouchableOpacity key={index} style={styles.card}>
+              <View style={styles.cardContent}>
+                <Text style={styles.cardTitle}>{restaurant.name}</Text>
+                <Text style={styles.cardAddress}>{restaurant.address}</Text>
+                <View style={styles.cardFooter}>
+                  <TouchableOpacity>
+                    <Image source={require("@/assets/images/icono_me_gusta-removebg-preview.png")} style={styles.icon} />
+                  </TouchableOpacity>
+                  <Image source={require("@/assets/images/icono_comentario-removebg-preview.png")} style={styles.icon} />
+                  <Text style={styles.cardAddress}>{restaurant.totalReviews}</Text>
+                  <Image source={require("@/assets/images/icono_de_calificacion-removebg-preview.png")} style={styles.icon} />
+                  <Text style={styles.cardAddress}>{restaurant.avgCalification}</Text>
+                </View>
               </View>
-            </View>
-            <View style={styles.boxImage}>
-              <Image source={{ uri: `data:image/png;base64,${restaurant.fotoPerfil}` }} style={styles.cardImage} />
-              <View style={styles.borderImage}></View>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-    </View>
+              <View style={[styles.boxImage, !restaurant.fotoPerfil && styles.placeholder]}>
+                {restaurant.fotoPerfil ? (
+                  <Image
+                    source={{
+                      uri: restaurant.fotoPerfil.startsWith("data:image")
+                        ? restaurant.fotoPerfil
+                        : `data:image/png;base64,${restaurant.fotoPerfil}`,
+                    }}
+                    style={styles.cardImage}
+                  />
+                ) : (
+                  <Text style={styles.placeholderText}>Sin foto</Text>
+                )}
+                <View style={styles.borderImage}></View>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
+    </View>  
   );
 }
 
@@ -155,7 +190,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: "#fff",
     marginVertical: 15,
-    marginLeft: 20,
+    marginLeft: 40,
   },
   list: {
     paddingHorizontal: 25,
@@ -203,5 +238,30 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginTop: 10,
+  },
+  placeholder: {
+    width: 80,
+    height: 80,
+    backgroundColor: "#ccc", 
+    justifyContent: "center",
+    alignItems: "center",
+    
+  },
+  placeholderText: {
+    fontSize: 10,
+    color: "#666",
+  },  
+
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "#fff",
+    textAlign: "center",
+    fontWeight: "bold",
   },
 });
