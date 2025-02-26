@@ -14,23 +14,28 @@ import Colors from "@/constants/Colors";
 import Entypo from "@expo/vector-icons/Entypo";
 import { useCookies } from "react-cookie";
 import ModalNotificacion from "@/components/ModalNotificacion";
+import { Ionicons } from '@expo/vector-icons';
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: "#8c0e03",
-    borderRadius: 9999,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: '#8c0e03', // Custom red color
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 10, 
+    borderWidth: 2,
+    borderColor: 'white',
+    borderStyle: 'dotted',
   },
   textButton: {
     color: Colors.white,
     textTransform: "uppercase",
-    fontSize: 12,
     fontWeight: "bold",
-    fontFamily: "Heebo",
+    fontFamily: "Helios Extended",
+    fontSize: 14,
+    fontWeight: "700",
+    letterSpacing: 0.5,
   },
   container: {
     backgroundColor: "rgba(0, 0, 0, 0.5)",
@@ -39,6 +44,7 @@ const styles = StyleSheet.create({
     gap: 25,
     padding: 30,
     width: "75%",
+    justifyContent: 'center',
   },
   textInput: {
     color: Colors.white,
@@ -57,14 +63,15 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: Colors.white,
-    fontFamily: "Heebo",
+    fontFamily: "Helios Extended",
     textAlign: "left",
     width: "100%",
+    letterSpacing: 0.7,
   },
   logoText: {
-    fontSize: 50,
+    fontSize: 90,
     fontWeight: "bold",
-    color: Colors.white,
+    color: "#FFF",
     fontFamily: "League Gothic",
   },
   logoContainer: {
@@ -74,8 +81,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   logoImage: {
-    height: 80,
-    width: 60,
+    height: 97,
+    width: 72,
   },
   backgroundImage: {
     flex: 1,
@@ -139,16 +146,15 @@ export default function Login() {
         setModalMessage("Inicio de sesión exitoso."); // Mensaje de éxito
         setModalSuccess(true); // Indicar que la operación fue exitosa
         setModalVisible(true);
-        navigate.push("/mainpage"); // Redirigir a la página principal
       } else {
         const errorData = await response.json();
-        console.error("Error en el login:", errorData);
+        //console.error("Error en el login:", errorData);
         setModalMessage("Error en el inicio de sesión."); // Mensaje de error
         setModalSuccess(false); // Indicar que hubo un error
         setModalVisible(true);
       }
     } catch (error) {
-      console.error("Error de red:", error);
+      //console.error("Error de red:", error);
       setModalMessage("Error de red. Por favor, intenta de nuevo."); // Mensaje de error
       setModalSuccess(false); // Indicar que hubo un error
       setModalVisible(true);
@@ -161,7 +167,7 @@ export default function Login() {
 
   return (
     <ImageBackground
-      source={require("@/assets/images/iniciar sesion (2).png")}
+      source={require("@/assets/images/iniciar_sesion.png")}
       style={styles.backgroundImage}
     >
       <View
@@ -238,7 +244,7 @@ export default function Login() {
                 </Pressable>
               )}
             </View>
-            <View style={{ paddingRight: 15 }}>
+            <View style={{paddingBottom: 40 , paddingVertical: 15}}>
               <Link
                 style={{
                   fontSize: 11,
@@ -268,9 +274,11 @@ export default function Login() {
                 styles.button,
                 {
                   backgroundColor: pressed ? Colors.lightGray : "#8c0e03",
+                  backgroundColor: "#5a1a12"
                 },
               ]}
             >
+              <Ionicons name="arrow-back" size={28} color="white" style={styles.icon} />
               <Text style={styles.textButton}>VOLVER</Text>
             </Pressable>
 
@@ -284,6 +292,7 @@ export default function Login() {
               onPress={() => iniciarSesion()}
             >
               <Text style={styles.textButton}>SIGUIENTE</Text>
+              <Ionicons name="arrow-forward" size={28} color="white" style={styles.icon} />
             </Pressable>
           </View>
         </View>
