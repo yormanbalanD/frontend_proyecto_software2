@@ -1,37 +1,21 @@
-import React, { useState } from "react";
-import { useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
 import {
-  Modal,
   View,
   Text,
-  TextInput,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
   Image,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
 } from "react-native";
-import { MaterialIcons, Entypo } from "@expo/vector-icons";
-import Notificacion from "@/components/ModalNotificacion";
-import { jwtDecode as decode } from "jwt-decode";
-import * as Location from "expo-location";
+import { Ionicons } from "@expo/vector-icons";
+import ModalCrearLocal from "../components/ModalCrearLocal";
 import { useCookies } from "react-cookie";
-import * as ImagePicker from "expo-image-picker";
+import { jwtDecode as decode } from "jwt-decode";
 
-export default function ModalCrearLocal({ visible, onClose }) {
-  const [nombre, setNombre] = useState("");
-  const [descripcion, setDescripcion] = useState("");
-  const [ubicacion, setUbicacion] = useState("");
-  const [coordenadas, setCoordenadas] = useState(null);
-  const [imagen, setImagen] = useState(null);
-  const [errores, setErrores] = useState({});
-  const [modalVisible, setModalVisible] = useState(false); // Estado para el modal
-  const [modalMessage, setModalMessage] = useState(""); // Mensaje del modal
-  const [modalSuccess, setModalSuccess] = useState(false); // Éxito del modal
+export default function LocalesPropios() {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [restaurants, setRestaurants] = useState([]);
   const [cookies] = useCookies(["token"]);
-
-  const closeModal = () => {
-    setModalVisible(false);
-  };
 
   const getToken = () => {
     return cookies.token;
@@ -45,397 +29,283 @@ export default function ModalCrearLocal({ visible, onClose }) {
     return decoded.sub;
   };
 
-  const validarInputs = () => {
-    let nuevosErrores = {};
+  const getLocalesPropios = async () => {
+    const response = await fetch(
+      "https://backend-swii.vercel.app/api/getRestaurants/",
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + getToken(),
+        },
+      }
+    );
 
-    if (!nombre.trim()) {
-      nuevosErrores.nombre = "Este campo es obligatorio";
-    }
-    if (!descripcion.trim()) {
-      nuevosErrores.descripcion = "Este campo es obligatorio";
-    }
-    if (!ubicacion.trim()) {
-      nuevosErrores.ubicacion = "Este campo es obligatorio";
-    }
-    if (coordenadas == null) {
-      nuevosErrores.coordenadas = "Este campo es obligatorio";
-    }
+    console.log(response);
 
-    setErrores(nuevosErrores);
-    return Object.keys(nuevosErrores).length === 0; // Retorna true si no hay errores
-  };
+    if (response.status === 200) {
+      const data = await response.json();
+      //console.log(data);
+      // Procesamos los datos para agregar promedio de calificación y cantidad de comentarios
+      const processedRestaurants = data.restaurantsFound.map((restaurant) => {
+        const reviews = restaurant.reviews || []; // Si no tiene reviews, ponemos un array vacío
+        const totalReviews = reviews.length;
 
-  const handleCrearLocal = async () => {
-    if (!validarInputs()) return; // Si falla la validación, no ejecuta la petición
+        // Calcular promedio de calificación
+        console.log(
+          "Datos del restaurante:",
+          restaurant.name,
+          restaurant.reviews
+        );
+        const totalCalification = restaurant.reviews.reduce((sum, review) => {
+          const calification = Number(review.calification); // Convertir a número
+          return !isNaN(calification) ? sum + calification : sum; // Sumar solo si es número válido
+        }, 0);
 
-    const userId = getUserId(); // Obtiene el ID del usuario desde el token
-    if (!userId) {
-      alert("Error: No se pudo obtener el usuario. Inicia sesión nuevamente.");
-      return;
-    }
-      const response = await fetch(
-        "https://backend-swii.vercel.app/api/createRestaurant",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            name: nombre,
-            own: userId,
-            fotoPerfil: imagen,
-            description: descripcion,
-            address: ubicacion,
-            latitude: parseFloat(coordenadas.latitude), // Convertir a número si es string
-            longitude: parseFloat(coordenadas.longitude),
-            viewed: 0, // Inicialmente en 0
-            reviews: [], // Iniciar con un array vacío
-          }),
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + getToken(),
-          },
-        }
-      );
-
-      const responseText = await response.text();
-console.log("Respuesta del servidor:", responseText);
-      if (response.status === 200) {
-        const result = await response.json();
-      setModalMessage("Local creado correctamente.");
-      setModalSuccess(true);
-      setModalVisible(true);
-      handleCancelar(); // Limpia el formulario y cierra el modal
-      }else {
-      setModalMessage("Error al crear local.");
-      setModalSuccess(false);
-      setModalVisible(true);
+        const avgCalification =
+          totalReviews > 0
+            ? (totalCalification / totalReviews).toFixed(1)
+            : "N/A";
+        return {
+          ...restaurant,
+          avgCalification,
+          totalReviews,
+        };
+      });
+      setRestaurants(processedRestaurants);
     }
   };
 
-  const handleCancelar = () => {
-    setErrores({}); // Limpia los errores
-    setNombre("");
-    setDescripcion("");
-    setUbicacion("");
-    setCoordenadas(null);
-    setImagen(null);
-    onClose();
-  };
-
-  const getCoordenadas = async () => {
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== "granted") {
-      alert("Permiso denegado para acceder a la ubicación");
-      return;
-    }
-    const location = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Highest,
-    });
-
-    setCoordenadas(location.coords);
-  };
-
-  const seleccionarImagen = async () => {
-    // Pedir permiso de acceso a la galería
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      alert("Se requiere permiso para acceder a la galería.");
-      return;
-    }
-
-    // Abrir la galería
-    const resultado = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: "images",
-      allowsEditing: true,
-      base64: true,
-      quality: 0.1, // Calidad de la imagen (1 = máxima calidad)
-    });
-
-    // Si el usuario no cancela, guardar la imagen seleccionada
-    if (!resultado.canceled) {
-      setImagen(`data:image/jpeg;base64,${resultado.assets[0].base64}`);
-    }
-  };
+  useEffect(() => {
+    getLocalesPropios();
+    console.log(getUserId());
+  }, []);
 
   return (
-    <Modal transparent={true} visible={visible} animationType="fade">
-      <View style={styles.overlay}>
-        <View style={styles.modalContainer}>
-          <ScrollView contentContainerStyle={styles.scrollContainer}>
-            <Text style={styles.modalTitle}>Nuevo Local</Text>
-
-            <Text style={styles.label}>Nombre</Text>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                maxLength={20}
-                value={nombre}
-                onChangeText={setNombre}
-              />
-              <Text style={styles.charCount}>{nombre.length}/20</Text>
-              <Text style={styles.asterisk}>*</Text>
-            </View>
-            {errores.nombre && (
-              <Text style={styles.errorText}>{errores.nombre}</Text>
-            )}
-
-            <Text style={styles.label}>Descripción</Text>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                maxLength={100}
-                value={descripcion}
-                onChangeText={setDescripcion}
-                multiline
-              />
-              <Text style={styles.charCount}>{descripcion.length}/100</Text>
-              <Text style={styles.asterisk}>*</Text>
-            </View>
-            {errores.descripcion && (
-              <Text style={styles.errorText}>{errores.descripcion}</Text>
-            )}
-
-            <Text style={styles.label}>Ubicación</Text>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                maxLength={100}
-                value={ubicacion}
-                onChangeText={setUbicacion}
-                multiline
-              />
-              <Text style={styles.charCount}>{ubicacion.length}/100</Text>
-              <Text style={styles.asterisk}>*</Text>
-            </View>
-            {errores.ubicacion && (
-              <Text style={styles.errorText}>{errores.ubicacion}</Text>
-            )}
-
-            <View style={styles.coorTextContainer}>
-              <MaterialIcons
-                name="place"
-                size={20}
-                color="black"
-                style={styles.icon}
-              />
-              <TextInput
-                style={styles.inputCoord}
-                value={
-                  coordenadas
-                    ? `${coordenadas.latitude}, ${coordenadas.longitude}`
-                    : ""
-                }
-                editable={false}
-              />
-            </View>
-            {errores.coordenadas && (
-              <Text style={styles.errorText}>{errores.coordenadas}</Text>
-            )}
-
-            <TouchableOpacity
-              onPress={getCoordenadas}
-              style={styles.coordButton}
-            >
-              <Text style={styles.coordButtonText}>RECUPERAR COORDENADAS</Text>
-              <Entypo name="location" size={20} color="#fff" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={seleccionarImagen}
-              style={styles.addButton}
-            >
-              <Text style={styles.addButtonText}>AÑADIR</Text>
-              <MaterialIcons name="photo-camera" size={20} color="#fff" />
-            </TouchableOpacity>
-
-            {imagen && (
-              <View style={styles.imageContainer}>
-                <Image source={{ uri: imagen }} style={styles.image} />
-              </View>
-            )}
-
-            <View style={styles.buttonRow}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={handleCancelar}
-              >
-                <Text style={styles.cancelButtonText}>Cancelar</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.createButton}
-                onPress={handleCrearLocal}
-              >
-                <Text style={styles.createButtonText}>Crear</Text>
-              </TouchableOpacity>
-            </View>
-          </ScrollView>
-        </View>
-      </View>
-      <Notificacion
-        isVisible={modalVisible}
-        isSuccess={modalSuccess}
-        message={modalMessage}
-        onClose={closeModal}
+    <View style={styles.container}>
+      <Image
+        source={require("@/assets/images/historial (2).png")}
+        style={styles.background}
       />
-    </Modal>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.push("/mainpage")}>
+          <Image
+            source={require("@/assets/images/icono_atras.png")}
+            style={styles.iconBack}
+          />
+        </TouchableOpacity>
+        <Image
+          source={require("@/assets/images/logo_recortado.png")}
+          style={styles.logo}
+        />
+        <Text style={styles.title}>FOODIGO</Text>
+      </View>
+      <View style={styles.titleContainer}>
+        <Text style={styles.localTitle}>LOCAL</Text>
+        <TouchableOpacity style={styles.createButton}>
+          <Text
+            style={styles.createButtonText}
+            onPress={() => setModalVisible(true)}
+          >
+            Crear
+          </Text>
+          <Ionicons name="add-circle-outline" size={22} color="#fff" />
+        </TouchableOpacity>
+      </View>
+      <ScrollView style={styles.list}>
+        {restaurants.length > 0 ? (
+          restaurants.map((restaurant, index) => (
+            <TouchableOpacity key={index} style={styles.card}>
+              <View style={styles.cardContent}>
+                <Text style={styles.cardTitle}>{restaurant.name}</Text>
+                <Text style={styles.cardAddress}>{restaurant.address}</Text>
+                <Text style={styles.cardAddress}>
+                  {restaurant.latitude}, {restaurant.longitude}
+                </Text>
+                <View style={styles.cardFooter}>
+                  <TouchableOpacity>
+                    <Image
+                      source={require("@/assets/images/icono_me_gusta-removebg-preview.png")}
+                      style={styles.icon}
+                    />
+                  </TouchableOpacity>
+                  <Image
+                    source={require("@/assets/images/icono_comentario-removebg-preview.png")}
+                    style={styles.icon}
+                  />
+                  {
+                    <Text style={styles.cardAddress}>
+                      {restaurant.totalReviews}
+                    </Text>
+                  }
+                  <Image
+                    source={require("@/assets/images/icono_de_calificacion-removebg-preview.png")}
+                    style={styles.icon}
+                  />
+                  {
+                    <Text style={styles.cardAddress}>
+                      {restaurant.avgCalification}
+                    </Text>
+                  }
+                </View>
+              </View>
+              <View
+                style={[
+                  styles.boxImage,
+                  !(
+                    restaurant.fotoPerfil &&
+                    restaurant.fotoPerfil.startsWith("data:image")
+                  ) && styles.placeholder,
+                ]}
+              >
+                {restaurant.fotoPerfil &&
+                restaurant.fotoPerfil.startsWith("data:image") ? (
+                  <Image
+                    source={{ uri: restaurant.fotoPerfil }}
+                    style={styles.cardImage}
+                  />
+                ) : (
+                  <Text style={styles.placeholderText}>Sin foto</Text>
+                )}
+
+                <View style={styles.borderImage}></View>
+              </View>
+            </TouchableOpacity>
+          ))
+        ) : (
+          <Text style={{ textAlign: "center", marginTop: 20, color: "#fff" }}>
+            No tienes locales aún.
+          </Text>
+        )}
+      </ScrollView>
+      <ModalCrearLocal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
+  container: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
+  },
+  background: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+  },
+  header: {
+    marginLeft: 30,
+    marginTop: 40,
+    marginBottom: 15,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  iconBack: {
+    width: 40,
+    height: 40,
+    marginRight: 15,
+  },
+  icon: {
+    width: 18,
+    height: 18,
+    marginHorizontal: 3,
+  },
+  logo: {
+    width: 20,
+    height: 30,
+    marginRight: 2,
+  },
+  title: {
+    fontFamily: "League-Gothic",
+    fontSize: 32,
+    color: "#fff",
+  },
+  titleContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginHorizontal: 20,
+  },
+  localTitle: {
+    fontFamily: "Helios-Bold",
+    fontSize: 24,
+    color: "#fff",
+    marginVertical: 15,
+    marginLeft: 20,
+  },
+  createButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#00bf62",
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 5,
+    marginRight: 20,
+  },
+  createButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    marginRight: 5,
+    fontFamily: "OpenSans-Bold",
+  },
+  list: {
+    paddingHorizontal: 25,
+    marginBottom: 10,
+  },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 5,
+    marginVertical: 7,
+    overflow: "hidden",
+    flexDirection: "row",
+    padding: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cardImage: {
+    width: 80,
+    height: 80,
+  },
+  boxImage: {
     justifyContent: "center",
     alignItems: "center",
   },
-  modalContainer: {
-    width: "85%",
-    backgroundColor: "#fff9f1",
-    borderRadius: 10,
-    padding: 20,
-    marginVertical: 20,
+  borderImage: {
+    width: "90%",
+    height: "90%",
+    position: "absolute",
+    borderWidth: 4,
+    borderColor: "#FFF",
   },
-  scrollContainer: {
-    paddingBottom: 20, // Espacio para evitar que el contenido quede cortado
-    alignItems: "center",
+  cardContent: {
+    width: "65%",
+    marginRight: 20,
   },
-  modalTitle: {
-    fontSize: 15,
+  cardTitle: {
     fontFamily: "OpenSans-Bold",
-    marginBottom: 30,
+    fontSize: 14,
+    marginBottom: 5,
   },
-  inputContainer: {
-    position: "relative",
-    width: "100%",
-  },
-  asterisk: {
-    position: "absolute",
-    right: 10,
-    top: "50%",
-    transform: [{ translateY: -14 }],
-    fontSize: 16,
+  cardAddress: {
     fontFamily: "Open-Sans",
+    fontSize: 9,
   },
-  label: {
-    alignSelf: "flex-start",
-    fontSize: 12,
-    fontFamily: "Open-Sans",
-    marginLeft: 4,
-  },
-  errorText: {
-    color: "red",
-    fontSize: 12,
-    fontFamily: "Open-Sans",
-    marginBottom: 10,
-  },
-  charCount: {
-    alignSelf: "flex-end",
-    fontSize: 12,
-    fontFamily: "Open-Sans",
-    marginTop: 2,
-    marginRight: 10,
-  },
-  input: {
-    width: "100%",
-    borderBottomWidth: 1,
-    borderBottomColor: "#736e69",
-    borderRadius: 5,
-    paddingRight: 20,
-    paddingTop: 3,
-    paddingBottom: 4,
-  },
-  inputCoord: {
-    width: "100%",
-    borderBottomWidth: 1,
-    borderBottomColor: "#736e69",
-    borderRadius: 5,
-    paddingLeft: 30,
-    paddingBottom: 4,
-  },
-  icon: {
-    position: "absolute",
-    left: 5,
-    top: "50%",
-    transform: [{ translateY: -8 }],
-  },
-  coorTextContainer: {
-    position: "relative",
-    width: "100%",
-    marginBottom: 4,
-  },
-  coordButton: {
+  cardFooter: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#8c1b1d",
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    marginVertical: 10,
-  },
-  coordButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    marginRight: 8,
-    fontFamily: "Open-Sans",
-  },
-  addButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#0e87d6",
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    marginTop: 10,
-    marginBottom: 50,
-  },
-  addButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    marginRight: 8,
-    fontFamily: "Open-Sans",
-  },
-  buttonRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "70%",
     marginTop: 10,
   },
-  cancelButton: {
-    flex: 1,
+  placeholder: {
+    width: 80,
+    height: 80,
+    backgroundColor: "#ccc", // Fondo gris
+    justifyContent: "center",
     alignItems: "center",
-    padding: 6,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: "#736e69",
   },
-  cancelButtonText: {
-    color: "#007AFF",
-    fontSize: 12,
-    fontFamily: "OpenSans-Bold",
-  },
-  createButton: {
-    flex: 1,
-    alignItems: "center",
-    padding: 6,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: "#736e69",
-    marginLeft: 20,
-  },
-  createButtonText: {
-    fontSize: 12,
-    fontFamily: "OpenSans-Bold",
-    color: "#736e69",
-  },
-  imageContainer: {
-    width: 100, // Ajusta según el tamaño que necesites
-    height: 100,
-    borderRadius: 10,
-    overflow: "hidden",
-    marginBottom: 40,
-  },
-  image: {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover", // Esto recorta la imagen para llenar el espacio cuadrado
+  placeholderText: {
+    fontSize: 10,
+    color: "#666",
   },
 });
