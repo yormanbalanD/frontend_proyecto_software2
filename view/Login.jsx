@@ -36,6 +36,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     letterSpacing: 0.5,
+    paddingTop: 2,
   },
   container: {
     backgroundColor: "rgba(0, 0, 0, 0.5)",
@@ -69,10 +70,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.7,
   },
   logoText: {
-    fontSize: 90,
+    fontSize: 80,
     fontWeight: "bold",
     color: "#FFF",
-    fontFamily: "League Gothic",
+    fontFamily: "League-Gothic",
   },
   logoContainer: {
     flexDirection: "row",
@@ -81,8 +82,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   logoImage: {
-    height: 97,
-    width: 72,
+    height: 80,
+    width: 60,
   },
   backgroundImage: {
     flex: 1,
@@ -91,6 +92,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     height: "100%",
     width: "100%",
+  },
+  icon: {
+    
   },
 });
 
@@ -278,7 +282,7 @@ export default function Login() {
                 },
               ]}
             >
-              <Ionicons name="arrow-back" size={28} color="white" style={styles.icon} />
+              <Ionicons name="arrow-back" size={24} color="white" style={styles.icon} />
               <Text style={styles.textButton}>VOLVER</Text>
             </Pressable>
 
