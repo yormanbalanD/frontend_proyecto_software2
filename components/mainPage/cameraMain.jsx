@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Platform,
   Button,
+  Pressable,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CameraView, Camera, useCameraPermissions } from "expo-camera";
@@ -16,24 +17,7 @@ import { set } from "react-hook-form";
 import * as Location from "expo-location";
 import * as geolib from "geolib";
 import TargetaCamara from "./TargetaCamara";
-
-const negociosMinifinca = [
-  {
-    latitud: 8.25217693739277,
-    longitud: -62.74120469516385,
-    nombre: "Restaurante Manos Criollas",
-  },
-  {
-    latitud: 8.252016694798241,
-    longitud: -62.7412507498899,
-    nombre: "Restaurante Manos no Criollas",
-  },
-  {
-    latitud: 8.25177169365717,
-    longitud: -62.74125455857067,
-    nombre: "Restaurante daniel",
-  },
-];
+import { useCookies } from "react-cookie";
 
 const negociosRioAro = [
   {
@@ -49,14 +33,21 @@ export default function CameraScreen() {
   const cameraRef = useRef(null);
   const [tomandoFoto, setTomandoFoto] = useState(false);
   const [angulo, setAngulo] = useState(null);
-  const [restaurantes, setRestaurantes] = useState([
-    {
-      latitud: 0,
-      longitud: 0,
-      nombre: "",
-      distancia: 0,
-    },
-  ]);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [visibleModal, setVisibleModal] = useState(false);
+  const [targetaSeleccionada, setTargetaSeleccionada] = useState(null);
+  const [abriendose, setAbriendose] = useState(false);
+
+  /**
+   *  @type {[{ _id: string; address: string; reviews: {}[]; distance: number; fotoPerfil: string; latitude: number; longitude: number; name: string; rating: number; name: string; description: string; viewed: number }[], {}]}
+   */
+  const [restaurantes, setRestaurantes] = useState([]);
+
+  const [cookies] = useCookies(["token"]);
+
+  const getToken = () => {
+    return cookies.token;
+  };
 
   useEffect(() => {
     if (permission && !permission.granted) {
@@ -75,23 +66,38 @@ export default function CameraScreen() {
   const fetchRestaurantes = async ({ angulo, base64 }) => {
     const coords = await getCoordenadas();
 
-    setRestaurantes(
-      negociosMinifinca.map((negocio) => {
-        return {
-          ...negocio,
-          distancia: geolib.getDistance(
-            {
-              latitude: coords.latitude,
-              longitude: coords.longitude,
-            },
-            {
-              longitude: negocio.longitud,
-              latitude: negocio.latitud,
-            }
-          ),
-        };
-      })
+    const response = await fetch(
+      "https://backend-swii.vercel.app/api/getEscaneoNearUserFromDistance/" +
+        coords.latitude +
+        "/" +
+        coords.longitude +
+        "/" +
+        angulo.toFixed(0) +
+        "/5000",
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + getToken(),
+        },
+      }
     );
+
+    if (response.status === 200) {
+      const data = await response.json();
+      /**
+       *  @type {{ _id: string; address: string; reviews: {}[]; distance: number; fotoPerfil: string; latitude: number; longitude: number; name: string; rating: number; name: string; description: string; viewed: number }[]}
+       */
+      const restaurantes = data.escaneosNear
+        .sort((a, b) => a.distance - b.distance)
+        .slice(0, 4);
+
+      setRestaurantes(restaurantes);
+      //  setVisibleModal(false);
+    } else {
+      console.log("error");
+      setVisibleModal(false);
+    }
   };
   const tomarFoto = async () => {
     if (tomandoFoto) return;
@@ -100,6 +106,7 @@ export default function CameraScreen() {
     cameraRef.current.takePictureAsync().then(({ base64, width, height }) => {
       console.log("angulo", angulo);
       setTomandoFoto(false);
+      setVisibleModal(true);
       fetchRestaurantes({
         angulo,
         base64,
@@ -110,7 +117,7 @@ export default function CameraScreen() {
   async function solicitarPermisoParaElAnguloDeCamara() {
     let { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
-      setErrorMsg("Permission to access location was denied");
+      setErrorMsg("El permiso de acceso a la ubicaion no fue concedido");
       return;
     }
 
@@ -128,7 +135,6 @@ export default function CameraScreen() {
     return <View />;
   }
 
-
   return (
     <View style={styles.container}>
       <CameraView
@@ -138,9 +144,39 @@ export default function CameraScreen() {
         }}
         ref={cameraRef}
       ></CameraView>
-      {/* {restaurantes[0].nombre != "" && restaurantes.map((restaurante) => {
-        return <TargetaCamara restaurante={restaurante} />;
-      })} */}
+      {visibleModal && (
+        <View style={{ ...styles.fondoModal }}>
+          <Pressable
+            onPress={() => {
+              setVisibleModal(false);
+              setRestaurantes([]);
+            }}
+            style={{
+              width: "100%",
+              height: "100%",
+              position: "absolute",
+              top: 0,
+              left: 0,
+            }}
+          />
+          <View style={{ gap: 15, backgroundColor: "transparent" }}>
+            {restaurantes.length > 0 &&
+              restaurantes.map((restaurante, index) => {
+                return (
+                  <TargetaCamara
+                    key={index}
+                    restaurante={restaurante}
+                    index={index}
+                    setTargetaSeleccionada={setTargetaSeleccionada}
+                    targetaSeleccionada={targetaSeleccionada}
+                    abriendose={abriendose}
+                    setAbriendose={setAbriendose}
+                  />
+                );
+              })}
+          </View>
+        </View>
+      )}
       <BotonRedondoCamara tomarFoto={tomarFoto} />
     </View>
   );
@@ -148,4 +184,16 @@ export default function CameraScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center" },
+  fondoModal: {
+    flex: 1,
+    height: "100%",
+    width: "100%",
+    backgroundColor: "rgba(0,0,0,0.4)",
+    position: "absolute",
+    top: 0,
+    left: 0,
+    zIndex: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 });

@@ -7,12 +7,77 @@ import {
   StyleSheet,
   ScrollView,
   FlatList,
+  Pressable,
 } from "react-native";
 import * as Font from "expo-font";
-import { Tab, TabView, Icon } from "@rneui/themed";
+import { Tab, TabView } from "@rneui/themed";
+import Icon from "@expo/vector-icons/FontAwesome";
+import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+
+const listaComentarios = [
+  {
+    id: "1",
+    nombre: "Ana Perez",
+    comentario: "Excelente comida y servicio!",
+    calificacion: 5,
+    fotoPerfil: require("../assets/images/avatarPrueba.png"),
+  },
+  {
+    id: "2",
+    nombre: "Carlos Gomez",
+    comentario: "Buena atencion, pero algo lenta.",
+    calificacion: 4,
+    fotoPerfil: require("../assets/images/avatarPrueba.png"),
+  },
+  {
+    id: "3",
+    nombre: "Laura Rivas",
+    comentario: "El ambiente es agradable, pero la comida podria mejorar.",
+    calificacion: 3,
+    fotoPerfil: require("../assets/images/avatarPrueba.png"),
+  },
+  {
+    id: "4",
+    nombre: "Laura Rivaero",
+    comentario: "El ambiente es bueno. Me gusta. ",
+    calificacion: 5,
+    fotoPerfil: require("../assets/images/avatarPrueba.png"),
+  },
+];
+
+const StarRating = ({ rating, maxStars = 5 }) => {
+  return (
+    <View style={{ flexDirection: "row" }}>
+      {[...Array(maxStars)].map((_, i) => (
+        <Icon
+          key={i}
+          name={i < rating ? "star" : "star"}
+          color={i < rating ? "#FFD700" : "#fff"}
+          size={20}
+        />
+      ))}
+    </View>
+  );
+};
+
+const RenderComentario = ({ item }) => (
+  <View style={styles.card}>
+    <View style={styles.cardTexto}>
+      <Text style={styles.comentario}>{item.comentario}</Text>
+      <Text style={styles.nombreCc}>{item.nombre}</Text>
+      <StarRating rating={item.calificacion} />
+    </View>
+    <View style={styles.logoContainerComent}>
+      <Image source={item.fotoPerfil} style={styles.logoImage} />
+    </View>
+  </View>
+);
 
 const Local = () => {
+  const navigate = useRouter();
   const [fontsLoaded, setFontsLoaded] = useState(false);
+  const [comentarios, setComentarios] = useState(listaComentarios);
 
   useEffect(() => {
     const loadFonts = async () => {
@@ -38,65 +103,6 @@ const Local = () => {
   const renderImagen = ({ item }) => (
     <View style={styles.imageLocalContainer}>
       <Image source={item.source} style={styles.image} />
-    </View>
-  );
-
-  const comentarios = [
-    {
-      id: "1",
-      nombre: "Ana Perez",
-      comentario: "Excelente comida y servicio!",
-      calificacion: 5,
-      fotoPerfil: require("../assets/images/avatarPrueba.png"),
-    },
-    {
-      id: "2",
-      nombre: "Carlos Gomez",
-      comentario: "Buena atencion, pero algo lenta.",
-      calificacion: 4,
-      fotoPerfil: require("../assets/images/avatarPrueba.png"),
-    },
-    {
-      id: "3",
-      nombre: "Laura Rivas",
-      comentario: "El ambiente es agradable, pero la comida podria mejorar.",
-      calificacion: 3,
-      fotoPerfil: require("../assets/images/avatarPrueba.png"),
-    },
-    {
-      id: "4",
-      nombre: "Laura Rivaero",
-      comentario: "El ambiente es bueno. Me gusta. ",
-      calificacion: 5,
-      fotoPerfil: require("../assets/images/avatarPrueba.png"),
-    },
-  ];
-
-  const StarRating = ({ rating, maxStars = 5 }) => {
-    return (
-      <View style={{ flexDirection: "row" }}>
-        {[...Array(maxStars)].map((_, i) => (
-          <Icon
-            key={i}
-            name={i < rating ? "star" : "star"}
-            color={i < rating ? "#FFD700" : "#fff"}
-            size={20}
-          />
-        ))}
-      </View>
-    );
-  };
-
-  const renderComentario = ({ item }) => (
-    <View style={styles.card}>
-      <View style={styles.cardTexto}>
-        <Text style={styles.comentario}>{item.comentario}</Text>
-        <Text style={styles.nombreCc}>{item.nombre}</Text>
-        <StarRating rating={item.calificacion} />
-      </View>
-      <View style={styles.logoContainerComent}>
-        <Image source={item.fotoPerfil} style={styles.logoImage} />
-      </View>
     </View>
   );
 
@@ -149,15 +155,12 @@ const Local = () => {
       : 0;
 
   return (
-    <ScrollView style={{ flex: 1 }}>
-      <View style={styles.container}>
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <Icon
-            name="chevron-left"
-            type="font-awesome"
-            size={35}
-            color="#8c0e03"
-          />
+          <Pressable onPress={() => navigate.back()}>
+            <Icon name="chevron-left" size={35} color="#8c0e03" />
+          </Pressable>
           <Image
             source={require("../assets/images/logo_recortado.png")}
             style={styles.logo}
@@ -235,121 +238,101 @@ const Local = () => {
 
         <TabView value={index} onChange={setIndex} animationType="spring">
           {/* Descripcion */}
-          <TabView.Item style={styles.tabVista}>
-            <View style={{ paddingBottom: 0 }}>
-              <View style={styles.descripcion}>
-                <Icon
-                  name="map-marker"
-                  type="font-awesome"
-                  size={35}
-                  color="#8c0e03"
-                />
-                <Text style={styles.descripcion}>
-                  Ciudad Guayana 8050, Bolivar. Ubicado en: Centro Comercial
-                  Costa America.
-                </Text>
-              </View>
-              <View style={styles.descripcion}>
-                <Icon
-                  name="phone"
-                  type="font-awesome"
-                  size={35}
-                  color="#8c0e03"
-                />
-                <Text style={styles.descripcion}>0286-9221100</Text>
-              </View>
-              <View style={styles.descripcion}>
-                <Icon
-                  name="location-arrow"
-                  type="font-awesome"
-                  size={35}
-                  color="#8c0e03"
-                />
-                <Text style={styles.descripcion}>
-                  874G+3P Ciudad Guayana, Bolivar
-                </Text>
-              </View>
+          <TabView.Item>
+            <ScrollView>
+              <View>
+                <View style={styles.descripcion}>
+                  <Icon name="map-marker" size={35} color="#8c0e03" />
+                  <Text style={styles.descripcion}>
+                    Ciudad Guayana 8050, Bolivar. Ubicado en: Centro Comercial
+                    Costa America.
+                  </Text>
+                </View>
+                <View style={styles.descripcion}>
+                  <Icon name="phone" size={35} color="#8c0e03" />
+                  <Text style={styles.descripcion}>0286-9221100</Text>
+                </View>
+                <View style={styles.descripcion}>
+                  <Icon name="location-arrow" size={35} color="#8c0e03" />
+                  <Text style={styles.descripcion}>
+                    874G+3P Ciudad Guayana, Bolivar
+                  </Text>
+                </View>
 
-              <Text style={styles.fototexto}>Fotos</Text>
-              <View style={styles.fotoHeader}>
-                <TouchableOpacity onPress={antImagen}>
-                  <Icon
-                    name="chevron-circle-left"
-                    type="font-awesome"
-                    size={25}
-                    color="#8c0e03"
+                <Text style={styles.fototexto}>Fotos</Text>
+                <View style={styles.fotoHeader}>
+                  <TouchableOpacity onPress={antImagen}>
+                    <Icon
+                      name="chevron-circle-left"
+                      size={25}
+                      color="#8c0e03"
+                    />
+                  </TouchableOpacity>
+                  <FlatList
+                    ref={flatListRef}
+                    data={images}
+                    renderItem={renderImagen}
+                    keyExtractor={(item) => item.id}
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.lista}
                   />
-                </TouchableOpacity>
-                <FlatList
-                  ref={flatListRef}
-                  data={images}
-                  renderItem={renderImagen}
-                  keyExtractor={(item) => item.id}
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.lista}
-                />
-                <TouchableOpacity onPress={sigImagen}>
-                  <Icon
-                    name="chevron-circle-right"
-                    type="font-awesome"
-                    size={25}
-                    color="#8c0e03"
-                  />
-                </TouchableOpacity>
+                  <TouchableOpacity onPress={sigImagen}>
+                    <Icon
+                      name="chevron-circle-right"
+                      type="font-awesome"
+                      size={25}
+                      color="#8c0e03"
+                    />
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
+            </ScrollView>
           </TabView.Item>
 
           {/* Opiniones */}
-          <TabView.Item style={styles.tabVista}>
-            <View>
-              <View style={styles.container}>
-                <View style={styles.total}>
-                  <View style={styles.CalificacionDistribucionContainer}>
-                    {Object.entries(cantidad)
-                      .reverse()
-                      .map(([rating, count]) => (
-                        <RatingBar key={rating} rating={rating} count={count} />
-                      ))}
-                  </View>
-                  <View style={styles.puntuacionContainer}>
-                    <Text style={{ fontSize: 40 }}>
-                      {promedioCalificacion.toFixed(1)}
-                    </Text>
-
-                    <StarRating rating={Math.round(promedioCalificacion)} />
-                    <Text style={{ paddingBottom: 20 }}>
-                      {totalComentarios} opiniones
-                    </Text>
-
-                    <TouchableOpacity
-                      style={styles.botonComentario}
-                      // onPress={{}}
-                    >
-                      <Icon
-                        name="comment"
-                        type="font-awesome"
-                        size={15}
-                        color="#74C0FC"
-                      />
-                      <Text style={styles.botonTexto}>Dejar comentario</Text>
-                    </TouchableOpacity>
-                  </View>
+          <TabView.Item>
+            <ScrollView>
+              <View style={styles.total}>
+                <View style={styles.CalificacionDistribucionContainer}>
+                  {Object.entries(cantidad)
+                    .reverse()
+                    .map(([rating, count]) => (
+                      <RatingBar key={rating} rating={rating} count={count} />
+                    ))}
                 </View>
-                <View style={{ margin: 10 }}>
-                  <FlatList
-                    data={comentarios}
-                    keyExtractor={(item) => item.id}
-                    renderItem={renderComentario}
-                  />
+
+                <View style={styles.puntuacionContainer}>
+                  <Text style={{ fontSize: 40 }}>
+                    {promedioCalificacion.toFixed(1)}
+                  </Text>
+
+                  <StarRating rating={Math.round(promedioCalificacion)} />
+                  <Text style={{ paddingBottom: 20 }}>
+                    {totalComentarios} opiniones
+                  </Text>
+
+                  <TouchableOpacity
+                    style={styles.botonComentario}
+                    // onPress={{}}
+                  >
+                    <Icon name="comment" size={15} color="#74C0FC" />
+                    <Text style={styles.botonTexto}>Dejar comentario</Text>
+                  </TouchableOpacity>
                 </View>
               </View>
-            </View>
+              <View>
+                <ScrollView>
+                  {comentarios.map((item) => {
+                    return <RenderComentario item={item} key={item.id} />;
+                  })}
+                </ScrollView>
+              </View>
+            </ScrollView>
           </TabView.Item>
         </TabView>
-      </View>
-    </ScrollView>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 };
 
@@ -476,16 +459,15 @@ const styles = StyleSheet.create({
   },
 
   tabVista: {
-    flex: 1,
     width: "100%",
     padding: 10,
   },
-
-  tabvistas: {
-    margin: 10,
-    marginLeft: 50,
-    marginRight: 50,
+  tabVistaComentarios: {
+    width: "100%",
+    height: 500,
+    padding: 10,
   },
+  tabvistas: {},
 
   lista: {
     width: 100,
@@ -569,6 +551,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     flexWrap: "wrap",
+    width: "100%",
   },
   logoContainerComent: {
     shadowColor: "#000",
@@ -615,12 +598,12 @@ const styles = StyleSheet.create({
     heigth: 2,
     width: 2,
     backgroundColor: "#fff",
-    calificacion: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      marginTop: 5,
-    },
+  },
+  calificacion: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 5,
   },
   comentario: {
     alignItems: "center",
@@ -656,7 +639,7 @@ const styles = StyleSheet.create({
   botonComentario: {
     alignItems: "center",
     justifyContent: "center",
-    flex: "wrap",
+    flex: 1,
     borderWidth: 1,
     borderRadius: 10,
     padding: 5,
