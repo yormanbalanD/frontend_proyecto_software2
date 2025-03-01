@@ -6,16 +6,25 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import ModalCrearLocal from "../components/ModalCrearLocal";
+
+import { useRouter } from "expo-router";
+import ModalCrearLocal from "../components/ModalCrearLocal";  
+import Notificacion from "@/components/ModalNotificacion";
 import { useCookies } from "react-cookie";
 import { jwtDecode as decode } from "jwt-decode";
 
 export default function LocalesPropios() {
+  const router = useRouter();
   const [modalVisible, setModalVisible] = useState(false);
   const [restaurants, setRestaurants] = useState([]);
   const [cookies] = useCookies(["token"]);
+  const [notificacionVisible, setNotificacionVisible] = useState(false);
+const [notificacionMensaje, setNotificacionMensaje] = useState("");
+const [notificacionExito, setNotificacionExito] = useState(false);
+const [loading, setLoading] = useState(true); 
 
   const getToken = () => {
     return cookies.token;
@@ -36,10 +45,9 @@ export default function LocalesPropios() {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization:
-            "Bearer " + getToken(),
+          Authorization: "Bearer " + getToken(),
         },
-      } 
+      }
     );
 
     console.log(response);
@@ -48,26 +56,29 @@ export default function LocalesPropios() {
       const data = await response.json();
       //console.log(data);
       // Procesamos los datos para agregar promedio de calificación y cantidad de comentarios
-        const processedRestaurants = data.restaurantsFound.map((restaurant) => {
+      const processedRestaurants = data.restaurantsFound.map((restaurant) => {
         const reviews = restaurant.reviews || []; // Si no tiene reviews, ponemos un array vacío
         const totalReviews = reviews.length;
-        
+
         // Calcular promedio de calificación
-        console.log("Datos del restaurante:", restaurant.name, restaurant.reviews);
         const totalCalification = restaurant.reviews.reduce((sum, review) => {
-          const calification = Number(review.calification); // Convertir a número
-          return !isNaN(calification) ? sum + calification : sum;  // Sumar solo si es número válido
+          const calification = Number(review.calification);
+          return !isNaN(calification) ? sum + calification : sum;
         }, 0);
 
-        const avgCalification = totalReviews > 0 ? (totalCalification / totalReviews).toFixed(1) : "N/A";
-      return { 
-        ...restaurant, 
-        avgCalification, 
-        totalReviews 
-      };
-    }); 
-    setRestaurants(processedRestaurants);
+        const avgCalification =
+          totalReviews > 0
+            ? (totalCalification / totalReviews).toFixed(1)
+            : "N/A";
+        return {
+          ...restaurant,
+          avgCalification,
+          totalReviews,
+        };
+      });
+      setRestaurants(processedRestaurants);
     }
+    setLoading(false); 
   };
 
   useEffect(() => {
@@ -106,9 +117,17 @@ export default function LocalesPropios() {
           <Ionicons name="add-circle-outline" size={22} color="#fff" />
         </TouchableOpacity>
       </View>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FFF" />
+        </View>
+      ): restaurants.length === 0 ? ( 
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No has visto ningún restaurante aún.</Text>
+        </View>
+      ) : (
       <ScrollView style={styles.list}>
-        {restaurants.length > 0 ? (
-          restaurants.map((restaurant, index) => (
+          {restaurants.map((restaurant, index) => (
             <TouchableOpacity key={index} style={styles.card}>
               <View style={styles.cardContent}>
                 <Text style={styles.cardTitle}>{restaurant.name}</Text>
@@ -127,12 +146,20 @@ export default function LocalesPropios() {
                     source={require("@/assets/images/icono_comentario-removebg-preview.png")}
                     style={styles.icon}
                   />
-                  {<Text style={styles.cardAddress}>{restaurant.totalReviews}</Text>}
+                  {
+                    <Text style={styles.cardAddress}>
+                      {restaurant.totalReviews}
+                    </Text>
+                  }
                   <Image
                     source={require("@/assets/images/icono_de_calificacion-removebg-preview.png")}
                     style={styles.icon}
                   />
-                   { <Text style={styles.cardAddress}>{restaurant.avgCalification}</Text>}
+                  {
+                    <Text style={styles.cardAddress}>
+                      {restaurant.avgCalification}
+                    </Text>
+                  }
                 </View>
               </View>
               <View style={[styles.boxImage, !restaurant.fotoPerfil && styles.placeholder]}>
@@ -149,20 +176,33 @@ export default function LocalesPropios() {
                 <Text style={styles.placeholderText}>Sin foto</Text>
               )}
               <View style={styles.borderImage}></View>
-
               </View>
             </TouchableOpacity>
-          ))
-        ) : (
-          <Text style={{ textAlign: "center", marginTop: 20, color: "#fff" }}>
-            No tienes locales aún.
-          </Text>
-        )}
+          ))}
       </ScrollView>
+  )}
       <ModalCrearLocal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
+  visible={modalVisible}
+  onClose={() => setModalVisible(false)}
+  onSuccess={(mensaje, esExito) => {
+    setNotificacionMensaje(mensaje);
+    setNotificacionExito(esExito);
+    setNotificacionVisible(true);
+
+    if (esExito) {
+      getLocalesPropios(); // Recargar la lista de locales solo si fue exitoso
+      setModalVisible(false); // Cerrar modal de creación
+    }
+  }}
+/>
+
+      <Notificacion
+        isVisible={notificacionVisible}
+        isSuccess={notificacionExito}
+        message={notificacionMensaje}
+        onClose={() => setNotificacionVisible(false)}
       />
+    
     </View>
   );
 }
@@ -288,5 +328,17 @@ const styles = StyleSheet.create({
   placeholderText: {
     fontSize: 10,
     color: "#666",
-  },  
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "#fff",
+    textAlign: "center",
+    fontWeight: "bold",
+  },
 });
