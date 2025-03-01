@@ -20,9 +20,8 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [ubicacion, setUbicacion] = useState("");
-  const [coordenadas, setCoordenadas] = useState(null);
+  const [coordenadas, setCoordenadas] = useState({ latitude: "", longitude: "" });
   const [imagen, setImagen] = useState(null);
-  const [errores, setErrores] = useState({});
   const [cookies] = useCookies(["token"]);
 
   const getToken = () => {
@@ -38,23 +37,38 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
   };
 
   const validarInputs = () => {
-    let nuevosErrores = {};
+    const coordenadasRegex = /^-?\d+(\.\d+)?$/; // Permite números positivos, negativos y decimales
 
     if (!nombre.trim()) {
-      nuevosErrores.nombre = "Este campo es obligatorio";
+      onSuccess("El campo Nombre es obligatorio.", false);
+      return false;
     }
     if (!descripcion.trim()) {
-      nuevosErrores.descripcion = "Este campo es obligatorio";
+      onSuccess("El campo Descripción es obligatorio.", false);
+      return false;
     }
     if (!ubicacion.trim()) {
-      nuevosErrores.ubicacion = "Este campo es obligatorio";
+      onSuccess("El campo Ubicación es obligatorio.", false);
+      return false;
     }
-    if (coordenadas == null) {
-      nuevosErrores.coordenadas = "Este campo es obligatorio";
+    if (!coordenadas.latitude.trim() || !coordenadas.longitude.trim()) {
+      onSuccess("Debe ingresar las coordenadas para continuar.", false);
+      return false;
     }
-
-    setErrores(nuevosErrores);
-    return Object.keys(nuevosErrores).length === 0; // Retorna true si no hay errores
+    if (!coordenadasRegex.test(coordenadas.latitude) || !coordenadasRegex.test(coordenadas.longitude)) {
+      onSuccess("Debe ingresar coordenadas numéricas.", false);
+      return false;
+    }
+    if (parseFloat(coordenadas.latitude) === 0 || parseFloat(coordenadas.longitude) === 0) {
+      onSuccess("Las coordenadas no pueden ser 0.", false);
+      return false;
+  }
+    if (imagen === null) {
+      onSuccess("Debe seleccionar una imagen para continuar.", false);
+      return false;
+    }
+  
+    return true; // Si todo está bien, retorna true
   };
 
   const handleCrearLocal = async () => {
@@ -75,7 +89,7 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
             fotoPerfil: imagen,
             description: descripcion,
             address: ubicacion,
-            latitude: parseFloat(coordenadas.latitude), // Convertir a número si es string
+            latitude: parseFloat(coordenadas.latitude), // Convertir a número
             longitude: parseFloat(coordenadas.longitude),
             viewed: 0, // Inicialmente en 0
             reviews: [], // Iniciar con un array vacío
@@ -93,7 +107,7 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
         setNombre("");
         setDescripcion("");
         setUbicacion("");
-        setCoordenadas(null);
+        setCoordenadas({ latitude: "", longitude: "" });
         setImagen(null);
       }else {
         onSuccess("Error al crear local. Inténtalo de nuevo.", false);
@@ -101,11 +115,10 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
   };
 
   const handleCancelar = () => {
-    setErrores({}); // Limpia los errores
     setNombre("");
     setDescripcion("");
     setUbicacion("");
-    setCoordenadas(null);
+    setCoordenadas({ latitude: "", longitude: "" });
     setImagen(null);
     onClose();
   };
@@ -119,8 +132,7 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
     const location = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.Highest,
     });
-
-    setCoordenadas(location.coords);
+    setCoordenadas({ latitude: location.coords.latitude.toString(), longitude: location.coords.longitude.toString() });
   };
 
   const seleccionarImagen = async () => {
@@ -163,9 +175,6 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
               <Text style={styles.charCount}>{nombre.length}/20</Text>
               <Text style={styles.asterisk}>*</Text>
             </View>
-            {errores.nombre && (
-              <Text style={styles.errorText}>{errores.nombre}</Text>
-            )}
 
             <Text style={styles.label}>Descripción</Text>
             <View style={styles.inputContainer}>
@@ -179,9 +188,6 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
               <Text style={styles.charCount}>{descripcion.length}/100</Text>
               <Text style={styles.asterisk}>*</Text>
             </View>
-            {errores.descripcion && (
-              <Text style={styles.errorText}>{errores.descripcion}</Text>
-            )}
 
             <Text style={styles.label}>Ubicación</Text>
             <View style={styles.inputContainer}>
@@ -195,9 +201,6 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
               <Text style={styles.charCount}>{ubicacion.length}/100</Text>
               <Text style={styles.asterisk}>*</Text>
             </View>
-            {errores.ubicacion && (
-              <Text style={styles.errorText}>{errores.ubicacion}</Text>
-            )}
 
             <View style={styles.coorTextContainer}>
               <MaterialIcons
@@ -208,17 +211,13 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
               />
               <TextInput
                 style={styles.inputCoord}
-                value={
-                  coordenadas
-                    ? `${coordenadas.latitude}, ${coordenadas.longitude}`
-                    : ""
-                }
-                onChangeText={setCoordenadas}
+                value={`${coordenadas.latitude}, ${coordenadas.longitude}`}
+                onChangeText={(text) => {
+                  const [lat, lon] = text.split(",").map((item) => item.trim());
+                  setCoordenadas({ latitude: lat || "", longitude: lon || "" });
+                }}
               />
             </View>
-            {errores.coordenadas && (
-              <Text style={styles.errorText}>{errores.coordenadas}</Text>
-            )}
 
             <TouchableOpacity
               onPress={getCoordenadas}
@@ -304,12 +303,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: "Open-Sans",
     marginLeft: 4,
-  },
-  errorText: {
-    color: "red",
-    fontSize: 12,
-    fontFamily: "Open-Sans",
-    marginBottom: 10,
   },
   charCount: {
     alignSelf: "flex-end",
