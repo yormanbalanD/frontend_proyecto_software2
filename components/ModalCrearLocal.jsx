@@ -20,7 +20,7 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [ubicacion, setUbicacion] = useState("");
-  const [coordenadas, setCoordenadas] = useState({ latitude: "", longitude: "" });
+  const [coordenadas, setCoordenadas] = useState(null);
   const [imagen, setImagen] = useState(null);
   const [cookies] = useCookies(["token"]);
 
@@ -37,7 +37,6 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
   };
 
   const validarInputs = () => {
-    const coordenadasRegex = /^-?\d+(\.\d+)?$/; // Permite números positivos, negativos y decimales
 
     if (!nombre.trim()) {
       onSuccess("El campo Nombre es obligatorio.", false);
@@ -51,18 +50,10 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
       onSuccess("El campo Ubicación es obligatorio.", false);
       return false;
     }
-    if (!coordenadas.latitude.trim() || !coordenadas.longitude.trim()) {
-      onSuccess("Debe ingresar las coordenadas para continuar.", false);
+    if (coordenadas === null) {
+      onSuccess("Debe obtener las coordenadas para continuar.", false);
       return false;
     }
-    if (!coordenadasRegex.test(coordenadas.latitude) || !coordenadasRegex.test(coordenadas.longitude)) {
-      onSuccess("Debe ingresar coordenadas numéricas.", false);
-      return false;
-    }
-    if (parseFloat(coordenadas.latitude) === 0 || parseFloat(coordenadas.longitude) === 0) {
-      onSuccess("Las coordenadas no pueden ser 0.", false);
-      return false;
-  }
     if (imagen === null) {
       onSuccess("Debe seleccionar una imagen para continuar.", false);
       return false;
@@ -89,7 +80,7 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
             fotoPerfil: imagen,
             description: descripcion,
             address: ubicacion,
-            latitude: parseFloat(coordenadas.latitude), // Convertir a número
+            latitude: parseFloat(coordenadas.latitude), // Convertir a número si es string
             longitude: parseFloat(coordenadas.longitude),
             viewed: 0, // Inicialmente en 0
             reviews: [], // Iniciar con un array vacío
@@ -107,7 +98,7 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
         setNombre("");
         setDescripcion("");
         setUbicacion("");
-        setCoordenadas({ latitude: "", longitude: "" });
+        setCoordenadas(null);
         setImagen(null);
       }else {
         onSuccess("Error al crear local. Inténtalo de nuevo.", false);
@@ -118,7 +109,7 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
     setNombre("");
     setDescripcion("");
     setUbicacion("");
-    setCoordenadas({ latitude: "", longitude: "" });
+    setCoordenadas(null);
     setImagen(null);
     onClose();
   };
@@ -132,7 +123,8 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
     const location = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.Highest,
     });
-    setCoordenadas({ latitude: location.coords.latitude.toString(), longitude: location.coords.longitude.toString() });
+
+    setCoordenadas(location.coords);
   };
 
   const seleccionarImagen = async () => {
@@ -211,11 +203,12 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
               />
               <TextInput
                 style={styles.inputCoord}
-                value={`${coordenadas.latitude}, ${coordenadas.longitude}`}
-                onChangeText={(text) => {
-                  const [lat, lon] = text.split(",").map((item) => item.trim());
-                  setCoordenadas({ latitude: lat || "", longitude: lon || "" });
-                }}
+                value={
+                  coordenadas
+                    ? `${coordenadas.latitude}, ${coordenadas.longitude}`
+                    : ""
+                }
+                editable={false}
               />
             </View>
 
