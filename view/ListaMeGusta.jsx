@@ -49,9 +49,8 @@ export default function ListaMeGusta() {
 
     if (response.status === 200) {
       const data = await response.json();
-      //console.log(data);
       // Procesamos los datos para agregar promedio de calificación y cantidad de comentarios
-        const processedRestaurants = data.restaurants.map((restaurant) => {
+      const processedRestaurants = data.restaurants.map((restaurant) => {
         const reviews = restaurant.reviews || []; // Si no tiene reviews, ponemos un array vacío
         const totalReviews = reviews.length;
         
@@ -63,29 +62,62 @@ export default function ListaMeGusta() {
         }, 0);
 
         const avgCalification = totalReviews > 0 ? (totalCalification / totalReviews).toFixed(1) : "N/A";
-      return { 
-        ...restaurant, 
-        avgCalification, 
-        totalReviews,
-        liked: true // Add liked property to each restaurant
-      };
-    }); 
-    setRestaurants(processedRestaurants);
+        return { 
+          ...restaurant, 
+          avgCalification, 
+          totalReviews,
+          liked: true // Add liked property to each restaurant
+        };
+      }); 
+      setRestaurants(processedRestaurants);
+    } else {
+      console.log("Failed to fetch liked restaurants");
     }
     setLoading(false); 
   };
 
   useEffect(() => {
     getListaMeGusta();
-    console.log(getUserId());
+    //console.log(getUserId());
   }, []);
 
-  const toggleLike = (index) => {
-    setRestaurants((prevRestaurants) => {
-      const updatedRestaurants = [...prevRestaurants];
-      updatedRestaurants[index].liked = !updatedRestaurants[index].liked;
-      return updatedRestaurants;
-    });
+
+  const removeRestaurantFromLiked = async (restaurantId) => {
+    const response = await fetch(
+      `https://backend-swii.vercel.app/api/deleteRestaurantFromLiked/${getUserId()}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + getToken(),
+        },
+        body: JSON.stringify({ restaurantId }),
+      }
+    );
+  
+    console.log(response);
+  
+    if (response.status === 200) {
+      const data = await response.json();
+      console.log("Restaurant removed:", data);
+      return true;
+    } else {
+      console.log("Failed to remove restaurant");
+      return false;
+    }
+  };
+  
+  const handleHeartPress = async (index) => {
+    const restaurant = restaurants[index];
+    console.log("Restaurant ID:", restaurant._id);
+    const success = await removeRestaurantFromLiked(restaurant._id);
+    if (success) {
+      setRestaurants((prevRestaurants) => {
+        const updatedRestaurants = [...prevRestaurants];
+        updatedRestaurants.splice(index, 1);
+        return updatedRestaurants;
+      });
+    }
   };
 
   return (
@@ -122,12 +154,12 @@ export default function ListaMeGusta() {
         <ScrollView style={styles.list}>
           
           {restaurants.map((restaurant, index) => (
-            <TouchableOpacity key={index} style={styles.card}>
+            <TouchableOpacity key={index} style={styles.card} onPress={() => console.log("presionado")}>
               <View style={styles.cardContent}>
                 <Text style={styles.cardTitle}>{restaurant.name}</Text>
                 <Text style={styles.cardAddress}>{restaurant.address}</Text>
                 <View style={styles.cardFooter}>
-                  <TouchableOpacity onPress={() => toggleLike(index)}>
+                  <TouchableOpacity onPress={() => handleHeartPress(index)}>
                     <FontAwesome 
                       name={restaurant.liked ? "heart" : "heart-o"} 
                       size={18} 
