@@ -12,6 +12,7 @@ import { useFonts } from "expo-font";
 import { useRouter } from "expo-router";
 import { useCookies } from "react-cookie";
 import { jwtDecode as decode } from "jwt-decode";
+import { FontAwesome } from '@expo/vector-icons'; // Import FontAwesome
 
 export default function ListaMeGusta() {
   const router = useRouter();
@@ -55,17 +56,18 @@ export default function ListaMeGusta() {
         const totalReviews = reviews.length;
         
         // Calcular promedio de calificación
-          console.log("Datos del restaurante:", restaurant.name, restaurant.reviews);
-          const totalCalification = restaurant.reviews.reduce((sum, review) => {
+        console.log("Datos del restaurante:", restaurant.name, restaurant.reviews);
+        const totalCalification = restaurant.reviews.reduce((sum, review) => {
           const calification = Number(review.calification); 
           return !isNaN(calification) ? sum + calification : sum;  
         }, 0);
 
-          const avgCalification = totalReviews > 0 ? (totalCalification / totalReviews).toFixed(1) : "N/A";
+        const avgCalification = totalReviews > 0 ? (totalCalification / totalReviews).toFixed(1) : "N/A";
       return { 
         ...restaurant, 
         avgCalification, 
-        totalReviews 
+        totalReviews,
+        liked: true // Add liked property to each restaurant
       };
     }); 
     setRestaurants(processedRestaurants);
@@ -76,8 +78,15 @@ export default function ListaMeGusta() {
   useEffect(() => {
     getListaMeGusta();
     console.log(getUserId());
-    console.log(getToken());
   }, []);
+
+  const toggleLike = (index) => {
+    setRestaurants((prevRestaurants) => {
+      const updatedRestaurants = [...prevRestaurants];
+      updatedRestaurants[index].liked = !updatedRestaurants[index].liked;
+      return updatedRestaurants;
+    });
+  };
 
   return (
     <View style={styles.container}>
@@ -100,14 +109,14 @@ export default function ListaMeGusta() {
       </View>
 
       {/* Mostrar indicador de carga si los datos aún se están cargando */}
-      <Text style={styles.historialTitle}>ME GUSTA</Text>
+      <Text style={styles.meGustaTitle}>ME GUSTA</Text>
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#FFF" />
         </View>
       ): restaurants.length === 0 ? ( 
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No has dado me gusta a ningun restaurante.</Text>
+          <Text style={styles.emptyText}>No has visto ningún restaurante aún.</Text>
         </View>
       ) : (
         <ScrollView style={styles.list}>
@@ -118,8 +127,13 @@ export default function ListaMeGusta() {
                 <Text style={styles.cardTitle}>{restaurant.name}</Text>
                 <Text style={styles.cardAddress}>{restaurant.address}</Text>
                 <View style={styles.cardFooter}>
-                  <TouchableOpacity>
-                    <Image source={require("@/assets/images/icono_me_gusta-removebg-preview.png")} style={styles.icon} />
+                  <TouchableOpacity onPress={() => toggleLike(index)}>
+                    <FontAwesome 
+                      name={restaurant.liked ? "heart" : "heart-o"} 
+                      size={18} 
+                      color="red" 
+                      style={styles.icon} 
+                    />
                   </TouchableOpacity>
                   <Image source={require("@/assets/images/icono_comentario-removebg-preview.png")} style={styles.icon} />
                   <Text style={styles.cardAddress}>{restaurant.totalReviews}</Text>
@@ -186,7 +200,7 @@ const styles = StyleSheet.create({
     fontSize: 32,
     color: "#fff",
   },
-  historialTitle: {
+  meGustaTitle: {
     fontFamily: "Helios-Bold",
     fontSize: 24,
     color: "#fff",
