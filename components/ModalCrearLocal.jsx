@@ -22,7 +22,6 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
   const [ubicacion, setUbicacion] = useState("");
   const [coordenadas, setCoordenadas] = useState(null);
   const [imagen, setImagen] = useState(null);
-  const [errores, setErrores] = useState({});
   const [cookies] = useCookies(["token"]);
 
   const getToken = () => {
@@ -38,23 +37,29 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
   };
 
   const validarInputs = () => {
-    let nuevosErrores = {};
 
     if (!nombre.trim()) {
-      nuevosErrores.nombre = "Este campo es obligatorio";
+      onSuccess("El campo Nombre es obligatorio.", false);
+      return false;
     }
     if (!descripcion.trim()) {
-      nuevosErrores.descripcion = "Este campo es obligatorio";
+      onSuccess("El campo Descripción es obligatorio.", false);
+      return false;
     }
     if (!ubicacion.trim()) {
-      nuevosErrores.ubicacion = "Este campo es obligatorio";
+      onSuccess("El campo Ubicación es obligatorio.", false);
+      return false;
     }
-    if (coordenadas == null) {
-      nuevosErrores.coordenadas = "Este campo es obligatorio";
+    if (coordenadas === null) {
+      onSuccess("Debe obtener las coordenadas para continuar.", false);
+      return false;
     }
-
-    setErrores(nuevosErrores);
-    return Object.keys(nuevosErrores).length === 0; // Retorna true si no hay errores
+    if (imagen === null) {
+      onSuccess("Debe seleccionar una imagen para continuar.", false);
+      return false;
+    }
+  
+    return true; // Si todo está bien, retorna true
   };
 
   const handleCrearLocal = async () => {
@@ -101,7 +106,6 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
   };
 
   const handleCancelar = () => {
-    setErrores({}); // Limpia los errores
     setNombre("");
     setDescripcion("");
     setUbicacion("");
@@ -163,9 +167,6 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
               <Text style={styles.charCount}>{nombre.length}/20</Text>
               <Text style={styles.asterisk}>*</Text>
             </View>
-            {errores.nombre && (
-              <Text style={styles.errorText}>{errores.nombre}</Text>
-            )}
 
             <Text style={styles.label}>Descripción</Text>
             <View style={styles.inputContainer}>
@@ -179,9 +180,6 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
               <Text style={styles.charCount}>{descripcion.length}/100</Text>
               <Text style={styles.asterisk}>*</Text>
             </View>
-            {errores.descripcion && (
-              <Text style={styles.errorText}>{errores.descripcion}</Text>
-            )}
 
             <Text style={styles.label}>Ubicación</Text>
             <View style={styles.inputContainer}>
@@ -195,9 +193,6 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
               <Text style={styles.charCount}>{ubicacion.length}/100</Text>
               <Text style={styles.asterisk}>*</Text>
             </View>
-            {errores.ubicacion && (
-              <Text style={styles.errorText}>{errores.ubicacion}</Text>
-            )}
 
             <View style={styles.coorTextContainer}>
               <MaterialIcons
@@ -213,12 +208,9 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
                     ? `${coordenadas.latitude}, ${coordenadas.longitude}`
                     : ""
                 }
-                onChangeText={setCoordenadas}
+                editable={false}
               />
             </View>
-            {errores.coordenadas && (
-              <Text style={styles.errorText}>{errores.coordenadas}</Text>
-            )}
 
             <TouchableOpacity
               onPress={getCoordenadas}
@@ -304,12 +296,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: "Open-Sans",
     marginLeft: 4,
-  },
-  errorText: {
-    color: "red",
-    fontSize: 12,
-    fontFamily: "Open-Sans",
-    marginBottom: 10,
   },
   charCount: {
     alignSelf: "flex-end",
