@@ -116,7 +116,7 @@ export default function ListaMeGusta() {
         </View>
       ): restaurants.length === 0 ? ( 
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No has visto ningún restaurante aún.</Text>
+          <Text style={styles.emptyText}>No has dado me gusta a un restaurante aún.</Text>
         </View>
       ) : (
         <ScrollView style={styles.list}>
