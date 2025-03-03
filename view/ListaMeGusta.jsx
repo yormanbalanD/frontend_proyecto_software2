@@ -5,18 +5,19 @@ import {
   Image,
   ScrollView,
   StyleSheet,
-  TouchableOpacity,
+  TouchableOpacity, 
+  ActivityIndicator,
 } from "react-native";
 import { useFonts } from "expo-font";
 import { useRouter } from "expo-router";
 import { useCookies } from "react-cookie";
 import { jwtDecode as decode } from "jwt-decode";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome } from '@expo/vector-icons'; // Import FontAwesome
 
 export default function ListaMeGusta() {
   const router = useRouter();
   const [restaurants, setRestaurants] = useState([]);
-  const [liked, setLiked] = useState({});
+  const [loading, setLoading] = useState(true);  
   const [cookies] = useCookies(["token"]);
 
   const getToken = () => {
@@ -30,79 +31,92 @@ export default function ListaMeGusta() {
     const decoded = decode(token);
     return decoded.sub;
   };
-  const user = "67bc92ed7b1d62946bdde7bf";
-//https://backend-swii.vercel.app/api/deleteRestaurantFromLiked/ + user
-  const getListaMegusta = async () => {
+
+  const getListaMeGusta = async () => {
+    setLoading(true);
     const response = await fetch(
-      
-      "https://backend-swii.vercel.app/api/getRestaurantsLiked/" + user, //aqui iria el getUserId(), pero me retorna null
+      "https://backend-swii.vercel.app/api/getRestaurantsLiked/" + getUserId(),
       {
         method: "GET",
         headers: { 
-          "Content-Type": "application/json", //aqui tmb iria tmb el getToken() pero retorna null tmb
-          Authorization: "Bearer " + "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6IkFETUlOMTIzQEdNQUlMLkNPTSIsInN1YiI6IjY3YmM5MmVkN2IxZDYyOTQ2YmRkZTdiZiIsImlhdCI6MTc0MDUyNTAzNn0.vSvsRgbNFAbVl43-fqAGeBsbb3PUbQG-dv4ngL0TG4U",
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + getToken(),
         },
       }
     );
 
-    console.log(response);
+    //console.log(response);
 
     if (response.status === 200) {
       const data = await response.json();
-      //console.log(data);
       // Procesamos los datos para agregar promedio de calificación y cantidad de comentarios
       const processedRestaurants = data.restaurants.map((restaurant) => {
         const reviews = restaurant.reviews || []; // Si no tiene reviews, ponemos un array vacío
         const totalReviews = reviews.length;
         
         // Calcular promedio de calificación
-        console.log("Datos del restaurante:", restaurant.name, restaurant.reviews);
+        //console.log("Datos del restaurante:", restaurant.name, restaurant.reviews);
         const totalCalification = restaurant.reviews.reduce((sum, review) => {
-          const calification = Number(review.calification); // Convertir a número
-          return !isNaN(calification) ? sum + calification : sum;  // Sumar solo si es número válido
+          const calification = Number(review.calification); 
+          return !isNaN(calification) ? sum + calification : sum;  
         }, 0);
 
         const avgCalification = totalReviews > 0 ? (totalCalification / totalReviews).toFixed(1) : "N/A";
         return { 
           ...restaurant, 
           avgCalification, 
-          totalReviews 
+          totalReviews,
+          liked: true // Add liked property to each restaurant
         };
       }); 
       setRestaurants(processedRestaurants);
-      // Initialize all hearts to be filled
-      const initialLikedState = {};
-      processedRestaurants.forEach((_, index) => {
-        initialLikedState[index] = true;
-      });
-      setLiked(initialLikedState);
+    } else {
+      console.log("Failed to fetch liked restaurants");
     }
+    setLoading(false); 
   };
 
   useEffect(() => {
-    getListaMegusta();
-    console.log(getUserId());
+    getListaMeGusta();
+    //console.log(getUserId());
   }, []);
 
-  const toggleLike = async (index, restaurantId) => {
-    const newLikedState = !liked[index];
-    setLiked((prevLiked) => ({
-      ...prevLiked,
-      [index]: newLikedState,
-    }));
 
-    if (!newLikedState) {
-      await fetch(
-        "https://backend-swii.vercel.app/api/deleteRestaurantFromLiked/" + user,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6IkFETUlOMTIzQEdNQUlMLkNPTSIsInN1YiI6IjY3YmM5MmVkN2IxZDYyOTQ2YmRkZTdiZiIsImlhdCI6MTc0MDUyNTAzNn0.vSvsRgbNFAbVl43-fqAGeBsbb3PUbQG-dv4ngL0TG4U",
-          },
-          body: JSON.stringify({ restaurantId }),
-        }
-      );
+  const removeRestaurantFromLiked = async (restaurantId) => {
+    const response = await fetch(
+      `https://backend-swii.vercel.app/api/deleteRestaurantFromLiked/${getUserId()}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + getToken(),
+        },
+        body: JSON.stringify({ idRestaurants : [restaurantId] }),
+      }
+    );
+  
+   // console.log(response);
+  
+    if (response.status === 200) {
+      const data = await response.json();
+      console.log("Restaurant removed:", data);
+      return true;
+    } else {
+      console.log("Failed to remove restaurant");
+      return false;
+    }
+  };
+  
+  const handleHeartPress = async (index) => {
+    const restaurant = restaurants[index];
+    //console.log("Restaurant ID:", restaurant._id);
+    const success = await removeRestaurantFromLiked(restaurant._id);
+    if (success) {
+      setRestaurants((prevRestaurants) => {
+        const updatedRestaurants = [...prevRestaurants];
+        updatedRestaurants.splice(index, 1);
+        return updatedRestaurants;
+      });
     }
   };
 
@@ -126,55 +140,59 @@ export default function ListaMeGusta() {
         <Text style={styles.title}>FOODIGO</Text>
       </View>
 
-      <ScrollView style={styles.list}>
-        <Text style={styles.historialTitle}>ME GUSTA</Text>
-        {restaurants.map((restaurant, index) => (
-          <TouchableOpacity key={index} style={styles.card}>
-            <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>{restaurant.name}</Text>
-              <Text style={styles.cardAddress}>
-                {restaurant.address}
-              </Text>
-              <View style={styles.cardFooter}>
-                <TouchableOpacity onPress={() => toggleLike(index, restaurant._id)}>
-                  <FontAwesome
-                    name={liked[index] ? "heart" : "heart-o"}
-                    size={18}
-                    color="red"
-                    style={styles.icon}
-                  />
-                </TouchableOpacity>
-                <Image 
-                  source={require("@/assets/images/icono_comentario-removebg-preview.png")}
-                  style={styles.icon}
-                />
-                {<Text style={styles.cardAddress}>{restaurant.totalReviews}</Text>}
-                <Image
-                  source={require("@/assets/images/icono_de_calificacion-removebg-preview.png")}
-                  style={styles.icon}
-                />
-                { <Text style={styles.cardAddress}>{restaurant.avgCalification}</Text>}
+      {/* Mostrar indicador de carga si los datos aún se están cargando */}
+      <Text style={styles.meGustaTitle}>ME GUSTA</Text>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FFF" />
+        </View>
+      ): restaurants.length === 0 ? ( 
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No has dado me gusta a un restaurante aún.</Text>
+        </View>
+      ) : (
+        <ScrollView style={styles.list}>
+          
+          {restaurants.map((restaurant, index) => (
+            <TouchableOpacity key={index} style={styles.card} onPress={() => console.log("presionado")}>
+              <View style={styles.cardContent}>
+                <Text style={styles.cardTitle}>{restaurant.name}</Text>
+                <Text style={styles.cardAddress}>{restaurant.address}</Text>
+                <View style={styles.cardFooter}>
+                  <TouchableOpacity onPress={() => handleHeartPress(index)}>
+                    <FontAwesome 
+                      name={restaurant.liked ? "heart" : "heart-o"} 
+                      size={18} 
+                      color="red" 
+                      style={styles.icon} 
+                    />
+                  </TouchableOpacity>
+                  <Image source={require("@/assets/images/icono_comentario-removebg-preview.png")} style={styles.icon} />
+                  <Text style={styles.cardAddress}>{restaurant.totalReviews}</Text>
+                  <Image source={require("@/assets/images/icono_de_calificacion-removebg-preview.png")} style={styles.icon} />
+                  <Text style={styles.cardAddress}>{restaurant.avgCalification}</Text>
+                </View>
               </View>
-            </View>
-            <View style={[styles.boxImage, !restaurant.fotoPerfil && styles.placeholder]}>
-              {restaurant.fotoPerfil ? (
-                <Image
-                  source={{
-                    uri: restaurant.fotoPerfil.startsWith("data:image")
-                      ? restaurant.fotoPerfil
-                      : `data:image/png;base64,${restaurant.fotoPerfil}`,
-                  }}
-                  style={styles.cardImage}
-                />
-              ) : (
-                <Text style={styles.placeholderText}>Sin foto</Text>
-              )}
-              <View style={styles.borderImage}></View>
-            </View>
-          </TouchableOpacity> 
-        ))} 
-      </ScrollView>
-    </View>
+              <View style={[styles.boxImage, !restaurant.fotoPerfil && styles.placeholder]}>
+                {restaurant.fotoPerfil ? (
+                  <Image
+                    source={{
+                      uri: restaurant.fotoPerfil.startsWith("data:image")
+                        ? restaurant.fotoPerfil
+                        : `data:image/png;base64,${restaurant.fotoPerfil}`,
+                    }}
+                    style={styles.cardImage}
+                  />
+                ) : (
+                  <Text style={styles.placeholderText}>Sin foto</Text>
+                )}
+                <View style={styles.borderImage}></View>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
+    </View>  
   );
 }
 
@@ -214,12 +232,12 @@ const styles = StyleSheet.create({
     fontSize: 32,
     color: "#fff",
   },
-  historialTitle: {
+  meGustaTitle: {
     fontFamily: "Helios-Bold",
     fontSize: 24,
     color: "#fff",
     marginVertical: 15,
-    marginLeft: 20,
+    marginLeft: 40,
   },
   list: {
     paddingHorizontal: 25,
@@ -271,7 +289,7 @@ const styles = StyleSheet.create({
   placeholder: {
     width: 80,
     height: 80,
-    backgroundColor: "#ccc", // Fondo gris
+    backgroundColor: "#ccc", 
     justifyContent: "center",
     alignItems: "center",
     
@@ -280,4 +298,17 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: "#666",
   },  
+
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "#fff",
+    textAlign: "center",
+    fontWeight: "bold",
+  },
 });
