@@ -45,7 +45,7 @@ export default function ListaMeGusta() {
       }
     );
 
-    console.log(response);
+    //console.log(response);
 
     if (response.status === 200) {
       const data = await response.json();
@@ -55,7 +55,7 @@ export default function ListaMeGusta() {
         const totalReviews = reviews.length;
         
         // Calcular promedio de calificación
-        console.log("Datos del restaurante:", restaurant.name, restaurant.reviews);
+        //console.log("Datos del restaurante:", restaurant.name, restaurant.reviews);
         const totalCalification = restaurant.reviews.reduce((sum, review) => {
           const calification = Number(review.calification); 
           return !isNaN(calification) ? sum + calification : sum;  
@@ -91,11 +91,11 @@ export default function ListaMeGusta() {
           "Content-Type": "application/json",
           Authorization: "Bearer " + getToken(),
         },
-        body: JSON.stringify({ restaurantId }),
+        body: JSON.stringify({ idRestaurants : [restaurantId] }),
       }
     );
   
-    console.log(response);
+   // console.log(response);
   
     if (response.status === 200) {
       const data = await response.json();
@@ -109,7 +109,7 @@ export default function ListaMeGusta() {
   
   const handleHeartPress = async (index) => {
     const restaurant = restaurants[index];
-    console.log("Restaurant ID:", restaurant._id);
+    //console.log("Restaurant ID:", restaurant._id);
     const success = await removeRestaurantFromLiked(restaurant._id);
     if (success) {
       setRestaurants((prevRestaurants) => {
