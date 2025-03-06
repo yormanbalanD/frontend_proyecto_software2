@@ -3,16 +3,14 @@ import {
   View,
   Text,
   Image,
-  ScrollView,
   StyleSheet,
   TouchableOpacity, 
   ActivityIndicator,
 } from "react-native";
-import { useFonts } from "expo-font";
+import ListaRestaurantes from "@/components/ListaRestaurantes";
 import { useRouter } from "expo-router";
 import { useCookies } from "react-cookie";
 import { jwtDecode as decode } from "jwt-decode";
-import { FontAwesome } from '@expo/vector-icons'; // Import FontAwesome
 
 export default function ListaMeGusta() {
   const router = useRouter();
@@ -151,46 +149,10 @@ export default function ListaMeGusta() {
           <Text style={styles.emptyText}>No has dado me gusta a un restaurante aún.</Text>
         </View>
       ) : (
-        <ScrollView style={styles.list}>
-          
-          {restaurants.map((restaurant, index) => (
-            <TouchableOpacity key={index} style={styles.card} onPress={() => console.log("presionado")}>
-              <View style={styles.cardContent}>
-                <Text style={styles.cardTitle}>{restaurant.name}</Text>
-                <Text style={styles.cardAddress}>{restaurant.address}</Text>
-                <View style={styles.cardFooter}>
-                  <TouchableOpacity onPress={() => handleHeartPress(index)}>
-                    <FontAwesome 
-                      name={restaurant.liked ? "heart" : "heart-o"} 
-                      size={18} 
-                      color="red" 
-                      style={styles.icon} 
-                    />
-                  </TouchableOpacity>
-                  <Image source={require("@/assets/images/icono_comentario-removebg-preview.png")} style={styles.icon} />
-                  <Text style={styles.cardAddress}>{restaurant.totalReviews}</Text>
-                  <Image source={require("@/assets/images/icono_de_calificacion-removebg-preview.png")} style={styles.icon} />
-                  <Text style={styles.cardAddress}>{restaurant.avgCalification}</Text>
-                </View>
-              </View>
-              <View style={[styles.boxImage, !restaurant.fotoPerfil && styles.placeholder]}>
-                {restaurant.fotoPerfil ? (
-                  <Image
-                    source={{
-                      uri: restaurant.fotoPerfil.startsWith("data:image")
-                        ? restaurant.fotoPerfil
-                        : `data:image/png;base64,${restaurant.fotoPerfil}`,
-                    }}
-                    style={styles.cardImage}
-                  />
-                ) : (
-                  <Text style={styles.placeholderText}>Sin foto</Text>
-                )}
-                <View style={styles.borderImage}></View>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        <ListaRestaurantes 
+  restaurants={restaurants} 
+  handleHeartPress={handleHeartPress} 
+/>
       )}
     </View>  
   );
@@ -217,11 +179,6 @@ const styles = StyleSheet.create({
     height: 40,
     marginRight: 15,
   },
-  icon: {
-    width: 18,
-    height: 18,
-    marginHorizontal: 3,
-  },
   logo: {
     width: 20,
     height: 30,
@@ -239,66 +196,6 @@ const styles = StyleSheet.create({
     marginVertical: 15,
     marginLeft: 40,
   },
-  list: {
-    paddingHorizontal: 25,
-    marginBottom: 10,
-  },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 5,
-    marginVertical: 7,
-    overflow: "hidden",
-    flexDirection: "row",
-    padding: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cardImage: {
-    width: 80,
-    height: 80,
-  },
-  boxImage: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  borderImage: {
-    width: "90%",
-    height: "90%",
-    position: "absolute",
-    borderWidth: 4,
-    borderColor: "#FFF",
-  },
-  cardContent: {
-    width: "65%",
-    marginRight: 20,
-  },
-  cardTitle: {
-    fontFamily: "OpenSans-Bold",
-    fontSize: 14,
-    marginBottom: 5,
-  },
-  cardAddress: {
-    fontFamily: "Open-Sans",
-    fontSize: 9,
-  },
-  cardFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 10,
-  },
-  placeholder: {
-    width: 80,
-    height: 80,
-    backgroundColor: "#ccc", 
-    justifyContent: "center",
-    alignItems: "center",
-    
-  },
-  placeholderText: {
-    fontSize: 10,
-    color: "#666",
-  },  
-
   emptyContainer: {
     flex: 1,
     justifyContent: "center",
@@ -312,3 +209,4 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
+
