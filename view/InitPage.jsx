@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import { router } from "expo-router";
 import Colors from "@/constants/Colors";
 import Arrow from "@/components/Arrow";
 import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const styles = StyleSheet.create({
   button: {
@@ -51,6 +52,20 @@ const styles = StyleSheet.create({
 });
 
 export default function Login() {
+  const getToken = async () => {
+    try {
+      const value = await AsyncStorage.getItem('token');
+      if (value !== null) {
+        router.push("mainpage");
+      }
+    } catch (e) {
+      console.log(e)
+    }
+  };
+  useEffect(() => {
+    getToken();
+  }, [])
+
   return (
     <SafeAreaProvider>
       <SafeAreaView style={{ flex: 1, height: "100%" }}>
