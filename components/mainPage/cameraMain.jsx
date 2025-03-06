@@ -68,13 +68,13 @@ export default function CameraScreen() {
     const coords = await getCoordenadas();
 
     const response = await fetch(
-      "https://backend-swii.vercel.app/api/getEscaneoNearUserFromDistance/" +
+      "https://backend-swii.vercel.app/api/getNearbyRestaurants/" +
         coords.latitude +
         "/" +
         coords.longitude +
         "/" +
         angulo.toFixed(0) +
-        "/5000",
+        "/50",
       {
         method: "GET",
         headers: {

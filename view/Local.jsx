@@ -15,6 +15,7 @@ import Icon from "@expo/vector-icons/FontAwesome";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useCookies } from "react-cookie";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const listaComentarios = [
   {

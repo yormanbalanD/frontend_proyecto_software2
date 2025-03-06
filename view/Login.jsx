@@ -7,6 +7,7 @@ import {
   Pressable,
   TextInput,
   ImageBackground,
+  Platform,
 } from "react-native";
 import { Image } from "expo-image";
 import { Link, useRouter } from "expo-router";
@@ -14,19 +15,20 @@ import Colors from "@/constants/Colors";
 import Entypo from "@expo/vector-icons/Entypo";
 import { useCookies } from "react-cookie";
 import ModalNotificacion from "@/components/ModalNotificacion";
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: '#8c0e03', // Custom red color
-    flexDirection: 'row',
-    alignItems: 'center',
+    backgroundColor: "#8c0e03", // Custom red color
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 5,
     paddingHorizontal: 10,
-    borderRadius: 10, 
+    borderRadius: 10,
     borderWidth: 2,
-    borderColor: 'white',
-    borderStyle: 'dotted',
+    borderColor: "white",
+    borderStyle: "dotted",
   },
   textButton: {
     color: Colors.white,
@@ -44,7 +46,7 @@ const styles = StyleSheet.create({
     gap: 25,
     padding: 30,
     width: "75%",
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   textInput: {
     color: Colors.white,
@@ -128,24 +130,35 @@ export default function Login() {
     }
 
     try {
-      const response = await fetch("https://backend-swii.vercel.app/api/login", {
-        method: "POST",
-        body: JSON.stringify({
-          email: email, // Usar el email ingresado
-          password: password, // Usar la contraseña ingresada
-        }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        "https://backend-swii.vercel.app/api/login",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            email: email, // Usar el email ingresado
+            password: password, // Usar la contraseña ingresada
+          }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
-        setCookie("token", data.token); // Guardar el token en la cookie
-        console.log(data);
-        setModalMessage("Inicio de sesión exitoso."); // Mensaje de éxito
-        setModalSuccess(true); // Indicar que la operación fue exitosa
-        setModalVisible(true);
+        try {
+          await AsyncStorage.setItem("token", data.token);
+          console.log(data);
+          setModalMessage("Inicio de sesión exitoso."); // Mensaje de éxito
+          setModalSuccess(true); // Indicar que la operación fue exitosa
+          setModalVisible(true);
+        } catch (error) {
+          console.log(error);
+          setModalMessage("Error en el inicio de sesión."); // Mensaje de error
+          setModalSuccess(false); // Indicar que hubo un error
+          setModalVisible(true);
+          return;
+        }
       } else {
         const errorData = await response.json();
         //console.error("Error en el login:", errorData);
@@ -160,7 +173,7 @@ export default function Login() {
       setModalVisible(true);
     }
   };
-  
+
   useEffect(() => {
     console.log(email);
   }, [email]);
@@ -244,7 +257,7 @@ export default function Login() {
                 </Pressable>
               )}
             </View>
-            <View style={{paddingBottom: 40 , paddingVertical: 15}}>
+            <View style={{ paddingBottom: 40, paddingVertical: 15 }}>
               <Link
                 style={{
                   fontSize: 11,
@@ -274,11 +287,16 @@ export default function Login() {
                 styles.button,
                 {
                   backgroundColor: pressed ? Colors.lightGray : "#8c0e03",
-                  backgroundColor: "#5a1a12"
+                  backgroundColor: "#5a1a12",
                 },
               ]}
             >
-              <Ionicons name="arrow-back" size={28} color="white" style={styles.icon} />
+              <Ionicons
+                name="arrow-back"
+                size={28}
+                color="white"
+                style={styles.icon}
+              />
               <Text style={styles.textButton}>VOLVER</Text>
             </Pressable>
 
@@ -292,7 +310,12 @@ export default function Login() {
               onPress={() => iniciarSesion()}
             >
               <Text style={styles.textButton}>SIGUIENTE</Text>
-              <Ionicons name="arrow-forward" size={28} color="white" style={styles.icon} />
+              <Ionicons
+                name="arrow-forward"
+                size={28}
+                color="white"
+                style={styles.icon}
+              />
             </Pressable>
           </View>
         </View>

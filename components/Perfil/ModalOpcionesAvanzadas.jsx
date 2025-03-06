@@ -3,12 +3,12 @@ import { Modal, View, Text, Pressable, StyleSheet } from "react-native";
 import Icon from "@expo/vector-icons/Feather";
 import Colors from "@/constants/Colors";
 
-export default function ModalOpcionesAvanzadas({ visible, setVisible }) {
+export default function ModalOpcionesAvanzadas({ visible, setVisible, setModoEdicion }) {
   return (
-    <Modal visible={visible} transparent>
+    <Modal visible={visible} transparent animationType="slide">
       <Pressable
         onPress={() => {
-          setVisible(true);
+          setVisible(false);
         }}
         style={styles.fondo}
       />
@@ -17,11 +17,14 @@ export default function ModalOpcionesAvanzadas({ visible, setVisible }) {
           <Pressable
             style={{
               position: "absolute",
+              width: 25,
+              height: 25,
               top: 5,
               left: 5,
+              zIndex: 10,
             }}
             onPress={() => {
-              setVisible(visible);
+              setVisible(false);
             }}
           >
             <Icon name="x" size={25} color="black" />
@@ -40,6 +43,10 @@ export default function ModalOpcionesAvanzadas({ visible, setVisible }) {
           </View>
           <View style={styles.containerButtons}>
             <Pressable
+              onPress={() => {
+                setModoEdicion(true);
+                setVisible(false);
+              }}
               style={({ pressed }) => [
                 styles.buttonEditarPerfil,
                 { backgroundColor: pressed ? Colors.lightGray : Colors.white },
@@ -70,6 +77,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     backgroundColor: "#000000ac",
+    flex: 1,
   },
   recuadro: {
     width: "80%",
@@ -92,10 +100,11 @@ const styles = StyleSheet.create({
   containerButtons: {
     flexDirection: "row",
     margin: 0,
+    width: "100%",
   },
   buttonEditarPerfil: {
-    width: "50%",
     height: 60,
+    width: "50%",
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
@@ -112,7 +121,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderBottomColor: "transparent",
     borderLeftColor: "transparent",
-    borderRightColor: "transparent",
+    borderRightColor: "#000",
   },
   containerTextoRecuadro: {
     width: "100%",

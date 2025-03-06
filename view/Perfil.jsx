@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   TouchableOpacity,
@@ -6,17 +6,173 @@ import {
   Pressable,
   Text,
   TextInput,
+  Platform,
 } from "react-native";
 import Icon from "@expo/vector-icons/Entypo";
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import Colors from "@/constants/Colors";
 import { Image } from "expo-image";
 import ModalOpcionesAvanzadas from "../components/Perfil/ModalOpcionesAvanzadas";
 import { useRouter } from "expo-router";
+import { useCookies } from "react-cookie";
+import { jwtDecode as decode } from "jwt-decode";
+import PlaceholderText from "../components/PlaceholderText";
+import PlaceholderFotoPerfil from "../components/PlaceholderFotoPerfil";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as ImagePicker from "expo-image-picker";
+import ModalNotificacion from "@/components/ModalNotificacion";
 
 export default function Perfil() {
   const router = useRouter();
   const [modalOpcionesAvanzadasVisible, setModalOpcionesAvanzadasVisile] =
     useState(false);
+  const [cookies] = useCookies(["token"]);
+  const [user, setUser] = useState(null);
+  const [correo, setCorreo] = useState("");
+  const [nombre, setNombre] = useState("");
+  const [password, setPassword] = useState("");
+  const [fotoPerfil, setFotoPerfil] = useState("");
+  const [defaultValue, setDefaultValue] = useState({});
+  const [codigo, setCodigo] = useState();
+  const [modalNotification, setModalNotification] = useState({
+    visible: false,
+    message: "",
+    success: false,
+  });
+
+  const [modoEdicion, setModoEdicion] = useState(false);
+
+  const getToken = async () => {
+    try {
+      const value = await AsyncStorage.getItem("token");
+      if (value != null) {
+        return value;
+      }
+    } catch (e) {
+      console.log(e);
+      return null;
+    }
+  };
+
+  const getUserId = async () => {
+    const token = await getToken();
+    if (!token) return null;
+
+    const decoded = decode(token);
+    return decoded.sub;
+  };
+
+  const getUser = async () => {
+    const response = await fetch(
+      "https://backend-swii.vercel.app/api/getUser/" + (await getUserId()),
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${await getToken()}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (response.status == 200) {
+      const data = await response.json();
+
+      setUser(data.userFound);
+      setCorreo(data.userFound.email);
+      setNombre(data.userFound.name);
+      setCodigo(data.userFound._id);
+      setFotoPerfil(data.userFound.fotoPerfil);
+      setDefaultValue({
+        nombre: data.userFound.name,
+        correo: data.userFound.email,
+        fotoPerfil: data.userFound.fotoPerfil,
+      });
+    } else {
+      console.log(await response.json());
+      alert("Error");
+    }
+  };
+
+  const seleccionarImagen = async () => {
+    // Pedir permiso de acceso a la galería
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      alert("Se requiere permiso para acceder a la galería.");
+      return;
+    }
+
+    // Abrir la galería
+    const resultado = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: "images",
+      allowsEditing: true,
+      base64: true,
+      quality: 0.1, // Calidad de la imagen (1 = máxima calidad)
+      allowsMultipleSelection: false,
+    });
+
+    // Si el usuario no cancela, guardar la imagen seleccionada
+    if (!resultado.canceled) {
+      setFotoPerfil(
+        `data:${resultado.assets[0].mimeType};base64,${resultado.assets[0].base64}`
+      );
+    }
+  };
+
+  const modificarPerfil = async () => {
+    const userId = await getUserId(); // Obtiene el ID del usuario desde el token
+    const temp = {};
+
+    if (fotoPerfil != defaultValue.fotoPerfil) {
+      temp.fotoPerfil = fotoPerfil;
+    }
+
+    if (nombre != defaultValue.nombre) {
+      temp.name = nombre;
+    }
+
+    if (correo != defaultValue.correo) {
+      temp.email = correo;
+    }
+
+    if (password != "") {
+      temp.password = password;
+    }
+
+    const response = await fetch(
+      "https://backend-swii.vercel.app/api/updateUser/" + userId,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${await getToken()}`,
+        },
+        body: JSON.stringify(temp),
+      }
+    );
+
+    if (response.status == 200) {
+      setModalNotification({
+        visible: true,
+        message: "Perfil Modificado Exitosamente",
+        success: true,
+      });
+    } else {
+      alert("Error al modificar el perfil.");
+      setModalNotification({
+        visible: true,
+        message: "Error al modificar el perfil",
+        success: false,
+      });
+      setNombre(defaultValue.nombre);
+      setCorreo(defaultValue.correo);
+      setFotoPerfil(defaultValue.fotoPerfil);
+      setPassword("");
+    }
+  };
+
+  useEffect(() => {
+    getUser();
+  }, []);
 
   return (
     <View
@@ -29,14 +185,6 @@ export default function Perfil() {
         gap: 8,
       }}
     >
-      {/* <View
-        style={{
-          width: "100%",
-          height: "100%",
-
-          flex: 1,
-        }}
-      > */}
       <Image
         source={require("@/assets/images/tomar foto.png")}
         style={{
@@ -83,36 +231,141 @@ export default function Perfil() {
         />
         <Text style={styles.title}>FOODIGO</Text>
       </View>
-      <View style={{ alignItems: "center" }}>
-        <View style={styles.containerFotoPerfil}>
-          <Image
-            source={require("@/assets/images/avatarPrueba.png")}
-            style={styles.fotoPerfil}
-          />
+      <View style={{ alignItems: "center", gap: 3 }}>
+        <View style={{ marginBottom: 15 }}>
+          <View style={styles.containerFotoPerfil}>
+            {!defaultValue.nombre ? (
+              <PlaceholderFotoPerfil size={100} fontSize={50} />
+            ) : (
+              <Image
+                source={
+                  fotoPerfil == ""
+                    ? require("@/assets/images/avatarPrueba.png")
+                    : fotoPerfil
+                }
+                style={styles.fotoPerfil}
+              />
+            )}
+          </View>
+          {modoEdicion && (
+            <Pressable
+              onPress={() => {
+                seleccionarImagen();
+              }}
+              style={{
+                position: "absolute",
+                bottom: 0,
+                right: 0,
+                backgroundColor: "#FF9D23",
+                padding: 5,
+                borderRadius: 6,
+              }}
+            >
+              <FontAwesome6 name="edit" size={22} color="#000" />
+            </Pressable>
+          )}
         </View>
         {/* Nombre */}
-        <Text style={{ textAlign: "center", fontWeight: 700, fontSize: 23 }}>
-          Saray Hernandez
-        </Text>
+        {nombre != "" && (
+          <Text style={{ textAlign: "center", fontWeight: 700, fontSize: 23 }}>
+            {nombre}
+          </Text>
+        )}
+        {nombre == "" && <PlaceholderText width={220} fontSize={23} />}
 
         {/* Codigo */}
-        <Text
+        {codigo != "" && (
+          <Text
+            style={{
+              textAlign: "center",
+              fontSize: 12,
+              letterSpacing: 1,
+              fontWeight: 600,
+              marginBottom: 25,
+            }}
+          >
+            {codigo}
+          </Text>
+        )}
+        {codigo == "" && <PlaceholderText width={150} fontSize={12} />}
+      </View>
+      <TextInput
+        placeholder="Correo"
+        style={styles.input}
+        value={correo}
+        onChangeText={setCorreo}
+        editable={modoEdicion}
+      />
+      <TextInput
+        placeholder="Nombre"
+        style={styles.input}
+        value={nombre}
+        onChangeText={setNombre}
+        editable={modoEdicion}
+      />
+      <TextInput
+        placeholder="Contraseña"
+        style={styles.input}
+        value={!modoEdicion ? "********" : password}
+        onChangeText={setPassword}
+        editable={modoEdicion}
+      />
+      {modoEdicion && (
+        <Pressable
+          onPress={() => {
+            console.log("click");
+            modificarPerfil();
+            setModoEdicion(false);
+          }}
+          style={({ pressed }) => [
+            {
+              width: "80%",
+              paddingHorizontal: 10,
+              paddingVertical: 12,
+              alignItems: "center",
+              backgroundColor: !pressed ? "#EEAF5C" : "#E5Aa5a",
+              borderRadius: 10,
+            },
+          ]}
+        >
+          <Text
+            style={{
+              fontSize: 15,
+              textTransform: "capitalize",
+              fontWeight: 700,
+            }}
+          >
+            Editar
+          </Text>
+        </Pressable>
+      )}
+      {!modoEdicion && (
+        <Pressable
+          onPress={() => {
+            console.log("click");
+            setModoEdicion(false);
+          }}
           style={{
-            textAlign: "center",
-            fontSize: 15,
-            letterSpacing: 2,
-            fontWeight: 600,
-            marginBottom: 25,
+            width: "80%",
+            paddingHorizontal: 10,
+            paddingVertical: 12,
+            alignItems: "center",
+            backgroundColor: "#FEF9E1",
+            borderRadius: 8,
           }}
         >
-          12312123
-        </Text>
-      </View>
-
-      <TextInput placeholder="Correo" style={styles.input} />
-      <TextInput placeholder="Nombre" style={styles.input} />
-      <TextInput placeholder="Contraseña" style={styles.input} />
-
+          <Text
+            style={{
+              fontSize: 15,
+              textTransform: "capitalize",
+              fontWeight: 700,
+              color: "#777",
+            }}
+          >
+            Editar
+          </Text>
+        </Pressable>
+      )}
       <View
         style={{
           position: "absolute",
@@ -131,7 +384,8 @@ export default function Perfil() {
             },
           ]}
           onPress={() => {
-            setModalOpcionesAvanzadasVisile(false);
+            console.log("click");
+            setModalOpcionesAvanzadasVisile(true);
           }}
         >
           <Icon
@@ -145,7 +399,23 @@ export default function Perfil() {
           <Text style={styles.opcionesAvanzadas}>Opciones Avanzadas</Text>
         </Pressable>
       </View>
-      <ModalOpcionesAvanzadas setVisible={setModalOpcionesAvanzadasVisile} visible={modalOpcionesAvanzadasVisible} />
+      <ModalOpcionesAvanzadas
+        setModoEdicion={setModoEdicion}
+        setVisible={setModalOpcionesAvanzadasVisile}
+        visible={modalOpcionesAvanzadasVisible}
+      />
+      <ModalNotificacion
+        isSuccess={modalNotification.success}
+        message={modalNotification.message}
+        isVisible={modalNotification.visible}
+        onClose={() => {
+          setModalNotification({
+            visible: false,
+            message: "",
+            success: false,
+          });
+        }}
+      />
     </View>
   );
 }
@@ -184,10 +454,11 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     paddingRight: 12,
     borderRadius: 8,
-    backgroundColor: "#fff",
+    backgroundColor: "#ffffff",
     borderColor: Colors.darkRed,
     borderWidth: 1,
     textAlign: "center",
+    zIndex: 10,
   },
   opcionesAvanzadas: {
     textAlign: "center",
@@ -205,7 +476,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 20,
+    // marginBottom: 20,
   },
   fotoPerfil: {
     width: 100,
