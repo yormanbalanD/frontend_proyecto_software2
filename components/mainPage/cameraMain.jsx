@@ -37,6 +37,7 @@ export default function CameraScreen() {
   const [visibleModal, setVisibleModal] = useState(false);
   const [targetaSeleccionada, setTargetaSeleccionada] = useState(null);
   const [abriendose, setAbriendose] = useState(false);
+  const [promedioReseñas, setPromedioReseñas] = useState(0);
 
   /**
    *  @type {[{ _id: string; address: string; reviews: {}[]; distance: number; fotoPerfil: string; latitude: number; longitude: number; name: string; rating: number; name: string; description: string; viewed: number }[], {}]}
@@ -93,25 +94,28 @@ export default function CameraScreen() {
         .slice(0, 4);
 
       setRestaurantes(restaurantes);
-      //  setVisibleModal(false);
     } else {
       console.log("error");
       setVisibleModal(false);
+      cameraRef.current.resumePreview();
     }
   };
   const tomarFoto = async () => {
     if (tomandoFoto) return;
     setTomandoFoto(true);
 
-    cameraRef.current.takePictureAsync().then(({ base64, width, height }) => {
-      console.log("angulo", angulo);
-      setTomandoFoto(false);
-      setVisibleModal(true);
-      fetchRestaurantes({
-        angulo,
-        base64,
+    await cameraRef.current
+      .takePictureAsync()
+      .then(({ base64, width, height }) => {
+        console.log("angulo", angulo);
+        setTomandoFoto(false);
+        setVisibleModal(true);
+        fetchRestaurantes({
+          angulo,
+          base64,
+        });
       });
-    });
+    cameraRef.current.pausePreview();
   };
 
   async function solicitarPermisoParaElAnguloDeCamara() {
@@ -148,6 +152,7 @@ export default function CameraScreen() {
         <View style={{ ...styles.fondoModal }}>
           <Pressable
             onPress={() => {
+              cameraRef.current.resumePreview();
               setVisibleModal(false);
               setRestaurantes([]);
             }}

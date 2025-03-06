@@ -27,8 +27,9 @@ export default function _layout() {
         <Stack.Screen name="mainpage" />
         <Stack.Screen name="historial" />
         <Stack.Screen name="megusta" />
-        <Stack.Screen name="reportComment"/>
-        <Stack.Screen name="reportLocal"/>
+        <Stack.Screen name="localpropio" />
+        {/* <Stack.Screen name="reportComment"/> */}
+        {/* <Stack.Screen name="reportLocal"/> */}
       </Stack>
       <StatusBar style="auto" />
     </CookiesProvider>

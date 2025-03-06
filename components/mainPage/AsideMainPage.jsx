@@ -69,11 +69,10 @@ export default function AsideMainPage({ visible, setVisible }) {
             style={styles.menuItem}
             onPress={() => {
               setVisible(false)
-              router.push("/local");
-
+              router.push("/localpropio");
             }}
           >
-            <Text style={styles.menuText}>Local</Text>
+            <Text style={styles.menuText}>Locales</Text>
           </TouchableOpacity>
         </View>
       </View>

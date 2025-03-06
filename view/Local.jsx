@@ -13,7 +13,8 @@ import * as Font from "expo-font";
 import { Tab, TabView } from "@rneui/themed";
 import Icon from "@expo/vector-icons/FontAwesome";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { useCookies } from "react-cookie";
 
 const listaComentarios = [
   {
@@ -75,9 +76,50 @@ const RenderComentario = ({ item }) => (
 );
 
 const Local = () => {
+  const params = useLocalSearchParams();
   const navigate = useRouter();
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [comentarios, setComentarios] = useState(listaComentarios);
+  const [restaurante, setRestaurante] = useState({
+    fotoPerfil: "",
+  });
+  const [cookies] = useCookies(["token"]);
+
+  const getToken = () => {
+    return cookies.token;
+  };
+
+  const getDatosDelRestaurante = async () => {
+    const response = await fetch(
+      "https://backend-swii.vercel.app/api/getRestaurant/" + params.restaurante,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization:
+            "Bearer " +
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inlvcm1hbm1wM2JhbGFuQGdtYWlsLmNvbSIsInN1YiI6IjY3YmU1YjUyZDA5OWVjZDc3NTViNmMyMSIsImlhdCI6MTc0MDU0NzYzNn0.YESKRM0v25yDny8lQNF7gYY0o3BDXZQJKByopFR3xkU",
+          // Authorization: "Bearer " + getToken(),
+        },
+      }
+    );
+
+    if (response.status === 200) {
+      const data = await response.json();
+      setRestaurante(data.restaurantFound);
+    }
+  };
+
+  useEffect(() => {
+    console.log(params);
+    if (!params.restaurante) {
+      console.log("no hay restaurante");
+      navigate.back();
+      return;
+    }
+
+    getDatosDelRestaurante();
+  }, []);
 
   useEffect(() => {
     const loadFonts = async () => {
@@ -88,6 +130,7 @@ const Local = () => {
       setFontsLoaded(true);
     };
     loadFonts();
+    console.log(params);
   }, []);
 
   const [index, setIndex] = useState(0);
@@ -169,10 +212,7 @@ const Local = () => {
         </View>
 
         <View style={styles.restauranteInfo}>
-          <Text style={styles.restauranteNombre}>McDonald's</Text>
-          <Text style={styles.restauranteTipo}>
-            Restaurante de comida rapida
-          </Text>
+          <Text style={styles.restauranteNombre}>{restaurante.name}</Text>
           <View style={styles.seccion}>
             <Icon
               name="heart"
@@ -188,7 +228,9 @@ const Local = () => {
               color="#2199e4"
               style={styles.iconos}
             />
-            <Text style={styles.ratingText}>{totalComentarios}</Text>
+            <Text style={styles.ratingText}>
+              {restaurante.reviews ? restaurante.reviews.length : 0}
+            </Text>
             <Icon
               name="star"
               type="font-awesome"
@@ -197,23 +239,24 @@ const Local = () => {
               style={styles.iconos}
             />
             <Text style={styles.ratingText}>
-              {promedioCalificacion.toFixed(1)}
+              {restaurante.reviews &&
+                restaurante.reviews.reduce(
+                  (a, b) => parseInt(a) + parseInt(b.calification),
+                  0
+                ) / restaurante.reviews.length}
             </Text>
           </View>
         </View>
 
         <View style={styles.imageLogoContainer}>
           <Image
-            source={require("../assets/images/local3.jpg")}
-            style={styles.fixedImage}
+            source={{
+              uri: restaurante.fotoPerfil.startsWith("data:image")
+                ? restaurante.fotoPerfil
+                : `data:image/jpeg;base64,${restaurante.fotoPerfil}`,
+            }}
+            style={{ ...styles.fixedImage, backgroundColor: "#cdcdcd97" }}
           />
-
-          <View style={styles.logoContainer}>
-            <Image
-              source={require("../assets/images/McDonald's_logo.svg.png")}
-              style={styles.circularLogo}
-            />
-          </View>
         </View>
 
         <Tab
@@ -243,10 +286,7 @@ const Local = () => {
               <View>
                 <View style={styles.descripcion}>
                   <Icon name="map-marker" size={35} color="#8c0e03" />
-                  <Text style={styles.descripcion}>
-                    Ciudad Guayana 8050, Bolivar. Ubicado en: Centro Comercial
-                    Costa America.
-                  </Text>
+                  <Text style={styles.descripcion}>{restaurante.address}</Text>
                 </View>
                 <View style={styles.descripcion}>
                   <Icon name="phone" size={35} color="#8c0e03" />
@@ -426,7 +466,7 @@ const styles = StyleSheet.create({
   },
 
   iconos: {
-    marginRight: 5,
+    marginRight: 3,
     width: 30,
     height: 30,
   },
@@ -452,7 +492,7 @@ const styles = StyleSheet.create({
   },
 
   ratingText: {
-    marginHorizontal: 5,
+    marginRight: 8,
     fontSize: 16,
     alignItems: "center",
     fontWeight: "bold",
