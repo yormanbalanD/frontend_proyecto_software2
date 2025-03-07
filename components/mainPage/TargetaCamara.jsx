@@ -9,6 +9,7 @@ import {
   NativeModules,
   LayoutAnimation,
   Image,
+  Platform,
 } from "react-native";
 import EvilIcons from "@expo/vector-icons/EvilIcons";
 import { useRouter } from "expo-router";
@@ -53,11 +54,15 @@ export default function TargetaCamara({
   };
 
   useEffect(() => {
-    LayoutAnimation.spring();
-    if (targetaSeleccionada != index) {
-      setHeight(INITIAL_HEIGHT);
-    } else {
-      setHeight(INITIAL_HEIGHT + EXTRA_HEIGHT);
+    console.log("Platform.Version", Platform.Version);
+
+    if (UIManager.setLayoutAnimationEnabledExperimental) {
+      LayoutAnimation.spring();
+      if (targetaSeleccionada != index) {
+        setHeight(INITIAL_HEIGHT);
+      } else {
+        setHeight(INITIAL_HEIGHT + EXTRA_HEIGHT);
+      }
     }
   }, [targetaSeleccionada]);
 

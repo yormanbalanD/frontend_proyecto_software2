@@ -18,6 +18,7 @@ import * as Location from "expo-location";
 import * as geolib from "geolib";
 import TargetaCamara from "./TargetaCamara";
 import { useCookies } from "react-cookie";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const negociosRioAro = [
   {
