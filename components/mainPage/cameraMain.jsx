@@ -46,8 +46,24 @@ export default function CameraScreen() {
 
   const [cookies] = useCookies(["token"]);
 
-  const getToken = () => {
-    return cookies.token;
+  const getToken = async () => {
+    try {
+      const value = await AsyncStorage.getItem("token");
+      if (value != null) {
+        return value;
+      }
+    } catch (e) {
+      console.log(e);
+      return null;
+    }
+  };
+
+  const getUserId = async () => {
+    const token = await getToken();
+    if (!token) return null;
+
+    const decoded = decode(token);
+    return decoded.sub;
   };
 
   useEffect(() => {
@@ -74,12 +90,12 @@ export default function CameraScreen() {
         coords.longitude +
         "/" +
         angulo.toFixed(0) +
-        "/50",
+        "/5000",
       {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: "Bearer " + getToken(),
+          Authorization: "Bearer " + await getToken(),
         },
       }
     );

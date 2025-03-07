@@ -15,38 +15,8 @@ import Icon from "@expo/vector-icons/FontAwesome";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useCookies } from "react-cookie";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const listaComentarios = [
-  {
-    id: "1",
-    nombre: "Ana Perez",
-    comentario: "Excelente comida y servicio!",
-    calificacion: 5,
-    fotoPerfil: require("../assets/images/avatarPrueba.png"),
-  },
-  {
-    id: "2",
-    nombre: "Carlos Gomez",
-    comentario: "Buena atencion, pero algo lenta.",
-    calificacion: 4,
-    fotoPerfil: require("../assets/images/avatarPrueba.png"),
-  },
-  {
-    id: "3",
-    nombre: "Laura Rivas",
-    comentario: "El ambiente es agradable, pero la comida podria mejorar.",
-    calificacion: 3,
-    fotoPerfil: require("../assets/images/avatarPrueba.png"),
-  },
-  {
-    id: "4",
-    nombre: "Laura Rivaero",
-    comentario: "El ambiente es bueno. Me gusta. ",
-    calificacion: 5,
-    fotoPerfil: require("../assets/images/avatarPrueba.png"),
-  },
-];
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import PlaceholderFotoPerfil from "../components/PlaceholderFotoPerfil";
 
 const StarRating = ({ rating, maxStars = 5 }) => {
   return (
@@ -63,31 +33,99 @@ const StarRating = ({ rating, maxStars = 5 }) => {
   );
 };
 
-const RenderComentario = ({ item }) => (
-  <View style={styles.card}>
-    <View style={styles.cardTexto}>
-      <Text style={styles.comentario}>{item.comentario}</Text>
-      <Text style={styles.nombreCc}>{item.nombre}</Text>
-      <StarRating rating={item.calificacion} />
+const RenderComentario = ({ item }) => {
+  const [fotoPerfil, setFotoPerfil] = useState(null);
+  const getToken = async () => {
+    try {
+      const value = await AsyncStorage.getItem("token");
+      if (value != null) {
+        return value;
+      }
+    } catch (e) {
+      console.log(e);
+      return null;
+    }
+  };
+
+  const getUser = async () => {
+    const response = await fetch(
+      "https://backend-swii.vercel.app/api/getUser/" + item.idUser,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${await getToken()}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (response.status == 200) {
+      const data = await response.json();
+      setFotoPerfil(data.userFound.fotoPerfil);
+      console.log(data);
+    } else {
+      console.log(await response.json());
+      alert("Error");
+    }
+  };
+
+  useEffect(() => {
+    getUser();
+  }, []);
+
+  return (
+    <View style={styles.card}>
+      <View style={styles.cardTexto}>
+        <Text style={styles.comentario}>{item.comment}</Text>
+        <Text style={styles.nombreCc}>{item.userName}</Text>
+        <StarRating rating={item.calificacion} />
+      </View>
+      <View style={styles.logoContainerComent}>
+        {fotoPerfil == null ? (
+          <PlaceholderFotoPerfil size={50} fontSize={50} />
+        ) : (
+          <Image
+            source={
+              !fotoPerfil.startsWith("data:image")
+                ? require("@/assets/images/avatarPrueba.png")
+                : fotoPerfil
+            }
+            style={styles.fotoPerfil}
+          />
+        )}
+      </View>
     </View>
-    <View style={styles.logoContainerComent}>
-      <Image source={item.fotoPerfil} style={styles.logoImage} />
-    </View>
-  </View>
-);
+  );
+};
 
 const Local = () => {
   const params = useLocalSearchParams();
   const navigate = useRouter();
   const [fontsLoaded, setFontsLoaded] = useState(false);
-  const [comentarios, setComentarios] = useState(listaComentarios);
+  const [comentarios, setComentarios] = useState([]);
   const [restaurante, setRestaurante] = useState({
     fotoPerfil: "",
   });
   const [cookies] = useCookies(["token"]);
 
-  const getToken = () => {
-    return cookies.token;
+  const getToken = async () => {
+    try {
+      const value = await AsyncStorage.getItem("token");
+      if (value != null) {
+        return value;
+      }
+    } catch (e) {
+      console.log(e);
+      return null;
+    }
+  };
+
+  const getUserId = async () => {
+    const token = await getToken();
+    if (!token) return null;
+
+    const decoded = decode(token);
+    return decoded.sub;
   };
 
   const getDatosDelRestaurante = async () => {
@@ -97,10 +135,7 @@ const Local = () => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization:
-            "Bearer " +
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inlvcm1hbm1wM2JhbGFuQGdtYWlsLmNvbSIsInN1YiI6IjY3YmU1YjUyZDA5OWVjZDc3NTViNmMyMSIsImlhdCI6MTc0MDU0NzYzNn0.YESKRM0v25yDny8lQNF7gYY0o3BDXZQJKByopFR3xkU",
-          // Authorization: "Bearer " + getToken(),
+          Authorization: "Bearer " + (await getToken()),
         },
       }
     );
@@ -108,6 +143,12 @@ const Local = () => {
     if (response.status === 200) {
       const data = await response.json();
       setRestaurante(data.restaurantFound);
+      setComentarios(data.restaurantFound.reviews);
+      delete data.restaurantFound.fotoPerfil;
+      console.log(data.restaurantFound.reviews);
+    } else {
+      console.log("error");
+      console.log(response);
     }
   };
 
@@ -215,13 +256,15 @@ const Local = () => {
         <View style={styles.restauranteInfo}>
           <Text style={styles.restauranteNombre}>{restaurante.name}</Text>
           <View style={styles.seccion}>
-            <Icon
-              name="heart"
-              type="font-awesome"
-              size={30}
-              color="#8c0e03"
-              style={styles.iconos}
-            />
+            <Pressable style={{ marginRight: 10 }}>
+              <Icon
+                name="heart"
+                type="font-awesome"
+                size={30}
+                color="#8c0e03"
+                style={{ ...styles.iconos }}
+              />
+            </Pressable>
             <Icon
               name="comments"
               type="font-awesome"
@@ -241,23 +284,27 @@ const Local = () => {
             />
             <Text style={styles.ratingText}>
               {restaurante.reviews &&
-                restaurante.reviews.reduce(
-                  (a, b) => parseInt(a) + parseInt(b.calification),
-                  0
-                ) / restaurante.reviews.length}
+                restaurante.reviews.length > 0 &&
+                (
+                  restaurante.reviews.reduce(
+                    (a, b) => parseInt(a) + parseInt(b.calification),
+                    0
+                  ) / restaurante.reviews.length
+                ).toFixed(1)}
+              {restaurante.reviews && restaurante.reviews.length == 0 && "0"}
             </Text>
           </View>
         </View>
 
         <View style={styles.imageLogoContainer}>
-          <Image
-            source={{
-              uri: restaurante.fotoPerfil.startsWith("data:image")
-                ? restaurante.fotoPerfil
-                : `data:image/jpeg;base64,${restaurante.fotoPerfil}`,
-            }}
-            style={{ ...styles.fixedImage, backgroundColor: "#cdcdcd97" }}
-          />
+          {!restaurante.fotoPerfil ? (
+            <View />
+          ) : (
+            <Image
+              source={{ uri: restaurante.fotoPerfil }}
+              style={{ ...styles.fixedImage, backgroundColor: "#cdcdcd97" }}
+            />
+          )}
         </View>
 
         <Tab
@@ -286,18 +333,21 @@ const Local = () => {
             <ScrollView>
               <View>
                 <View style={styles.descripcion}>
-                  <Icon name="map-marker" size={35} color="#8c0e03" />
-                  <Text style={styles.descripcion}>{restaurante.address}</Text>
+                  <Text
+                    style={{ ...styles.descripcion, padding: 0, marginLeft: 0 }}
+                  >
+                    {restaurante.description}
+                  </Text>
                 </View>
                 <View style={styles.descripcion}>
-                  <Icon name="phone" size={35} color="#8c0e03" />
-                  <Text style={styles.descripcion}>0286-9221100</Text>
+                  <Icon name="map-marker" size={35} color="#8c0e03" />
+                  <Text style={styles.descripcion}>
+                    {restaurante.latitude}, {restaurante.longitude}
+                  </Text>
                 </View>
                 <View style={styles.descripcion}>
                   <Icon name="location-arrow" size={35} color="#8c0e03" />
-                  <Text style={styles.descripcion}>
-                    874G+3P Ciudad Guayana, Bolivar
-                  </Text>
+                  <Text style={styles.descripcion}>{restaurante.address}</Text>
                 </View>
 
                 <Text style={styles.fototexto}>Fotos</Text>
@@ -353,10 +403,7 @@ const Local = () => {
                     {totalComentarios} opiniones
                   </Text>
 
-                  <TouchableOpacity
-                    style={styles.botonComentario}
-                    // onPress={{}}
-                  >
+                  <TouchableOpacity style={styles.botonComentario}>
                     <Icon name="comment" size={15} color="#74C0FC" />
                     <Text style={styles.botonTexto}>Dejar comentario</Text>
                   </TouchableOpacity>
@@ -695,6 +742,12 @@ const styles = StyleSheet.create({
   },
   imageLocalContainer: {
     marginBottom: 50,
+  },
+  fotoPerfil: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 50,
+    overflow: "hidden",
   },
 });
 

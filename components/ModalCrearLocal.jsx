@@ -24,12 +24,20 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
   const [imagen, setImagen] = useState(null);
   const [cookies] = useCookies(["token"]);
 
-  const getToken = () => {
-    return cookies.token;
+  const getToken = async () => {
+    try {
+      const value = await AsyncStorage.getItem("token");
+      if (value != null) {
+        return value;
+      }
+    } catch (e) {
+      console.log(e);
+      return null;
+    }
   };
 
-  const getUserId = () => {
-    const token = getToken();
+  const getUserId = async () => {
+    const token = await getToken();
     if (!token) return null;
 
     const decoded = decode(token);
@@ -37,7 +45,6 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
   };
 
   const validarInputs = () => {
-
     if (!nombre.trim()) {
       onSuccess("El campo Nombre es obligatorio.", false);
       return false;
@@ -58,7 +65,7 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
       onSuccess("Debe seleccionar una imagen para continuar.", false);
       return false;
     }
-  
+
     return true; // Si todo está bien, retorna true
   };
 
@@ -70,38 +77,38 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
       alert("Error: No se pudo obtener el usuario. Inicia sesión nuevamente.");
       return;
     }
-      const response = await fetch(
-        "https://backend-swii.vercel.app/api/createRestaurant",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            name: nombre,
-            own: userId,
-            fotoPerfil: imagen,
-            description: descripcion,
-            address: ubicacion,
-            latitude: parseFloat(coordenadas.latitude), // Convertir a número si es string
-            longitude: parseFloat(coordenadas.longitude),
-            viewed: 0, // Inicialmente en 0
-            reviews: [], // Iniciar con un array vacío
-          }),
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + getToken(),
-          },
-        }
-      );
-      
-      if (response.status === 200) {
-        const result = await response.json();
-        onSuccess("Local creado correctamente.", true);
-        setNombre("");
-        setDescripcion("");
-        setUbicacion("");
-        setCoordenadas(null);
-        setImagen(null);
-      }else {
-        onSuccess("Error al crear local. Inténtalo de nuevo.", false);
+    const response = await fetch(
+      "https://backend-swii.vercel.app/api/createRestaurant",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          name: nombre,
+          own: userId,
+          fotoPerfil: imagen,
+          description: descripcion,
+          address: ubicacion,
+          latitude: parseFloat(coordenadas.latitude), // Convertir a número si es string
+          longitude: parseFloat(coordenadas.longitude),
+          viewed: 0, // Inicialmente en 0
+          reviews: [], // Iniciar con un array vacío
+        }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + (await getToken()),
+        },
+      }
+    );
+
+    if (response.status === 200) {
+      const result = await response.json();
+      onSuccess("Local creado correctamente.", true);
+      setNombre("");
+      setDescripcion("");
+      setUbicacion("");
+      setCoordenadas(null);
+      setImagen(null);
+    } else {
+      onSuccess("Error al crear local. Inténtalo de nuevo.", false);
     }
   };
 

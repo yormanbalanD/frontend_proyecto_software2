@@ -14,6 +14,7 @@ import Notificacion from "@/components/ModalNotificacion";
 import ListaRestaurantes from "@/components/ListaRestaurantes";
 import { useCookies } from "react-cookie";
 import { jwtDecode as decode } from "jwt-decode";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function LocalesPropios() {
   const router = useRouter();
@@ -25,35 +26,41 @@ const [notificacionMensaje, setNotificacionMensaje] = useState("");
 const [notificacionExito, setNotificacionExito] = useState(false);
 const [loading, setLoading] = useState(true); 
 
-  const getToken = () => {
-    return cookies.token;
-  };
+const getToken = async () => {
+  try {
+    const value = await AsyncStorage.getItem("token");
+    if (value != null) {
+      return value;
+    }
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+};
 
-  const getUserId = () => {
-    const token = getToken();
-    if (!token) return null;
+const getUserId = async () => {
+  const token = await getToken();
+  if (!token) return null;
 
-    const decoded = decode(token);
-    return decoded.sub;
-  };
+  const decoded = decode(token);
+  return decoded.sub;
+};
 
   const getLocalesPropios = async () => {
     const response = await fetch(
-      "https://backend-swii.vercel.app/api/getRestaurants/",
+      "https://backend-swii.vercel.app/api/getRestaurants",
       {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: "Bearer " + getToken(),
+          Authorization: "Bearer " + await getToken(),
         },
       }
     );
 
-    console.log(response);
-
     if (response.status === 200) {
       const data = await response.json();
-      //console.log(data);
+      console.log(data);
       // Procesamos los datos para agregar promedio de calificación y cantidad de comentarios
       const processedRestaurants = data.restaurantsFound.map((restaurant) => {
         const reviews = restaurant.reviews || []; // Si no tiene reviews, ponemos un array vacío
@@ -76,13 +83,15 @@ const [loading, setLoading] = useState(true);
         };
       });
       setRestaurants(processedRestaurants);
+    } else {
+      console.log("error");
+      console.log(response);
     }
     setLoading(false); 
   };
 
   useEffect(() => {
     getLocalesPropios();
-    console.log(getUserId());
   }, []);
 
   return (

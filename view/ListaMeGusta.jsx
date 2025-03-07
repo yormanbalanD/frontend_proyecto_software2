@@ -4,26 +4,35 @@ import {
   Text,
   Image,
   StyleSheet,
-  TouchableOpacity, 
+  TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
 import ListaRestaurantes from "@/components/ListaRestaurantes";
 import { useRouter } from "expo-router";
 import { useCookies } from "react-cookie";
 import { jwtDecode as decode } from "jwt-decode";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function ListaMeGusta() {
   const router = useRouter();
   const [restaurants, setRestaurants] = useState([]);
-  const [loading, setLoading] = useState(true);  
+  const [loading, setLoading] = useState(true);
   const [cookies] = useCookies(["token"]);
 
-  const getToken = () => {
-    return cookies.token;
+  const getToken = async () => {
+    try {
+      const value = await AsyncStorage.getItem("token");
+      if (value != null) {
+        return value;
+      }
+    } catch (e) {
+      console.log(e);
+      return null;
+    }
   };
 
-  const getUserId = () => {
-    const token = getToken();
+  const getUserId = async () => {
+    const token = await getToken();
     if (!token) return null;
 
     const decoded = decode(token);
@@ -33,12 +42,12 @@ export default function ListaMeGusta() {
   const getListaMeGusta = async () => {
     setLoading(true);
     const response = await fetch(
-      "https://backend-swii.vercel.app/api/getRestaurantsLiked/" + getUserId(),
+      "https://backend-swii.vercel.app/api/getRestaurantsLiked/" + await getUserId(),
       {
         method: "GET",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          Authorization: "Bearer " + getToken(),
+          Authorization: "Bearer " + await getToken(),
         },
       }
     );
@@ -51,34 +60,36 @@ export default function ListaMeGusta() {
       const processedRestaurants = data.restaurants.map((restaurant) => {
         const reviews = restaurant.reviews || []; // Si no tiene reviews, ponemos un array vacío
         const totalReviews = reviews.length;
-        
+
         // Calcular promedio de calificación
         //console.log("Datos del restaurante:", restaurant.name, restaurant.reviews);
         const totalCalification = restaurant.reviews.reduce((sum, review) => {
-          const calification = Number(review.calification); 
-          return !isNaN(calification) ? sum + calification : sum;  
+          const calification = Number(review.calification);
+          return !isNaN(calification) ? sum + calification : sum;
         }, 0);
 
-        const avgCalification = totalReviews > 0 ? (totalCalification / totalReviews).toFixed(1) : "N/A";
-        return { 
-          ...restaurant, 
-          avgCalification, 
+        const avgCalification =
+          totalReviews > 0
+            ? (totalCalification / totalReviews).toFixed(1)
+            : "N/A";
+        return {
+          ...restaurant,
+          avgCalification,
           totalReviews,
-          liked: true // Add liked property to each restaurant
+          liked: true, // Add liked property to each restaurant
         };
-      }); 
+      });
       setRestaurants(processedRestaurants);
     } else {
       console.log("Failed to fetch liked restaurants");
     }
-    setLoading(false); 
+    setLoading(false);
   };
 
   useEffect(() => {
     getListaMeGusta();
     //console.log(getUserId());
   }, []);
-
 
   const removeRestaurantFromLiked = async (restaurantId) => {
     const response = await fetch(
@@ -89,12 +100,12 @@ export default function ListaMeGusta() {
           "Content-Type": "application/json",
           Authorization: "Bearer " + getToken(),
         },
-        body: JSON.stringify({ idRestaurants : [restaurantId] }),
+        body: JSON.stringify({ idRestaurants: [restaurantId] }),
       }
     );
-  
-   // console.log(response);
-  
+
+    // console.log(response);
+
     if (response.status === 200) {
       const data = await response.json();
       console.log("Restaurant removed:", data);
@@ -104,7 +115,7 @@ export default function ListaMeGusta() {
       return false;
     }
   };
-  
+
   const handleHeartPress = async (index) => {
     const restaurant = restaurants[index];
     //console.log("Restaurant ID:", restaurant._id);
@@ -144,17 +155,19 @@ export default function ListaMeGusta() {
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#FFF" />
         </View>
-      ): restaurants.length === 0 ? ( 
+      ) : restaurants.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No has dado me gusta a un restaurante aún.</Text>
+          <Text style={styles.emptyText}>
+            No has dado me gusta a un restaurante aún.
+          </Text>
         </View>
       ) : (
-        <ListaRestaurantes 
-  restaurants={restaurants} 
-  handleHeartPress={handleHeartPress} 
-/>
+        <ListaRestaurantes
+          restaurants={restaurants}
+          handleHeartPress={handleHeartPress}
+        />
       )}
-    </View>  
+    </View>
   );
 }
 
@@ -209,4 +222,3 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
-

@@ -4,26 +4,35 @@ import {
   Text,
   Image,
   StyleSheet,
-  TouchableOpacity, 
+  TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import ListaRestaurantes from "@/components/ListaRestaurantes";
 import { useCookies } from "react-cookie";
 import { jwtDecode as decode } from "jwt-decode";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Historial() {
   const router = useRouter();
   const [restaurants, setRestaurants] = useState([]);
-  const [loading, setLoading] = useState(true);  
+  const [loading, setLoading] = useState(true);
   const [cookies] = useCookies(["token"]);
 
-  const getToken = () => {
-    return cookies.token;
+  const getToken = async () => {
+    try {
+      const value = await AsyncStorage.getItem("token");
+      if (value != null) {
+        return value;
+      }
+    } catch (e) {
+      console.log(e);
+      return null;
+    }
   };
 
-  const getUserId = () => {
-    const token = getToken();
+  const getUserId = async () => {
+    const token = await getToken();
     if (!token) return null;
 
     const decoded = decode(token);
@@ -33,12 +42,12 @@ export default function Historial() {
   const getHistorial = async () => {
     setLoading(true);
     const response = await fetch(
-      "https://backend-swii.vercel.app/api/getRestaurantsShowed/" + getUserId(),
+      "https://backend-swii.vercel.app/api/getRestaurantsShowed/" + await getUserId(),
       {
         method: "GET",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          Authorization: "Bearer " + getToken(),
+          Authorization: "Bearer " + await getToken(),
         },
       }
     );
@@ -52,24 +61,31 @@ export default function Historial() {
       const processedRestaurants = data.restaurants.map((restaurant) => {
         const reviews = restaurant.reviews || []; // Si no tiene reviews, ponemos un array vacío
         const totalReviews = reviews.length;
-        
+
         // Calcular promedio de calificación
-        console.log("Datos del restaurante:", restaurant.name, restaurant.reviews);
+        console.log(
+          "Datos del restaurante:",
+          restaurant.name,
+          restaurant.reviews
+        );
         const totalCalification = restaurant.reviews.reduce((sum, review) => {
-          const calification = Number(review.calification); 
-          return !isNaN(calification) ? sum + calification : sum;  
+          const calification = Number(review.calification);
+          return !isNaN(calification) ? sum + calification : sum;
         }, 0);
 
-        const avgCalification = totalReviews > 0 ? (totalCalification / totalReviews).toFixed(1) : "N/A";
-      return { 
-        ...restaurant, 
-        avgCalification, 
-        totalReviews 
-      };
-    }); 
-    setRestaurants(processedRestaurants);
+        const avgCalification =
+          totalReviews > 0
+            ? (totalCalification / totalReviews).toFixed(1)
+            : "N/A";
+        return {
+          ...restaurant,
+          avgCalification,
+          totalReviews,
+        };
+      });
+      setRestaurants(processedRestaurants);
     }
-    setLoading(false); 
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -103,14 +119,16 @@ export default function Historial() {
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#FFF" />
         </View>
-      ): restaurants.length === 0 ? ( 
+      ) : restaurants.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No has visto ningún restaurante aún.</Text>
+          <Text style={styles.emptyText}>
+            No has visto ningún restaurante aún.
+          </Text>
         </View>
       ) : (
         <ListaRestaurantes restaurants={restaurants} />
       )}
-    </View>  
+    </View>
   );
 }
 
