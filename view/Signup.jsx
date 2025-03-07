@@ -234,7 +234,6 @@ export default function Signup() {
             onFocus={()=> setNombreFocused(true)}
             onBlur={()=> setNombreFocused(false)}
             onChangeText={(value) => handleInputChange("name", value)}
-            maxLength={20}
           />
           <TextInput
             placeholderTextColor={"#acacac"}
@@ -246,7 +245,6 @@ export default function Signup() {
             onFocus={()=> setCorreoFocused(true)}
             onBlur={()=> setCorreoFocused(false)}
             onChangeText={(value) => handleInputChange("email", value)}
-            maxLength={20}
           />
           <View
             style={{
@@ -267,7 +265,6 @@ export default function Signup() {
               onFocus={()=> setPasswordFocused(true)}
               onBlur={()=> setPasswordFocused(false)}
               onChangeText={(value) => handleInputChange("password", value)}
-              maxLength={20}
             />
             {verPassword ? (
               <Pressable
@@ -304,7 +301,6 @@ export default function Signup() {
               onFocus={()=> setConfirmarPasswordFocused(true)}
               onBlur={()=> setConfirmarPasswordFocused(false)}
               onChangeText={(value) => handleInputChange("confirmPassword", value)}
-              maxLength={20}
             />
             {verConfirmarPassword ? (
               <Pressable
