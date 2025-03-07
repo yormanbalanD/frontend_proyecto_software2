@@ -23,8 +23,10 @@ const EXTRA_HEIGHT = 200;
 
 const { UIManager } = NativeModules;
 
-UIManager.setLayoutAnimationEnabledExperimental &&
-  UIManager.setLayoutAnimationEnabledExperimental(true);
+if (Platform.OS == "ios") {
+  UIManager.setLayoutAnimationEnabledExperimental &&
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 export default function TargetaCamara({
   restaurante,
