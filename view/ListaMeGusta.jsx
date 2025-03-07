@@ -93,12 +93,12 @@ export default function ListaMeGusta() {
 
   const removeRestaurantFromLiked = async (restaurantId) => {
     const response = await fetch(
-      `https://backend-swii.vercel.app/api/deleteRestaurantFromLiked/${getUserId()}`,
+      `https://backend-swii.vercel.app/api/deleteRestaurantFromLiked/${await getUserId()}`,
       {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: "Bearer " + getToken(),
+          Authorization: "Bearer " + await getToken(),
         },
         body: JSON.stringify({ idRestaurants: [restaurantId] }),
       }
