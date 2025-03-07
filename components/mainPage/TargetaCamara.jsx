@@ -40,7 +40,7 @@ export default function TargetaCamara({
 
   const abrirTargeta = () => {
     if (abriendose) return;
-    if (Platform.Version > 34) {
+    if (Platform.Version > 35) {
       setAbriendose(true);
       LayoutAnimation.spring(() => {
         setAbriendose(false);
@@ -58,7 +58,7 @@ export default function TargetaCamara({
   useEffect(() => {
     console.log("Platform.Version", Platform.Version);
 
-    if (Platform.Version > 34) {
+    if (Platform.Version > 35) {
       LayoutAnimation.spring();
     }
     if (targetaSeleccionada != index) {
