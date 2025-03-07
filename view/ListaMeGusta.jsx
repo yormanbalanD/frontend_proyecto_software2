@@ -10,27 +10,35 @@ import {
 } from "react-native";
 import { useFonts } from "expo-font";
 import { useRouter } from "expo-router";
-import { useCookies } from "react-cookie";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { jwtDecode as decode } from "jwt-decode";
 import { FontAwesome } from '@expo/vector-icons'; // Import FontAwesome
+
 
 export default function ListaMeGusta() {
   const router = useRouter();
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);  
-  const [cookies] = useCookies(["token"]);
-
-  const getToken = () => {
-    return cookies.token;
+  
+  const getToken = async () => {
+    try {
+      const value = await AsyncStorage.getItem("token");
+      if (value != null) {
+        return value;
+      }
+    } catch (e) {
+      console.log(e);
+      return null;
+    }
   };
 
-  const getUserId = () => {
-    const token = getToken();
+  const getUserId = async () => {
+    const token = await getToken();
     if (!token) return null;
 
     const decoded = decode(token);
     return decoded.sub;
-  };
+  }
 
   const getListaMeGusta = async () => {
     setLoading(true);
