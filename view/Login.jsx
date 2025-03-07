@@ -71,10 +71,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.7,
   },
   logoText: {
-    fontSize: 90,
+    fontSize: 60,
     fontWeight: "bold",
     color: "#FFF",
-    fontFamily: "League Gothic",
+    fontFamily: "League-Gothic",
   },
   logoContainer: {
     flexDirection: "row",
@@ -83,8 +83,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   logoImage: {
-    height: 97,
-    width: 72,
+    height: 80,
+    width: 60,
   },
   backgroundImage: {
     flex: 1,
