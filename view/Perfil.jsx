@@ -106,7 +106,7 @@ export default function Perfil() {
       mediaTypes: "images",
       allowsEditing: true,
       base64: true,
-      quality: 0.1, // Calidad de la imagen (1 = máxima calidad)
+      quality: 0.6, // Calidad de la imagen (1 = máxima calidad)
       allowsMultipleSelection: false,
     });
 

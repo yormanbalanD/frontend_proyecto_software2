@@ -7,7 +7,7 @@ import {
   Platform,
 } from "react-native";
 
-function Web({ size, fontSize }) {
+function Web({ size }) {
   return (
     <View
       style={[
@@ -15,18 +15,15 @@ function Web({ size, fontSize }) {
           width: size,
           height: size,
           borderRadius: size,
-          opacity: 0.9,
+          opacity,
           backgroundColor: "#94a3b8",
-          borderRadius: 4,
         },
       ]}
-    >
-      <Text style={{ fontSize }}> </Text>
-    </View>
+    />
   );
 }
 
-function Mobile({ size, fontSize }) {
+function Mobile({ size }) {
   const opacity = useAnimatedValue(0.9);
 
   const animate = () => {
@@ -58,16 +55,14 @@ function Mobile({ size, fontSize }) {
           backgroundColor: "#94a3b8",
         },
       ]}
-    >
-      <Text style={{ fontSize }}> </Text>
-    </Animated.View>
+    />
   );
 }
 
 export default function PlaceholderText({ size, fontSize }) {
   if (Platform.OS == "android" || Platform.OS == "ios") {
-    return <Mobile size={size} fontSize={fontSize} />;
+    return <Mobile size={size} />;
   } else {
-    return <Web size={size} fontSize={fontSize} />;
+    return <Web size={size} />;
   }
 }

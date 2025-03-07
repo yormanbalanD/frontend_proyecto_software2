@@ -17,6 +17,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { useCookies } from "react-cookie";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import PlaceholderFotoPerfil from "../components/PlaceholderFotoPerfil";
+import ModalCrearComentario from "../components/ModalCrearComentario";
 
 const StarRating = ({ rating, maxStars = 5 }) => {
   return (
@@ -62,7 +63,7 @@ const RenderComentario = ({ item }) => {
     if (response.status == 200) {
       const data = await response.json();
       setFotoPerfil(data.userFound.fotoPerfil);
-      console.log(data);
+      console.log(data.userFound.fotoPerfil.slice(0, 10));
     } else {
       console.log(await response.json());
       alert("Error");
@@ -82,17 +83,33 @@ const RenderComentario = ({ item }) => {
       </View>
       <View style={styles.logoContainerComent}>
         {fotoPerfil == null ? (
-          <PlaceholderFotoPerfil size={50} fontSize={50} />
+          <PlaceholderFotoPerfil size={60} fontSize={50} />
         ) : (
           <Image
             source={
               !fotoPerfil.startsWith("data:image")
                 ? require("@/assets/images/avatarPrueba.png")
-                : fotoPerfil
+                : { uri: fotoPerfil }
             }
             style={styles.fotoPerfil}
           />
         )}
+      </View>
+    </View>
+  );
+};
+
+const RatingBar = ({ rating, count, totalReviews }) => {
+  return (
+    <View style={styles.ratingBarContainer}>
+      <Text style={styles.ratingText}>{rating}</Text>
+      <View style={styles.barraCalificacionFondo}>
+        <View
+          style={[
+            styles.barraCalificacionRelleno,
+            { width: `${(count / totalReviews) * 100}%` },
+          ]}
+        />
       </View>
     </View>
   );
@@ -106,6 +123,8 @@ const Local = () => {
   const [restaurante, setRestaurante] = useState({
     fotoPerfil: "",
   });
+  const [modalCrearComentarioVisible, setModalCrearComentarioVisible] =
+    useState(false);
   const [cookies] = useCookies(["token"]);
 
   const getToken = async () => {
@@ -144,8 +163,6 @@ const Local = () => {
       const data = await response.json();
       setRestaurante(data.restaurantFound);
       setComentarios(data.restaurantFound.reviews);
-      delete data.restaurantFound.fotoPerfil;
-      console.log(data.restaurantFound.reviews);
     } else {
       console.log("error");
       console.log(response);
@@ -161,7 +178,7 @@ const Local = () => {
     }
 
     getDatosDelRestaurante();
-  }, []);
+  }, [modalCrearComentarioVisible]);
 
   useEffect(() => {
     const loadFonts = async () => {
@@ -217,27 +234,7 @@ const Local = () => {
   const cantidad = calcCantidadOpiniones(comentarios);
   const maxOpiniones = Math.max(...Object.values(cantidad));
 
-  const RatingBar = ({ rating, count }) => (
-    <View style={styles.ratingBarContainer}>
-      <Text style={styles.ratingText}>{rating}</Text>
-      <View style={styles.barraCalificacionFondo}>
-        <View
-          style={[
-            styles.barraCalificacionRelleno,
-            { width: `${(count / maxOpiniones) * 100}%` },
-          ]}
-        />
-      </View>
-    </View>
-  );
-
   const totalComentarios = comentarios.length;
-
-  const promedioCalificacion =
-    totalComentarios > 0
-      ? comentarios.reduce((sum, item) => sum + item.calificacion, 0) /
-        totalComentarios
-      : 0;
 
   return (
     <SafeAreaProvider>
@@ -296,7 +293,11 @@ const Local = () => {
           </View>
         </View>
 
-        <View style={styles.imageLogoContainer}>
+        <View
+          style={{
+            ...styles.imageLogoContainer,
+          }}
+        >
           {!restaurante.fotoPerfil ? (
             <View />
           ) : (
@@ -386,24 +387,83 @@ const Local = () => {
             <ScrollView>
               <View style={styles.total}>
                 <View style={styles.CalificacionDistribucionContainer}>
-                  {Object.entries(cantidad)
-                    .reverse()
-                    .map(([rating, count]) => (
-                      <RatingBar key={rating} rating={rating} count={count} />
-                    ))}
+                  <RatingBar
+                    rating={5}
+                    count={
+                      comentarios.filter((item) => item.calification == 5)
+                        .length
+                    }
+                    totalReviews={comentarios.length}
+                  />
+                  <RatingBar
+                    rating={4}
+                    count={
+                      comentarios.filter((item) => item.calification == 4)
+                        .length
+                    }
+                    totalReviews={comentarios.length}
+                  />
+                  <RatingBar
+                    rating={3}
+                    count={
+                      comentarios.filter((item) => item.calification == 3)
+                        .length
+                    }
+                    totalReviews={comentarios.length}
+                  />
+                  <RatingBar
+                    rating={2}
+                    count={
+                      comentarios.filter((item) => item.calification == 2)
+                        .length
+                    }
+                    totalReviews={comentarios.length}
+                  />
+                  <RatingBar
+                    rating={1}
+                    count={
+                      comentarios.filter((item) => item.calification == 1)
+                        .length
+                    }
+                    totalReviews={comentarios.length}
+                  />
                 </View>
 
                 <View style={styles.puntuacionContainer}>
                   <Text style={{ fontSize: 40 }}>
-                    {promedioCalificacion.toFixed(1)}
+                    {restaurante.reviews &&
+                      restaurante.reviews.length > 0 &&
+                      (
+                        restaurante.reviews.reduce(
+                          (a, b) => parseInt(a) + parseInt(b.calification),
+                          0
+                        ) / restaurante.reviews.length
+                      ).toFixed(1)}
+                    {restaurante.reviews &&
+                      restaurante.reviews.length == 0 &&
+                      "0"}
                   </Text>
 
-                  <StarRating rating={Math.round(promedioCalificacion)} />
+                  <StarRating
+                    rating={Math.round(
+                      restaurante.reviews && restaurante.reviews.length > 0
+                        ? (
+                            restaurante.reviews.reduce(
+                              (a, b) => parseInt(a) + parseInt(b.calification),
+                              0
+                            ) / restaurante.reviews.length
+                          ).toFixed(1)
+                        : 0
+                    )}
+                  />
                   <Text style={{ paddingBottom: 20 }}>
                     {totalComentarios} opiniones
                   </Text>
 
-                  <TouchableOpacity style={styles.botonComentario}>
+                  <TouchableOpacity
+                    onPress={() => setModalCrearComentarioVisible(true)}
+                    style={styles.botonComentario}
+                  >
                     <Icon name="comment" size={15} color="#74C0FC" />
                     <Text style={styles.botonTexto}>Dejar comentario</Text>
                   </TouchableOpacity>
@@ -420,6 +480,11 @@ const Local = () => {
           </TabView.Item>
         </TabView>
       </SafeAreaView>
+      <ModalCrearComentario
+        restaurante={restaurante}
+        visible={modalCrearComentarioVisible}
+        onClose={() => setModalCrearComentarioVisible(false)}
+      />
     </SafeAreaProvider>
   );
 };
@@ -467,13 +532,14 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
     borderWidth: 1,
     borderColor: "#656874",
+    overflow: "hidden",
+    padding: 1,
   },
 
   barraCalificacionRelleno: {
-    height: "80%",
+    height: "100%",
     backgroundColor: "#f4b400",
     borderRadius: 5,
-    margin: 1,
   },
 
   ratingCount: {

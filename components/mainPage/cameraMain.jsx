@@ -101,6 +101,8 @@ export default function CameraScreen() {
       }
     );
 
+    console.log(coords);
+
     if (response.status === 200) {
       const data = await response.json();
       /**
@@ -110,6 +112,7 @@ export default function CameraScreen() {
         .sort((a, b) => a.distance - b.distance)
         .slice(0, 4);
 
+        console.log(restaurantes);
       setRestaurantes(restaurantes);
     } else {
       console.log("error");

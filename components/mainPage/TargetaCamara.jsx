@@ -40,10 +40,12 @@ export default function TargetaCamara({
 
   const abrirTargeta = () => {
     if (abriendose) return;
-    setAbriendose(true);
-    LayoutAnimation.spring(() => {
-      setAbriendose(false);
-    });
+    if (Platform.Version > 34) {
+      setAbriendose(true);
+      LayoutAnimation.spring(() => {
+        setAbriendose(false);
+      });
+    }
     if (targetaSeleccionada === index) {
       setHeight(INITIAL_HEIGHT);
       setTargetaSeleccionada(null);
@@ -56,13 +58,13 @@ export default function TargetaCamara({
   useEffect(() => {
     console.log("Platform.Version", Platform.Version);
 
-    if (UIManager.setLayoutAnimationEnabledExperimental) {
+    if (Platform.Version > 34) {
       LayoutAnimation.spring();
-      if (targetaSeleccionada != index) {
-        setHeight(INITIAL_HEIGHT);
-      } else {
-        setHeight(INITIAL_HEIGHT + EXTRA_HEIGHT);
-      }
+    }
+    if (targetaSeleccionada != index) {
+      setHeight(INITIAL_HEIGHT);
+    } else {
+      setHeight(INITIAL_HEIGHT + EXTRA_HEIGHT);
     }
   }, [targetaSeleccionada]);
 
