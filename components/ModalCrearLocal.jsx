@@ -15,6 +15,7 @@ import { jwtDecode as decode } from "jwt-decode";
 import * as Location from "expo-location";
 import { useCookies } from "react-cookie";
 import * as ImagePicker from "expo-image-picker";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
   const [nombre, setNombre] = useState("");

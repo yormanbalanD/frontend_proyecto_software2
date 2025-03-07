@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Pressable, TextInput, ImageBackground } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  TextInput,
+  ImageBackground,
+} from "react-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import Colors from "@/constants/Colors";
@@ -8,6 +15,7 @@ import Entypo from "@expo/vector-icons/Entypo";
 import Notificacion from "@/components/ModalNotificacion";
 import { useFetch } from "../utils/fetch/useFetch"; // Asegúrate de usar la importación con llaves
 import endpoints from "../utils/fetch/endpoints-importantes.json";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Signup() {
   const router = useRouter();
@@ -43,7 +51,12 @@ export default function Signup() {
   const [modalSuccess, setModalSuccess] = useState(false); // Éxito del modal
 
   const { data, loading, error, fetchData } = useFetch();
-  const { data: emailValidationData, loading: emailValidationLoading, error: emailValidationError, fetchData: validateEmail } = useFetch();
+  const {
+    data: emailValidationData,
+    loading: emailValidationLoading,
+    error: emailValidationError,
+    fetchData: validateEmail,
+  } = useFetch();
 
   const validarFormulario = async () => {
     if (!userData.name) {
@@ -52,21 +65,21 @@ export default function Signup() {
       setModalVisible(true);
       return false;
     }
-  
+
     if (userData.name.length < 3) {
       setModalMessage("El nombre de usuario debe tener al menos 3 caracteres.");
       setModalSuccess(false);
       setModalVisible(true);
       return false;
     }
-  
+
     if (!userData.email) {
       setModalMessage("El correo electrónico es obligatorio.");
       setModalSuccess(false);
       setModalVisible(true);
       return false;
     }
-  
+
     // Validación de formato de correo electrónico (usando una expresión regular)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(userData.email)) {
@@ -77,19 +90,27 @@ export default function Signup() {
     }
 
     if (userData.email.length > 50) {
-      setModalMessage("El correo electrónico debe tener menos de 50 caracteres.");
+      setModalMessage(
+        "El correo electrónico debe tener menos de 50 caracteres."
+      );
       setModalSuccess(false);
       setModalVisible(true);
       return false;
     }
 
     const emailValidationUrl = `https://emailverification.whoisxmlapi.com/api/v3?apiKey=at_iFCVm77T67rg3vK28nnSUdCUNkpwW&emailAddress=${userData.email}`;
-    const emailValidationOptions = { method: 'GET', headers: { accept: 'application/json' } };
+    const emailValidationOptions = {
+      method: "GET",
+      headers: { accept: "application/json" },
+    };
 
     await validateEmail(emailValidationUrl, emailValidationOptions); // Llama a useFetch
 
     if (emailValidationError) {
-      setModalMessage("Error al validar el correo electrónico: " + (emailValidationError.message || "Error desconocido"));
+      setModalMessage(
+        "Error al validar el correo electrónico: " +
+          (emailValidationError.message || "Error desconocido")
+      );
       setModalSuccess(false);
       setModalVisible(true);
       return false;
@@ -108,7 +129,7 @@ export default function Signup() {
       setModalVisible(true);
       return false;
     }
-  
+
     // Validación de longitud mínima de contraseña
     if (userData.password.length < 4) {
       setModalMessage("La contraseña debe tener al menos 4 caracteres.");
@@ -123,7 +144,7 @@ export default function Signup() {
       setModalVisible(true);
       return false;
     }
-  
+
     if (userData.password !== userData.confirmPassword) {
       setModalMessage("Las contraseñas no coinciden.");
       setModalSuccess(false);
@@ -131,23 +152,30 @@ export default function Signup() {
       return false;
     }
     return true;
-  }
+  };
 
   const handleSignup = async () => {
-    if (!await validarFormulario()) {
+    if (!(await validarFormulario())) {
       return;
-    }    
+    }
 
-    await fetchData(
-      "https://backend-swii.vercel.app/api/createUser",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(userData),
-      }
-    );
+    await fetchData("https://backend-swii.vercel.app/api/createUser", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(userData),
+    });
+  };
+
+  const saveToken = async (value) => {
+    try {
+      const value = await AsyncStorage.setItem("token", value);
+      console.log(value);
+    } catch (e) {
+      console.log(e);
+      return null;
+    }
   };
 
   useEffect(() => {
@@ -170,12 +198,13 @@ export default function Signup() {
         description: "",
         typo: "",
       });
+      saveToken(data.token);
     }
   }, [loading, error, data]);
 
   const Signup = () => {
-    router.push('mainpage');
-  }
+    router.push("mainpage");
+  };
 
   const closeModal = () => {
     setModalVisible(false);
@@ -231,19 +260,17 @@ export default function Signup() {
             style={[styles.textInput, nombreFocused && { outline: "none" }]}
             placeholder="Nombre Del Usuario"
             value={userData.name}
-            onFocus={()=> setNombreFocused(true)}
-            onBlur={()=> setNombreFocused(false)}
+            onFocus={() => setNombreFocused(true)}
+            onBlur={() => setNombreFocused(false)}
             onChangeText={(value) => handleInputChange("name", value)}
           />
           <TextInput
             placeholderTextColor={"#acacac"}
-            style={[styles.textInput, 
-              correoFocused && {outline: "none"}
-            ]}
+            style={[styles.textInput, correoFocused && { outline: "none" }]}
             value={userData.email}
             placeholder="Correo"
-            onFocus={()=> setCorreoFocused(true)}
-            onBlur={()=> setCorreoFocused(false)}
+            onFocus={() => setCorreoFocused(true)}
+            onBlur={() => setCorreoFocused(false)}
             onChangeText={(value) => handleInputChange("email", value)}
           />
           <View
@@ -262,8 +289,8 @@ export default function Signup() {
               placeholder="Contraseña"
               secureTextEntry={!verPassword}
               value={userData.password}
-              onFocus={()=> setPasswordFocused(true)}
-              onBlur={()=> setPasswordFocused(false)}
+              onFocus={() => setPasswordFocused(true)}
+              onBlur={() => setPasswordFocused(false)}
               onChangeText={(value) => handleInputChange("password", value)}
             />
             {verPassword ? (
@@ -298,9 +325,11 @@ export default function Signup() {
               placeholder="Confirmar Contraseña"
               secureTextEntry={!verConfirmarPassword}
               value={userData.confirmPassword}
-              onFocus={()=> setConfirmarPasswordFocused(true)}
-              onBlur={()=> setConfirmarPasswordFocused(false)}
-              onChangeText={(value) => handleInputChange("confirmPassword", value)}
+              onFocus={() => setConfirmarPasswordFocused(true)}
+              onBlur={() => setConfirmarPasswordFocused(false)}
+              onChangeText={(value) =>
+                handleInputChange("confirmPassword", value)
+              }
             />
             {verConfirmarPassword ? (
               <Pressable
@@ -415,7 +444,7 @@ const styles = StyleSheet.create({
     paddingVertical: 30,
     paddingHorizontal: 30,
     width: "75%",
-    backgroundColor: "rgba(0,0,0, 0.6)"
+    backgroundColor: "rgba(0,0,0, 0.6)",
   },
   textInput: {
     fontFamily: "Open-sans",
@@ -427,7 +456,6 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.white,
     borderBottomWidth: 1,
     backgroundColor: "transparent",
-    color: Colors.white
+    color: Colors.white,
   },
 });
-
