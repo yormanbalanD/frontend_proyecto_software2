@@ -11,11 +11,12 @@ import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import Colors from "@/constants/Colors";
 import Entypo from "@expo/vector-icons/Entypo";
-
+import * as ImagePicker from "expo-image-picker";
 import Notificacion from "@/components/ModalNotificacion";
 import { useFetch } from "../utils/fetch/useFetch"; // Asegúrate de usar la importación con llaves
 import endpoints from "../utils/fetch/endpoints-importantes.json";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Picker } from "@react-native-picker/picker";
 
 export default function Signup() {
   const router = useRouter();
@@ -46,9 +47,21 @@ export default function Signup() {
     setUserData({ ...userData, [name]: value });
   };
 
+  const preguntasSeguridad = [
+    "¿Cuál es el nombre de tu primera mascota?",
+    "¿Cuál es tu ciudad natal?",
+    "¿Cuál es tu comida favorita?",
+    "¿Cuál es el nombre de tu escuela primaria?",
+  ];
+
   const [modalVisible, setModalVisible] = useState(false); // Estado para el modal
   const [modalMessage, setModalMessage] = useState(""); // Mensaje del modal
   const [modalSuccess, setModalSuccess] = useState(false); // Éxito del modal
+
+  const [preguntaSeguridad1, setPreguntaSeguridad1] = useState(preguntasSeguridad[0]);
+  const [respuestaSeguridad1, setRespuestaSeguridad1] = useState("");
+  const [preguntaSeguridad2, setPreguntaSeguridad2] = useState(preguntasSeguridad[1]);
+  const [respuestaSeguridad2, setRespuestaSeguridad2] = useState("");
 
   const { data, loading, error, fetchData } = useFetch();
   const {
@@ -154,6 +167,31 @@ export default function Signup() {
     return true;
   };
 
+  const seleccionarImagen = async () => {
+      // Pedir permiso de acceso a la galería
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        alert("Se requiere permiso para acceder a la galería.");
+        return;
+      }
+  
+      // Abrir la galería
+      const resultado = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: "images",
+        allowsEditing: true,
+        base64: true,
+        quality: 0.6, // Calidad de la imagen (1 = máxima calidad)
+        allowsMultipleSelection: false,
+      });
+  
+      // Si el usuario no cancela, guardar la imagen seleccionada
+      if (!resultado.canceled) {
+        setFotoPerfil(
+          `data:${resultado.assets[0].mimeType};base64,${resultado.assets[0].base64}`
+        );
+      }
+    };
+
   const handleSignup = async () => {
     if (!(await validarFormulario())) {
       return;
@@ -217,8 +255,8 @@ export default function Signup() {
     <ImageBackground //Main page
       source={require("@/assets/images/registrarse (2).png")}
       style={{
-        height: "100%",
-        width: "100%",
+        height: "100dvh",
+        width: "100dvw",
         alignItems: "center",
         justifyContent: "center",
       }}
@@ -227,8 +265,7 @@ export default function Signup() {
         style={{
           flexDirection: "row",
           alignItems: "center",
-          justifyContent: "center",
-          marginBottom: 50,
+          justifyContent: "center",          
           width: "80%",
         }}
       >
@@ -347,10 +384,47 @@ export default function Signup() {
               </Pressable>
             )}
           </View>
+           {/* Pregunta de seguridad 1 */}
+          <Text style={styles.titulo}>Pregunta de Seguridad 1</Text>
+          <Picker
+            selectedValue={preguntaSeguridad1}
+            onValueChange={(itemValue) => setPreguntaSeguridad1(itemValue)}
+            style={{ color: Colors.white, width: "100%" }}
+          >
+            {preguntasSeguridad.map((pregunta, index) => (
+              <Picker.Item key={index} label={pregunta} value={pregunta} />
+            ))}
+          </Picker>
+          <TextInput
+            placeholderTextColor={"#acacac"}
+            style={styles.textInput}
+            placeholder="Respuesta"
+            value={respuestaSeguridad1}
+            onChangeText={(value) => setRespuestaSeguridad1(value)}
+          />
+
+          {/* Pregunta de seguridad 2 */}
+          <Text style={styles.titulo}>Pregunta de Seguridad 2</Text>
+          <Picker
+            selectedValue={preguntaSeguridad2}
+            onValueChange={(itemValue) => setPreguntaSeguridad2(itemValue)}
+            style={{ color: Colors.white, width: "100%" }}
+          >
+            {preguntasSeguridad.map((pregunta, index) => (
+              <Picker.Item key={index} label={pregunta} value={pregunta} />
+            ))}
+          </Picker>
+          <TextInput
+            placeholderTextColor={"#acacac"}
+            style={styles.textInput}
+            placeholder="Respuesta"
+            value={respuestaSeguridad2}
+            onChangeText={(value) => setRespuestaSeguridad2(value)}
+          />
         </View>
 
         <Pressable
-          onPress={() => router.push("/")}
+          onPress={() => seleccionarImagen()}
           style={({ pressed }) => [
             styles.button,
             {
