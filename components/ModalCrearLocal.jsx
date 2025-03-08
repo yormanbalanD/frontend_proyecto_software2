@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Modal,
   View,
@@ -27,6 +27,8 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
   const [etiquetas, setEtiquetas] = useState([]);
   const [nuevaEtiqueta, setNuevaEtiqueta] = useState("");
   const [loading, setLoading] = useState(false);
+  const [botonHabilitado, setBotonHabilitado] = useState(false);
+  const [botonTextHabilitado, setBotonTextHabilitado] = useState(false);
   const [cookies] = useCookies(["token"]);
 
   const getToken = async () => {
@@ -73,6 +75,17 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
 
     return true; // Si todo está bien, retorna true
   };
+
+  useEffect(() => {
+    if (!nombre.trim() || !descripcion.trim() || !ubicacion.trim() || (coordenadas===null) || (imagenPrincipal===null)) {
+      setBotonHabilitado(true);
+      setBotonTextHabilitado(true); 
+    } else {
+      setBotonHabilitado(false);
+      setBotonTextHabilitado(false);
+    }
+    console.log(botonHabilitado);
+  }, [nombre, descripcion, ubicacion, coordenadas, imagenPrincipal]);
 
   const handleCrearLocal = async () => {
     if (!validarInputs()) return; // Si falla la validación, no ejecuta la petición
@@ -160,7 +173,7 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
     const resultado = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
       base64: true,
-      quality: 0.1,
+      quality: 0.4,
     });
 
     if (!resultado.canceled) {
@@ -350,10 +363,18 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={styles.createButton}
+                style={[
+                  styles.createButton,
+                  {
+                    borderColor: botonHabilitado ? "#736e69" : "#00bf62",
+                  },
+                ]}
                   onPress={handleCrearLocal}
                 >
-                  <Text style={styles.createButtonText}>Crear</Text>
+                  <Text style={[
+                    styles.createButtonText,
+                    { color: botonTextHabilitado ? "#736e69" : "#00bf62" },
+                  ]}>Crear</Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>
@@ -498,13 +519,11 @@ const styles = StyleSheet.create({
     padding: 6,
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: "#736e69",
     marginLeft: 20,
   },
   createButtonText: {
     fontSize: 12,
     fontFamily: "OpenSans-Bold",
-    color: "#736e69",
   },
   imageContainer: {
     position: "relative",
