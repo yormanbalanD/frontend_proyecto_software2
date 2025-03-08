@@ -7,7 +7,7 @@ import {
   Platform,
 } from "react-native";
 
-function Web({ size }) {
+function Web({ size, style }) {
   return (
     <View
       style={[
@@ -18,12 +18,13 @@ function Web({ size }) {
           opacity,
           backgroundColor: "#94a3b8",
         },
+        style,
       ]}
     />
   );
 }
 
-function Mobile({ size }) {
+function Mobile({ size, style }) {
   const opacity = useAnimatedValue(0.9);
 
   const animate = () => {
@@ -54,15 +55,18 @@ function Mobile({ size }) {
           opacity,
           backgroundColor: "#94a3b8",
         },
+        style,
       ]}
-    />
+    >
+      <Text> </Text>
+    </Animated.View>
   );
 }
 
-export default function PlaceholderText({ size, fontSize }) {
+export default function PlaceholderFotoPerfil({ size, fontSize, style }) {
   if (Platform.OS == "android" || Platform.OS == "ios") {
-    return <Mobile size={size} />;
+    return <Mobile style={style} size={size} />;
   } else {
-    return <Web size={size} />;
+    return <Web style={style} size={size} />;
   }
 }

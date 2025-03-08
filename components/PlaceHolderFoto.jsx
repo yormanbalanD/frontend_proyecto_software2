@@ -7,25 +7,24 @@ import {
   Platform,
 } from "react-native";
 
-function Web({ width, fontSize, style }) {
+function Web({ width, height, style }) {
   return (
     <View
       style={[
         {
-          opacity: 0.9,
-          backgroundColor: "#94a3b8",
           width,
-          borderRadius: 4,
-          style,
+          height,
+          borderRadius: size,
+          opacity,
+          backgroundColor: "#94a3b8",
         },
+        style
       ]}
-    >
-      <Text style={{ fontSize }}> </Text>
-    </View>
+    />
   );
 }
 
-function Mobile({ width, fontSize, style }) {
+function Mobile({ width, height, style }) {
   const opacity = useAnimatedValue(0.9);
 
   const animate = () => {
@@ -50,23 +49,22 @@ function Mobile({ width, fontSize, style }) {
     <Animated.View
       style={[
         {
+          width,
+          height,
+          borderRadius: 10,
           opacity,
           backgroundColor: "#94a3b8",
-          width,
-          borderRadius: 4,
         },
-        style,
+        style
       ]}
-    >
-      <Text style={{ fontSize }}> </Text>
-    </Animated.View>
+    />
   );
 }
 
-export default function PlaceholderText({ width, fontSize, style }) {
+export default function PlaceholderFoto({ width, height, style }) {
   if (Platform.OS == "android" || Platform.OS == "ios") {
-    return <Mobile style={style} width={width} fontSize={fontSize} />;
+    return <Mobile width={width} height={height} style={style} />;
   } else {
-    return <Web style={style} width={width} fontSize={fontSize} />;
+    return <Web width={width} height={height} style={style} />;
   }
 }
