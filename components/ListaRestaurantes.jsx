@@ -87,6 +87,7 @@ const styles = StyleSheet.create({
     padding: 10,
     alignItems: "center",
     justifyContent: "center",
+    elevation: 8,
   },
   cardImage: {
     width: 80,
