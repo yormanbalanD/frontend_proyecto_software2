@@ -2,12 +2,11 @@ import { View, Text, StyleSheet, Pressable, TextInput } from "react-native";
 import { useState } from "react";
 
 export default function ReportComment() {
-  const [text, onChangeText] = useState("");
-  const [checked1, setChecked1] = useState(false);
-  const [checked2, setChecked2] = useState(false);
-  const [checked3, setChecked3] = useState(false);
-  const [checked4, setChecked4] = useState(false);
-
+  const [textComment, setTextComment] = useState("");
+  const [selectedOption, setSelectedOption] = useState(null); 
+  const [message, setMessage] = useState('')
+  const [color, setColor] = useState("")
+  const [token, setToken] = useState("")
   const styles = StyleSheet.create({
     container: {
       display: "flex",
@@ -75,11 +74,33 @@ export default function ReportComment() {
       marginBottom: 8,
     },
   });
+ 
+  const getToken = async () => {
+    try {
+      const value = await AsyncStorage.getItem("token");
+      if (value != null) {
+        return value;
+      }
 
-  const renderCheckbox = (checked, setChecked, label) => (
+      setToken(value)
+    } catch (e) {
+      console.log(e);
+      return null;
+    }
+  };
+
+ useEffect(() => {
+  getToken()
+ }, [token])
+ 
+  const handleOptionSelect = (option) => {
+    setSelectedOption(option);
+  };
+
+  const renderCheckbox = (option, label) => (
     <Pressable
       style={styles.checkboxContainer}
-      onPress={() => setChecked(!checked)}
+      onPress={() => handleOptionSelect(option)}
     >
       <View
         style={{
@@ -94,7 +115,10 @@ export default function ReportComment() {
         }}
       >
         <View
-          style={[styles.checkbox, checked && styles.checkboxChecked]}
+          style={[
+            styles.checkbox,
+            selectedOption === option && styles.checkboxChecked, // Aplica el estilo si está seleccionado
+          ]}
         ></View>
       </View>
 
@@ -102,73 +126,109 @@ export default function ReportComment() {
     </Pressable>
   );
 
+  const handleSubmit = async (idRestaurante, idComentario) => {
+    if(selectedOption === null){
+      setMessage("Selecciona el tipo de denuncia ")
+      setColor("red")
+    }
+    
+    try {
+        await fetch(
+        `https://backend-swii.vercel.app/api/denunciarRestaurante/${idRestaurante}/${idComentario}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + token,
+          },
+          body: {
+            observacion: data.observation,
+            razon: selectedOption,
+          },
+        }
+      );
+      setColor("green")
+      setMessage("Envio Exitoso")
+    } catch (error) {
+      setColor("red")
+      setMessage("Ocurrio un error")
+      throw new Error(error);
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      <View style={styles.containerCard}>
-        <View style={styles.header}>
-          <Text style={styles.headerText}>Denunciar este comentario</Text>
-        </View>
+      <View style={styles.container}>
+        <View style={styles.containerCard}>
+          <View style={styles.header}>
+            <Text style={styles.headerText}>Denunciar este comentario</Text>
+          </View>
 
-        <View
-          style={{
-            width: "100%",
-            paddingLeft: 15,
-            marginTop: 16,
-            display: "flex",
-            itemsAlign: "center",
-            justifyContent: "center",
-          }}
-        >
-          {renderCheckbox(checked1, setChecked1, "Contenido inapropiado")}
-          {renderCheckbox(checked2, setChecked2, "Negocio Engañoso")}
-          {renderCheckbox(checked3, setChecked3, "Estafa")}
-          {renderCheckbox(checked4, setChecked4, "Contenido Sexual")}
-        </View>
-
-        <View
-          style={{
-            display: "flex",
-            width: "100%",
-            paddingLeft: 15,
-            paddingRight: 15,
-          }}
-        >
-          <Text
-            style={{ fontWeight: "normal", fontSize: 10, marginBottom: 15, marginTop: 15 }}
+          <View
+            style={{
+              width: "100%",
+              paddingLeft: 15,
+              marginTop: 16,
+              display: "flex",
+              itemsAlign: "center",
+              justifyContent: "center",
+            }}
           >
-            Comentario
-          </Text>
-          <TextInput
-            style={styles.input}
-            onChangeText={onChangeText}
-            value={text}
-            placeholder="Comparte detalles sobre tu denuncia (opcional)"
-          />
-        </View>
-        <View
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            gap: 16,
-            marginTop: 30,
-          }}
-        >
-          <Pressable style={styles.button}>
+            {renderCheckbox("inapropiado", "Contenido inapropiado")}
+            {renderCheckbox("engañoso", "Negocio Engañoso")}
+            {renderCheckbox("estafa", "Estafa")}
+            {renderCheckbox("sexual", "Contenido Sexual")}
+          </View>
+
+          <View
+            style={{
+              display: "flex",
+              width: "100%",
+              paddingLeft: 15,
+              paddingRight: 15,
+            }}
+          >
             <Text
-              style={{ color: "#545351", fontWeight: "bold", fontSize: 12 }}
+              style={{
+                fontWeight: "normal",
+                fontSize: 10,
+                marginBottom: 15,
+                marginTop: 15,
+              }}
             >
-              Cancelar
+              Comentario
             </Text>
-          </Pressable>
-          <Pressable style={styles.button}>
-            <Text
-              style={{ color: "#545351", fontWeight: "bold", fontSize: 12 }}
-            >
-              Denunciar
-            </Text>
-          </Pressable>
+            <TextInput
+              style={styles.input}
+              onChangeText={setTextComment}
+              value={textComment}
+              placeholder="Comparte detalles sobre tu denuncia (opcional)"
+            />
+          </View>
+          <View
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              gap: 16,
+              marginTop: 30,
+            }}
+          >
+            <Pressable style={styles.button}>
+              <Text
+                style={{ color: "#545351", fontWeight: "bold", fontSize: 12 }}
+              >
+                Cancelar
+              </Text>
+            </Pressable>
+            <Pressable  style={styles.button} onPress={handleSubmit}>
+              <Text
+                style={{ color: "#545351", fontWeight: "bold", fontSize: 12 }}
+              >
+                Denunciar
+              </Text>
+            </Pressable>
+          </View>
+           {message.length > 0 && <p style={{fontSize: "0.90rem", color: `${color}`}}>¡ {message} !</p>}
         </View>
       </View>
-    </View>
   );
 }
