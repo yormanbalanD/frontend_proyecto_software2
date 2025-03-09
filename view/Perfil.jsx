@@ -21,6 +21,7 @@ import PlaceholderFotoPerfil from "../components/PlaceholderFotoPerfil";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import ModalNotificacion from "@/components/ModalNotificacion";
+import ModalCerrarSesion from "@/components/Perfil/ModalCerrarSesion";
 
 export default function Perfil() {
   const router = useRouter();
@@ -39,6 +40,7 @@ export default function Perfil() {
     message: "",
     success: false,
   });
+  const [modalCerrarSesion, setModalCerrarSesion] = useState(false);
 
   const [modoEdicion, setModoEdicion] = useState(false);
 
@@ -87,6 +89,7 @@ export default function Perfil() {
         correo: data.userFound.email,
         fotoPerfil: data.userFound.fotoPerfil,
       });
+      console.log(data)
     } else {
       console.log(await response.json());
       alert("Error");
@@ -170,6 +173,11 @@ export default function Perfil() {
     }
   };
 
+  const cerrarSesion = () => {
+    AsyncStorage.clear();
+    router.push("/");
+  };
+
   useEffect(() => {
     getUser();
   }, []);
@@ -230,6 +238,23 @@ export default function Perfil() {
           style={styles.logo}
         />
         <Text style={styles.title}>FOODIGO</Text>
+        <Pressable
+          style={({ pressed }) => [
+            {
+              ...styles.boton,
+              opacity: pressed ? 0.8 : 1,
+              position: "absolute",
+              top: 6,
+              right: 30,
+              marginRight: 0,
+            },
+          ]}
+          onPress={() => {
+            setModalCerrarSesion(true);
+          }}
+        >
+          <Icon name="log-out" size={18} color="white" />
+        </Pressable>
       </View>
       <View style={{ alignItems: "center", gap: 3 }}>
         <View style={{ marginBottom: 15 }}>
@@ -416,6 +441,11 @@ export default function Perfil() {
           });
         }}
       />
+      <ModalCerrarSesion
+        setVisible={setModalCerrarSesion}
+        cerrarSesion={cerrarSesion}
+        visible={modalCerrarSesion}
+      />
     </View>
   );
 }
@@ -435,10 +465,11 @@ const styles = StyleSheet.create({
   header: {
     position: "absolute",
     top: 55,
-    left: 30,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    flex: 1,
+    width: "100%",
+    paddingHorizontal: 30,
   },
   title: {
     fontFamily: "League-Gothic",

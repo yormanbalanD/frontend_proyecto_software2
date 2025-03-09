@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
 import {
   Modal,
   View,
@@ -15,6 +14,7 @@ import { jwtDecode as decode } from "jwt-decode";
 import * as Location from "expo-location";
 import { useCookies } from "react-cookie";
 import * as ImagePicker from "expo-image-picker";
+import ModalDeCarga from "../components/ModalDeCarga"; // Importar el modal de carga
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
@@ -22,7 +22,13 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
   const [descripcion, setDescripcion] = useState("");
   const [ubicacion, setUbicacion] = useState("");
   const [coordenadas, setCoordenadas] = useState(null);
-  const [imagen, setImagen] = useState(null);
+  const [imagenPrincipal, setImagenPrincipal] = useState(null);
+  const [imagenesSecundarias, setImagenesSecundarias] = useState([]);
+  const [etiquetas, setEtiquetas] = useState([]);
+  const [nuevaEtiqueta, setNuevaEtiqueta] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [botonHabilitado, setBotonHabilitado] = useState(false);
+  const [botonTextHabilitado, setBotonTextHabilitado] = useState(false);
   const [cookies] = useCookies(["token"]);
 
   const getToken = async () => {
@@ -62,20 +68,34 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
       onSuccess("Debe obtener las coordenadas para continuar.", false);
       return false;
     }
-    if (imagen === null) {
-      onSuccess("Debe seleccionar una imagen para continuar.", false);
+    if (imagenPrincipal === null) {
+      onSuccess("Debe tomar una foto para continuar.", false);
       return false;
     }
 
     return true; // Si todo está bien, retorna true
   };
 
+  useEffect(() => {
+    if (!nombre.trim() || !descripcion.trim() || !ubicacion.trim() || (coordenadas===null) || (imagenPrincipal===null)) {
+      setBotonHabilitado(true);
+      setBotonTextHabilitado(true); 
+    } else {
+      setBotonHabilitado(false);
+      setBotonTextHabilitado(false);
+    }
+    console.log(botonHabilitado);
+  }, [nombre, descripcion, ubicacion, coordenadas, imagenPrincipal]);
+
   const handleCrearLocal = async () => {
     if (!validarInputs()) return; // Si falla la validación, no ejecuta la petición
+
+    setLoading(true); // Mostrar la pantalla de carga
 
     const userId = getUserId(); // Obtiene el ID del usuario desde el token
     if (!userId) {
       alert("Error: No se pudo obtener el usuario. Inicia sesión nuevamente.");
+      setLoading(false);
       return;
     }
     const response = await fetch(
@@ -85,13 +105,15 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
         body: JSON.stringify({
           name: nombre,
           own: userId,
-          fotoPerfil: imagen,
+          fotoPerfil: imagenPrincipal,
           description: descripcion,
+          etiquetas: etiquetas,
           address: ubicacion,
           latitude: parseFloat(coordenadas.latitude), // Convertir a número si es string
           longitude: parseFloat(coordenadas.longitude),
           viewed: 0, // Inicialmente en 0
           reviews: [], // Iniciar con un array vacío
+          fotos: imagenesSecundarias,
         }),
         headers: {
           "Content-Type": "application/json",
@@ -100,6 +122,8 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
       }
     );
 
+    setLoading(false);
+
     if (response.status === 200) {
       const result = await response.json();
       onSuccess("Local creado correctamente.", true);
@@ -107,7 +131,9 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
       setDescripcion("");
       setUbicacion("");
       setCoordenadas(null);
-      setImagen(null);
+      setImagenPrincipal(null);
+      setImagenesSecundarias([]);
+      setEtiquetas([]);
     } else {
       onSuccess("Error al crear local. Inténtalo de nuevo.", false);
     }
@@ -118,7 +144,9 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
     setDescripcion("");
     setUbicacion("");
     setCoordenadas(null);
-    setImagen(null);
+    setImagenPrincipal(null);
+    setImagenesSecundarias([]);
+    setEtiquetas([]);
     onClose();
   };
 
@@ -135,132 +163,227 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
     setCoordenadas(location.coords);
   };
 
-  const seleccionarImagen = async () => {
-    // Pedir permiso de acceso a la galería
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  const tomarFoto = async (tipo) => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
-      alert("Se requiere permiso para acceder a la galería.");
+      alert("Se requiere permiso para acceder a la cámara.");
       return;
     }
 
-    // Abrir la galería
-    const resultado = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: "images",
+    const resultado = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
       base64: true,
-      quality: 0.1, // Calidad de la imagen (1 = máxima calidad)
+      quality: 0.4,
     });
 
-    // Si el usuario no cancela, guardar la imagen seleccionada
     if (!resultado.canceled) {
-      setImagen(`data:image/jpeg;base64,${resultado.assets[0].base64}`);
+      const nuevaFoto = `data:image/jpeg;base64,${resultado.assets[0].base64}`;
+      if (tipo === "principal") {
+        setImagenPrincipal(nuevaFoto);
+      } else {
+        setImagenesSecundarias([...imagenesSecundarias, nuevaFoto]);
+      }
     }
   };
 
+  const eliminarImagenPrincipal = () => {
+    setImagenPrincipal(null);
+  };
+
+  const eliminarImagenSecundaria = (index) => {
+    setImagenesSecundarias(imagenesSecundarias.filter((_, i) => i !== index));
+  };
+
+  const agregarEtiqueta = () => {
+    if (nuevaEtiqueta.trim() !== "" && !etiquetas.includes(nuevaEtiqueta)) {
+      setEtiquetas([...etiquetas, nuevaEtiqueta.trim()]);
+      setNuevaEtiqueta("");
+    }
+  };
+
+  const eliminarEtiqueta = (index) => {
+    setEtiquetas(etiquetas.filter((_, i) => i !== index));
+  };
+
   return (
-    <Modal transparent={true} visible={visible} animationType="fade">
-      <View style={styles.overlay}>
-        <View style={styles.modalContainer}>
-          <ScrollView contentContainerStyle={styles.scrollContainer}>
-            <Text style={styles.modalTitle}>Nuevo Local</Text>
+    <>
+      <Modal transparent={true} visible={visible} animationType="fade">
+        <View style={styles.overlay}>
+          <View style={styles.modalContainer}>
+            <ScrollView contentContainerStyle={styles.scrollContainer}>
+              <Text style={styles.modalTitle}>Nuevo Local</Text>
 
-            <Text style={styles.label}>Nombre</Text>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                maxLength={20}
-                value={nombre}
-                onChangeText={setNombre}
-              />
-              <Text style={styles.charCount}>{nombre.length}/20</Text>
-              <Text style={styles.asterisk}>*</Text>
-            </View>
-
-            <Text style={styles.label}>Descripción</Text>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                maxLength={100}
-                value={descripcion}
-                onChangeText={setDescripcion}
-                multiline
-              />
-              <Text style={styles.charCount}>{descripcion.length}/100</Text>
-              <Text style={styles.asterisk}>*</Text>
-            </View>
-
-            <Text style={styles.label}>Ubicación</Text>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                maxLength={100}
-                value={ubicacion}
-                onChangeText={setUbicacion}
-                multiline
-              />
-              <Text style={styles.charCount}>{ubicacion.length}/100</Text>
-              <Text style={styles.asterisk}>*</Text>
-            </View>
-
-            <View style={styles.coorTextContainer}>
-              <MaterialIcons
-                name="place"
-                size={20}
-                color="black"
-                style={styles.icon}
-              />
-              <TextInput
-                style={styles.inputCoord}
-                value={
-                  coordenadas
-                    ? `${coordenadas.latitude}, ${coordenadas.longitude}`
-                    : ""
-                }
-                editable={false}
-              />
-            </View>
-
-            <TouchableOpacity
-              onPress={getCoordenadas}
-              style={styles.coordButton}
-            >
-              <Text style={styles.coordButtonText}>RECUPERAR COORDENADAS</Text>
-              <Entypo name="location" size={20} color="#fff" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={seleccionarImagen}
-              style={styles.addButton}
-            >
-              <Text style={styles.addButtonText}>AÑADIR</Text>
-              <MaterialIcons name="photo-camera" size={20} color="#fff" />
-            </TouchableOpacity>
-
-            {imagen && (
-              <View style={styles.imageContainer}>
-                <Image source={{ uri: imagen }} style={styles.image} />
+              <Text style={styles.label}>Nombre</Text>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  maxLength={20}
+                  value={nombre}
+                  onChangeText={setNombre}
+                />
+                <Text style={styles.charCount}>{nombre.length}/20</Text>
+                <Text style={styles.asterisk}>*</Text>
               </View>
-            )}
 
-            <View style={styles.buttonRow}>
+              <Text style={styles.label}>Descripción</Text>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  maxLength={100}
+                  value={descripcion}
+                  onChangeText={setDescripcion}
+                  multiline
+                />
+                <Text style={styles.charCount}>{descripcion.length}/100</Text>
+                <Text style={styles.asterisk}>*</Text>
+              </View>
+
+              <Text style={styles.label}>Ubicación</Text>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  maxLength={100}
+                  value={ubicacion}
+                  onChangeText={setUbicacion}
+                  multiline
+                />
+                <Text style={styles.charCount}>{ubicacion.length}/100</Text>
+                <Text style={styles.asterisk}>*</Text>
+              </View>
+
+              <View style={styles.coorTextContainer}>
+                <MaterialIcons
+                  name="place"
+                  size={20}
+                  color="black"
+                  style={styles.icon}
+                />
+                <TextInput
+                  style={styles.inputCoord}
+                  value={
+                    coordenadas
+                      ? `${coordenadas.latitude}, ${coordenadas.longitude}`
+                      : ""
+                  }
+                  editable={false}
+                />
+              </View>
+
               <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={handleCancelar}
+                onPress={getCoordenadas}
+                style={styles.coordButton}
               >
-                <Text style={styles.cancelButtonText}>Cancelar</Text>
+                <Text style={styles.coordButtonText}>
+                  RECUPERAR COORDENADAS
+                </Text>
+                <Entypo name="location" size={20} color="#fff" />
               </TouchableOpacity>
 
+              
               <TouchableOpacity
-                style={styles.createButton}
-                onPress={handleCrearLocal}
+                onPress={() => tomarFoto("principal")}
+                style={styles.addButton}
               >
-                <Text style={styles.createButtonText}>Crear</Text>
+                <Text style={styles.addButtonText}>Foto del Local</Text>
+                <MaterialIcons name="photo-camera" size={20} color="#fff" />
               </TouchableOpacity>
-            </View>
-          </ScrollView>
+
+              {imagenPrincipal && (
+                <View style={styles.imageContainer}>
+                  <Image
+                    source={{ uri: imagenPrincipal }}
+                    style={styles.image}
+                  />
+                  <TouchableOpacity
+                    onPress={eliminarImagenPrincipal}
+                    style={styles.deleteButton}
+                  >
+                    <MaterialIcons name="close" size={18} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+              )}
+
+             
+              <TouchableOpacity
+                onPress={() => tomarFoto("secundaria")}
+                style={styles.addButton}
+              >
+                <Text style={styles.addButtonText}>Tomar Más Fotos</Text>
+                <MaterialIcons name="add-a-photo" size={20} color="#fff" />
+              </TouchableOpacity>
+
+              <ScrollView horizontal>
+                {imagenesSecundarias.map((img, index) => (
+                  <View key={index} style={styles.imageContainer}>
+                    <Image source={{ uri: img }} style={styles.image} />
+                    <TouchableOpacity
+                      onPress={() => eliminarImagenSecundaria(index)}
+                      style={styles.deleteButton}
+                    >
+                      <MaterialIcons name="close" size={18} color="#fff" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </ScrollView>
+
+              <Text style={styles.label} marginTop={10}>
+                Etiquetas
+              </Text>
+              
+              <View style={styles.etiquetaInputContainer}>
+                <TextInput
+                  style={styles.inputEtiqueta}
+                  value={nuevaEtiqueta}
+                  onChangeText={setNuevaEtiqueta}
+                />
+                <TouchableOpacity
+                  onPress={agregarEtiqueta}
+                  style={styles.addEtiquetaButton}
+                >
+                  <MaterialIcons name="add" size={20} color="#fff" />
+                </TouchableOpacity>
+              </View>
+              <ScrollView horizontal>
+                {etiquetas.map((etiqueta, index) => (
+                  <View key={index} style={styles.etiquetaContainer}>
+                    <Text style={styles.etiquetaText}>{etiqueta}</Text>
+                    <TouchableOpacity onPress={() => eliminarEtiqueta(index)}>
+                      <MaterialIcons name="close" size={16} color="#fff" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </ScrollView>
+
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={handleCancelar}
+                >
+                  <Text style={styles.cancelButtonText}>Cancelar</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                style={[
+                  styles.createButton,
+                  {
+                    borderColor: botonHabilitado ? "#736e69" : "#00bf62",
+                  },
+                ]}
+                  onPress={handleCrearLocal}
+                >
+                  <Text style={[
+                    styles.createButtonText,
+                    { color: botonTextHabilitado ? "#736e69" : "#00bf62" },
+                  ]}>Crear</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
         </View>
-      </View>
-    </Modal>
+      </Modal>
+
+      <ModalDeCarga visible={loading} />
+    </>
   );
 }
 
@@ -363,7 +486,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 8,
     marginTop: 10,
-    marginBottom: 50,
+    marginBottom: 10,
   },
   addButtonText: {
     color: "#fff",
@@ -375,7 +498,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     width: "70%",
-    marginTop: 10,
+    marginTop: 20,
   },
   cancelButton: {
     flex: 1,
@@ -396,24 +519,60 @@ const styles = StyleSheet.create({
     padding: 6,
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: "#736e69",
     marginLeft: 20,
   },
   createButtonText: {
     fontSize: 12,
     fontFamily: "OpenSans-Bold",
-    color: "#736e69",
   },
   imageContainer: {
-    width: 100, // Ajusta según el tamaño que necesites
-    height: 100,
-    borderRadius: 10,
-    overflow: "hidden",
-    marginBottom: 40,
+    position: "relative",
+    margin: 5,
   },
   image: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+  },
+  deleteButton: {
+    position: "absolute",
+    top: 5,
+    right: 5,
+    backgroundColor: "red",
+    borderRadius: 15,
+    padding: 3,
+  },
+  etiquetaContainer: {
+    flexDirection: "row",
+    backgroundColor: "#0e87d6",
+    borderRadius: 8,
+    padding: 8,
+    margin: 10,
+    alignItems: "center",
+  },
+  etiquetaText: {
+    color: "#fff",
+    marginRight: 5,
+    fontFamily: "Open-Sans",
+    fontSize: 12,
+  },
+  etiquetaInputContainer: {
+    flexDirection: "row",
     width: "100%",
-    height: "100%",
-    objectFit: "cover", // Esto recorta la imagen para llenar el espacio cuadrado
+    marginBottom: 10,
+  },
+  inputEtiqueta: {
+    flex: 1,
+    borderBottomWidth: 1,
+    borderBottomColor: "#736e69",
+    borderRadius: 5,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+  },
+  addEtiquetaButton: {
+    marginLeft: 10,
+    backgroundColor: "#8c1b1d",
+    padding: 8,
+    borderRadius: 8,
   },
 });

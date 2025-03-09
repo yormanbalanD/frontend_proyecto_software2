@@ -18,102 +18,12 @@ import { useCookies } from "react-cookie";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import PlaceholderFotoPerfil from "../components/PlaceholderFotoPerfil";
 import ModalCrearComentario from "../components/ModalCrearComentario";
-
-const StarRating = ({ rating, maxStars = 5 }) => {
-  return (
-    <View style={{ flexDirection: "row" }}>
-      {[...Array(maxStars)].map((_, i) => (
-        <Icon
-          key={i}
-          name={i < rating ? "star" : "star"}
-          color={i < rating ? "#FFD700" : "#fff"}
-          size={20}
-        />
-      ))}
-    </View>
-  );
-};
-
-const RenderComentario = ({ item }) => {
-  const [fotoPerfil, setFotoPerfil] = useState(null);
-  const getToken = async () => {
-    try {
-      const value = await AsyncStorage.getItem("token");
-      if (value != null) {
-        return value;
-      }
-    } catch (e) {
-      console.log(e);
-      return null;
-    }
-  };
-
-  const getUser = async () => {
-    const response = await fetch(
-      "https://backend-swii.vercel.app/api/getUser/" + item.idUser,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${await getToken()}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    if (response.status == 200) {
-      const data = await response.json();
-      setFotoPerfil(data.userFound.fotoPerfil);
-      console.log(data.userFound.fotoPerfil.slice(0, 10));
-    } else {
-      console.log(await response.json());
-      alert("Error");
-    }
-  };
-
-  useEffect(() => {
-    getUser();
-  }, []);
-
-  return (
-    <View style={styles.card}>
-      <View style={styles.cardTexto}>
-        <Text style={styles.comentario}>{item.comment}</Text>
-        <Text style={styles.nombreCc}>{item.userName}</Text>
-        <StarRating rating={item.calificacion} />
-      </View>
-      <View style={styles.logoContainerComent}>
-        {fotoPerfil == null ? (
-          <PlaceholderFotoPerfil size={60} fontSize={50} />
-        ) : (
-          <Image
-            source={
-              !fotoPerfil.startsWith("data:image")
-                ? require("@/assets/images/avatarPrueba.png")
-                : { uri: fotoPerfil }
-            }
-            style={styles.fotoPerfil}
-          />
-        )}
-      </View>
-    </View>
-  );
-};
-
-const RatingBar = ({ rating, count, totalReviews }) => {
-  return (
-    <View style={styles.ratingBarContainer}>
-      <Text style={styles.ratingText}>{rating}</Text>
-      <View style={styles.barraCalificacionFondo}>
-        <View
-          style={[
-            styles.barraCalificacionRelleno,
-            { width: `${(count / totalReviews) * 100}%` },
-          ]}
-        />
-      </View>
-    </View>
-  );
-};
+import TabDescripcion from "../components/Local/TabDescripcion";
+import TabOpiniones from "../components/Local/TabOpiniones";
+import PlaceholderFoto from "../components/PlaceHolderFoto";
+import PlaceholderText from "../components/PlaceholderText";
+import { jwtDecode as decode } from "jwt-decode";
+import { set } from "react-hook-form";
 
 const Local = () => {
   const params = useLocalSearchParams();
@@ -126,6 +36,7 @@ const Local = () => {
   const [modalCrearComentarioVisible, setModalCrearComentarioVisible] =
     useState(false);
   const [cookies] = useCookies(["token"]);
+  const [liked, setLiked] = useState(false);
 
   const getToken = async () => {
     try {
@@ -163,6 +74,7 @@ const Local = () => {
       const data = await response.json();
       setRestaurante(data.restaurantFound);
       setComentarios(data.restaurantFound.reviews);
+      setLiked(data.liked);
     } else {
       console.log("error");
       console.log(response);
@@ -170,7 +82,6 @@ const Local = () => {
   };
 
   useEffect(() => {
-    console.log(params);
     if (!params.restaurante) {
       console.log("no hay restaurante");
       navigate.back();
@@ -189,39 +100,9 @@ const Local = () => {
       setFontsLoaded(true);
     };
     loadFonts();
-    console.log(params);
   }, []);
 
   const [index, setIndex] = useState(0);
-  const images = [
-    { id: "1", source: require("../assets/images/McDonald's_logo.svg.png") },
-    { id: "2", source: require("../assets/images/local2.png") },
-    { id: "3", source: require("../assets/images/local3.jpg") },
-    { id: "4", source: require("../assets/images/local3.jpg") },
-    { id: "5", source: require("../assets/images/local3.jpg") },
-    { id: "6", source: require("../assets/images/local3.jpg") },
-  ];
-
-  const renderImagen = ({ item }) => (
-    <View style={styles.imageLocalContainer}>
-      <Image source={item.source} style={styles.image} />
-    </View>
-  );
-
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const flatListRef = useRef(null);
-
-  const sigImagen = () => {
-    const nextIndex = currentIndex < images.length - 1 ? currentIndex + 1 : 0;
-    setCurrentIndex(nextIndex);
-    flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
-  };
-
-  const antImagen = () => {
-    const prevIndex = currentIndex > 0 ? currentIndex - 1 : images.length - 1;
-    setCurrentIndex(prevIndex);
-    flatListRef.current?.scrollToIndex({ index: prevIndex, animated: true });
-  };
 
   const calcCantidadOpiniones = (comentarios) => {
     const cantidad = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
@@ -231,10 +112,63 @@ const Local = () => {
     return cantidad;
   };
 
+  const toggleLike = async () => {
+    try {
+      if (!liked) {
+        console.log("liked", liked);
+        const response = await fetch(
+          "https://backend-swii.vercel.app/api/addFavoriteRestaurant",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + (await getToken()),
+            },
+            body: JSON.stringify({
+              restaurantId: restaurante._id,
+            }),
+          }
+        );
+
+        setLiked(true);
+        if (response.status === 200) {
+          const data = await response.json();
+        } else {
+          console.log("error Liked");
+          setLiked(false);
+        }
+      } else {
+        const response = await fetch(
+          "https://backend-swii.vercel.app/api/deleteRestaurantFromLiked/" +
+            (await getUserId()),
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + (await getToken()),
+            },
+            body: JSON.stringify({
+              idRestaurants: [restaurante._id],
+            }),
+          }
+        );
+        setLiked(false);
+
+        if (response.status === 200) {
+          const data = await response.json();
+        } else {
+          console.log("error DisLiked");
+          setLiked(true);
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      setLiked(!liked);
+    }
+  };
+
   const cantidad = calcCantidadOpiniones(comentarios);
   const maxOpiniones = Math.max(...Object.values(cantidad));
-
-  const totalComentarios = comentarios.length;
 
   return (
     <SafeAreaProvider>
@@ -253,9 +187,9 @@ const Local = () => {
         <View style={styles.restauranteInfo}>
           <Text style={styles.restauranteNombre}>{restaurante.name}</Text>
           <View style={styles.seccion}>
-            <Pressable style={{ marginRight: 10 }}>
+            <Pressable onPress={toggleLike} style={{ marginRight: 10 }}>
               <Icon
-                name="heart"
+                name={liked ? "heart" : "heart-o"}
                 type="font-awesome"
                 size={30}
                 color="#8c0e03"
@@ -269,9 +203,21 @@ const Local = () => {
               color="#2199e4"
               style={styles.iconos}
             />
-            <Text style={styles.ratingText}>
-              {restaurante.reviews ? restaurante.reviews.length : 0}
-            </Text>
+
+            {!restaurante.reviews ? (
+              <PlaceholderText
+                style={{
+                  width: "30",
+                  marginRight: 8,
+                }}
+                width={30}
+                fontSize={20}
+              />
+            ) : (
+              <Text style={styles.ratingText}>
+                {restaurante.reviews ? restaurante.reviews.length : 0}
+              </Text>
+            )}
             <Icon
               name="star"
               type="font-awesome"
@@ -279,17 +225,27 @@ const Local = () => {
               color="#e4dd21"
               style={styles.iconos}
             />
-            <Text style={styles.ratingText}>
-              {restaurante.reviews &&
-                restaurante.reviews.length > 0 &&
-                (
-                  restaurante.reviews.reduce(
-                    (a, b) => parseInt(a) + parseInt(b.calification),
-                    0
-                  ) / restaurante.reviews.length
-                ).toFixed(1)}
-              {restaurante.reviews && restaurante.reviews.length == 0 && "0"}
-            </Text>
+            {!restaurante.reviews ? (
+              <PlaceholderText
+                style={{
+                  width: "30",
+                  marginRight: 8,
+                }}
+                width={30}
+                fontSize={20}
+              />
+            ) : (
+              <Text style={styles.ratingText}>
+                {restaurante.reviews.length > 0 &&
+                  (
+                    restaurante.reviews.reduce(
+                      (a, b) => parseInt(a) + parseInt(b.calification),
+                      0
+                    ) / restaurante.reviews.length
+                  ).toFixed(1)}
+                {restaurante.reviews.length == 0 && "0"}
+              </Text>
+            )}
           </View>
         </View>
 
@@ -299,11 +255,11 @@ const Local = () => {
           }}
         >
           {!restaurante.fotoPerfil ? (
-            <View />
+            <PlaceholderFoto width={"100%"} height={"100%"} />
           ) : (
             <Image
               source={{ uri: restaurante.fotoPerfil }}
-              style={{ ...styles.fixedImage, backgroundColor: "#cdcdcd97" }}
+              style={{ ...styles.fixedImage }}
             />
           )}
         </View>
@@ -328,156 +284,20 @@ const Local = () => {
           />
         </Tab>
 
-        <TabView value={index} onChange={setIndex} animationType="spring">
+        <TabView
+          value={index}
+          onChange={setIndex}
+          animationType="spring"
+          minSwipeRatio={0.3}
+        >
           {/* Descripcion */}
-          <TabView.Item>
-            <ScrollView>
-              <View>
-                <View style={styles.descripcion}>
-                  <Text
-                    style={{ ...styles.descripcion, padding: 0, marginLeft: 0 }}
-                  >
-                    {restaurante.description}
-                  </Text>
-                </View>
-                <View style={styles.descripcion}>
-                  <Icon name="map-marker" size={35} color="#8c0e03" />
-                  <Text style={styles.descripcion}>
-                    {restaurante.latitude}, {restaurante.longitude}
-                  </Text>
-                </View>
-                <View style={styles.descripcion}>
-                  <Icon name="location-arrow" size={35} color="#8c0e03" />
-                  <Text style={styles.descripcion}>{restaurante.address}</Text>
-                </View>
-
-                <Text style={styles.fototexto}>Fotos</Text>
-                <View style={styles.fotoHeader}>
-                  <TouchableOpacity onPress={antImagen}>
-                    <Icon
-                      name="chevron-circle-left"
-                      size={25}
-                      color="#8c0e03"
-                    />
-                  </TouchableOpacity>
-                  <FlatList
-                    ref={flatListRef}
-                    data={images}
-                    renderItem={renderImagen}
-                    keyExtractor={(item) => item.id}
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.lista}
-                  />
-                  <TouchableOpacity onPress={sigImagen}>
-                    <Icon
-                      name="chevron-circle-right"
-                      type="font-awesome"
-                      size={25}
-                      color="#8c0e03"
-                    />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </ScrollView>
-          </TabView.Item>
+          <TabDescripcion restaurante={restaurante} />
 
           {/* Opiniones */}
-          <TabView.Item>
-            <ScrollView>
-              <View style={styles.total}>
-                <View style={styles.CalificacionDistribucionContainer}>
-                  <RatingBar
-                    rating={5}
-                    count={
-                      comentarios.filter((item) => item.calification == 5)
-                        .length
-                    }
-                    totalReviews={comentarios.length}
-                  />
-                  <RatingBar
-                    rating={4}
-                    count={
-                      comentarios.filter((item) => item.calification == 4)
-                        .length
-                    }
-                    totalReviews={comentarios.length}
-                  />
-                  <RatingBar
-                    rating={3}
-                    count={
-                      comentarios.filter((item) => item.calification == 3)
-                        .length
-                    }
-                    totalReviews={comentarios.length}
-                  />
-                  <RatingBar
-                    rating={2}
-                    count={
-                      comentarios.filter((item) => item.calification == 2)
-                        .length
-                    }
-                    totalReviews={comentarios.length}
-                  />
-                  <RatingBar
-                    rating={1}
-                    count={
-                      comentarios.filter((item) => item.calification == 1)
-                        .length
-                    }
-                    totalReviews={comentarios.length}
-                  />
-                </View>
-
-                <View style={styles.puntuacionContainer}>
-                  <Text style={{ fontSize: 40 }}>
-                    {restaurante.reviews &&
-                      restaurante.reviews.length > 0 &&
-                      (
-                        restaurante.reviews.reduce(
-                          (a, b) => parseInt(a) + parseInt(b.calification),
-                          0
-                        ) / restaurante.reviews.length
-                      ).toFixed(1)}
-                    {restaurante.reviews &&
-                      restaurante.reviews.length == 0 &&
-                      "0"}
-                  </Text>
-
-                  <StarRating
-                    rating={Math.round(
-                      restaurante.reviews && restaurante.reviews.length > 0
-                        ? (
-                            restaurante.reviews.reduce(
-                              (a, b) => parseInt(a) + parseInt(b.calification),
-                              0
-                            ) / restaurante.reviews.length
-                          ).toFixed(1)
-                        : 0
-                    )}
-                  />
-                  <Text style={{ paddingBottom: 20 }}>
-                    {totalComentarios} opiniones
-                  </Text>
-
-                  <TouchableOpacity
-                    onPress={() => setModalCrearComentarioVisible(true)}
-                    style={styles.botonComentario}
-                  >
-                    <Icon name="comment" size={15} color="#74C0FC" />
-                    <Text style={styles.botonTexto}>Dejar comentario</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-              <View>
-                <ScrollView>
-                  {comentarios.map((item) => {
-                    return <RenderComentario item={item} key={item.id} />;
-                  })}
-                </ScrollView>
-              </View>
-            </ScrollView>
-          </TabView.Item>
+          <TabOpiniones
+            restaurante={restaurante}
+            setModalCrearComentarioVisible={setModalCrearComentarioVisible}
+          />
         </TabView>
       </SafeAreaView>
       <ModalCrearComentario
@@ -493,7 +313,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     fontFamily: "Open-Sans",
-    margin: 10,
+    padding: 10,
   },
   header: {
     flexDirection: "row",
@@ -573,10 +393,8 @@ const styles = StyleSheet.create({
     alignItems: "left",
   },
   seccion: {
-    margin: 3,
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 5,
   },
 
   iconos: {
