@@ -13,8 +13,9 @@ import Colors from "@/constants/Colors";
 import Entypo from "@expo/vector-icons/Entypo";
 import * as ImagePicker from "expo-image-picker";
 import Notificacion from "@/components/ModalNotificacion";
-import { useFetch } from "../utils/fetch/useFetch"; // Asegúrate de usar la importación con llaves
+import { useFetch } from "../utils/fetch/useFetch"; 
 import endpoints from "../utils/fetch/endpoints-importantes.json";
+import Arrow from "@/components/Arrow";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Picker } from "@react-native-picker/picker";
 
@@ -109,6 +110,14 @@ export default function Signup() {
       setModalSuccess(false);
       setModalVisible(true);
       return false;
+    }
+
+    if(!userData.fotoPerfil) {
+      setModalMessage(
+        "Es necesario que suba una foto de perfil"
+      );
+      setModalSuccess(false);
+      setModalVisible(true);
     }
 
     const emailValidationUrl = `https://emailverification.whoisxmlapi.com/api/v3?apiKey=at_iFCVm77T67rg3vK28nnSUdCUNkpwW&emailAddress=${userData.email}`;
@@ -252,49 +261,23 @@ export default function Signup() {
   };
 
   return (
-    <ImageBackground //Main page
+    <ImageBackground
       source={require("@/assets/images/registrarse (2).png")}
-      style={{
-        height: "100dvh",
-        width: "100dvw",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
+      style={styles.imageBackground}
     >
-      <View // Logo Container
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",          
-          width: "80%",
-        }}
-      >
-        {/* Logo De La APP */}
+      <View style={styles.logoContainer}>
         <Image
           source={require("@/assets/images/logo_recortado.png")}
-          style={{
-            height: 80,
-            width: 60,
-          }}
-          contentFit="contain"
+          style={styles.logoImage}
         />
-        <Text
-          style={{
-            fontSize: 60,
-            color: "#FFF",
-            fontFamily: "League-Gothic",
-            width: "auto",
-          }}
-        >
-          FOODIGO
-        </Text>
+        <Text style={styles.logoText}>FOODIGO</Text>
       </View>
       <View style={styles.container}>
-        <View style={{ flexDirection: "column", width: "100%" }}>
+        <View style={styles.inputContainer}>
           <Text style={styles.titulo}>Registrarse</Text>
           <TextInput
             placeholderTextColor={"#acacac"}
-            style={[styles.textInput, nombreFocused && { outline: "none" }]}
+            style={[styles.textInput, nombreFocused && styles.inputFocused]}
             placeholder="Nombre Del Usuario"
             value={userData.name}
             onFocus={() => setNombreFocused(true)}
@@ -303,25 +286,20 @@ export default function Signup() {
           />
           <TextInput
             placeholderTextColor={"#acacac"}
-            style={[styles.textInput, correoFocused && { outline: "none" }]}
+            style={[styles.textInput, correoFocused && styles.inputFocused]}
             value={userData.email}
             placeholder="Correo"
             onFocus={() => setCorreoFocused(true)}
             onBlur={() => setCorreoFocused(false)}
             onChangeText={(value) => handleInputChange("email", value)}
           />
-          <View
-            style={{
-              width: "100%",
-              justifyContent: "center",
-            }}
-          >
+          <View style={styles.passwordContainer}>
             <TextInput
               placeholderTextColor={"#acacac"}
               style={[
                 styles.textInput,
-                { paddingRight: 40 },
-                PasswordFocused && { outline: "none" },
+                styles.passwordInput,
+                PasswordFocused && styles.inputFocused,
               ]}
               placeholder="Contraseña"
               secureTextEntry={!verPassword}
@@ -333,31 +311,26 @@ export default function Signup() {
             {verPassword ? (
               <Pressable
                 onPress={() => setVerPassword(false)}
-                style={{ position: "absolute", right: 10 }}
+                style={styles.eyeIcon}
               >
                 <Entypo name="eye-with-line" size={24} color="#fff" />
               </Pressable>
             ) : (
               <Pressable
                 onPress={() => setVerPassword(true)}
-                style={{ position: "absolute", right: 10 }}
+                style={styles.eyeIcon}
               >
                 <Entypo name="eye" size={24} color="#fff" />
               </Pressable>
             )}
           </View>
-          <View
-            style={{
-              width: "100%",
-              justifyContent: "center",
-            }}
-          >
+          <View style={styles.passwordContainer}>
             <TextInput
               placeholderTextColor={"#acacac"}
               style={[
                 styles.textInput,
-                { paddingRight: 40 },
-                confirmarPasswordFocused && { outline: "none" },
+                styles.passwordInput,
+                confirmarPasswordFocused && styles.inputFocused,
               ]}
               placeholder="Confirmar Contraseña"
               secureTextEntry={!verConfirmarPassword}
@@ -371,30 +344,31 @@ export default function Signup() {
             {verConfirmarPassword ? (
               <Pressable
                 onPress={() => setVerConfirmarPassword(false)}
-                style={{ position: "absolute", right: 10 }}
+                style={styles.eyeIcon}
               >
                 <Entypo name="eye-with-line" size={24} color="#fff" />
               </Pressable>
             ) : (
               <Pressable
                 onPress={() => setVerConfirmarPassword(true)}
-                style={{ position: "absolute", right: 10 }}
+                style={styles.eyeIcon}
               >
                 <Entypo name="eye" size={24} color="#fff" />
               </Pressable>
             )}
           </View>
-           {/* Pregunta de seguridad 1 */}
-          <Text style={styles.titulo}>Pregunta de Seguridad 1</Text>
-          <Picker
-            selectedValue={preguntaSeguridad1}
-            onValueChange={(itemValue) => setPreguntaSeguridad1(itemValue)}
-            style={{ color: Colors.white, width: "100%" }}
-          >
-            {preguntasSeguridad.map((pregunta, index) => (
-              <Picker.Item key={index} label={pregunta} value={pregunta} />
-            ))}
-          </Picker>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={preguntaSeguridad1}
+              onValueChange={(itemValue) => setPreguntaSeguridad1(itemValue)}
+              style={styles.picker}
+              dropdownIconColor={Colors.lightGray}
+            >
+              {preguntasSeguridad.map((pregunta, index) => (
+                <Picker.Item key={index} label={pregunta} value={pregunta} style={styles.pickerItem}/>
+              ))}
+            </Picker>
+          </View>
           <TextInput
             placeholderTextColor={"#acacac"}
             style={styles.textInput}
@@ -402,18 +376,19 @@ export default function Signup() {
             value={respuestaSeguridad1}
             onChangeText={(value) => setRespuestaSeguridad1(value)}
           />
-
-          {/* Pregunta de seguridad 2 */}
-          <Text style={styles.titulo}>Pregunta de Seguridad 2</Text>
-          <Picker
-            selectedValue={preguntaSeguridad2}
-            onValueChange={(itemValue) => setPreguntaSeguridad2(itemValue)}
-            style={{ color: Colors.white, width: "100%" }}
-          >
-            {preguntasSeguridad.map((pregunta, index) => (
-              <Picker.Item key={index} label={pregunta} value={pregunta} />
-            ))}
-          </Picker>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={preguntaSeguridad2}
+              onValueChange={(itemValue) => setPreguntaSeguridad2(itemValue)}
+              style={styles.picker}
+              dropdownIconColor={Colors.lightGray}
+              itemStyle={styles.pickerItem}
+            >
+              {preguntasSeguridad.map((pregunta, index) => (
+                <Picker.Item key={index} label={pregunta} value={pregunta} style={styles.pickerItem}/>
+              ))}
+            </Picker>
+          </View >
           <TextInput
             placeholderTextColor={"#acacac"}
             style={styles.textInput}
@@ -427,53 +402,52 @@ export default function Signup() {
           onPress={() => seleccionarImagen()}
           style={({ pressed }) => [
             styles.button,
-            {
-              backgroundColor: pressed ? Colors.lightGray : Colors.white,
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-            },
+            pressed && styles.buttonPressed,
+            styles.buttonWithIcon,
           ]}
         >
-          <Text style={styles.textButton}>Subir foto</Text>
+          <Text style={[styles.textButton, {color: Colors.white}]}>Subir foto</Text>
           <Entypo
             name="camera"
             size={24}
-            color="#000"
-            style={{ paddingLeft: 5 }}
+            color={Colors.white}
+            style={styles.buttonIcon}
           />
         </Pressable>
 
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "center",
-            gap: 25,
-            width: "100%",
-          }}
-        >
+        <View style={styles.buttonGroup}>
           <Pressable
             onPress={() => router.push("/")}
             style={({ pressed }) => [
-              styles.button,
-              {
-                backgroundColor: pressed ? Colors.lightGray : Colors.white,
+              styles.buttonWithIcon,
+              {padding: 15,
+              borderRadius: 10,
               },
+              {backgroundColor: Colors.vinoDark},
+              pressed && styles.buttonPressed,
             ]}
           >
-            <Text style={styles.textButton}>Volver</Text>
+            <Text style={[styles.textButton, {color: Colors.white, marginLeft: 30}]}>Volver</Text>
+            <View style={{ left: 15, position: "absolute", transform: [{ rotate: "180deg" }] }}>
+              <Arrow />
+            </View>
           </Pressable>
 
           <Pressable
             style={({ pressed }) => [
-              styles.button,
-              {
-                backgroundColor: pressed ? Colors.lightGray : Colors.white,
+              styles.buttonWithIcon,
+              {backgroundColor: Colors.vino},
+              {padding: 15,
+              borderRadius: 10,
               },
+              pressed && styles.buttonPressed, 
             ]}
             onPress={() => handleSignup()}
           >
-            <Text style={styles.textButton}>Aceptar</Text>
+            <Text style={[styles.textButton, {color: Colors.white, marginRight: 30}]}>Aceptar</Text>
+            <View style={{ right: 15, position: "absolute" }}>
+              <Arrow />
+            </View>
           </Pressable>
         </View>
       </View>
@@ -488,37 +462,46 @@ export default function Signup() {
 }
 
 const styles = StyleSheet.create({
-  titulo: {
-    color: Colors.white,
-    fontFamily: "HeliosExt-Regular",
-    fontSize: 26,
+  imageBackground: {
+    height: "100%",
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
   },
-  button: {
-    backgroundColor: Colors.white,
-    borderRadius: 4,
-    paddingTop: 12,
-    paddingBottom: 12,
-    paddingLeft: 20,
-    paddingRight: 20,
-    boxShadow: "6px 6px 10px rgba(0, 0, 0, 0.6)",
+  logoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
   },
-  textButton: {
-    fontFamily: "Open-sans",
-    textAlign: "center",
-    color: Colors.primary,
-    textTransform: "uppercase",
-    fontSize: 12,
-    fontWeight: 600,
-    width: 70,
+  logoImage: {
+    width: "10%",
+    height: "70%",
+    resizeMode: "center"
+  },
+  logoText: {
+    color: '#FFF',
+    fontFamily: 'League-Gothic',
+    fontSize: 60,    
   },
   container: {
     flexDirection: "column",
     alignItems: "center",
-    gap: 35,
-    paddingVertical: 30,
-    paddingHorizontal: 30,
-    width: "75%",
     backgroundColor: "rgba(0,0,0, 0.6)",
+    padding: 20,
+    width: "90%",
+    gap: 10,
+    borderRadius: 20
+  },
+  inputContainer: {
+    flexDirection: "column",
+    width: "100%",
+    gap: 5
+  },
+  titulo: {
+    color: Colors.white,
+    fontFamily: "HeliosExt-Regular",
+    fontSize: 26,
   },
   textInput: {
     fontFamily: "Open-sans",
@@ -531,5 +514,73 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     backgroundColor: "transparent",
     color: Colors.white,
+    fontSize: 14,
+  },  
+  passwordContainer: {
+    justifyContent: "center",
+    margin: 0
+  },
+  eyeIcon: {
+    position: "absolute",
+    right: 10,
+  },
+  picker: {
+    color: Colors.lightGray,
+    backgroundColor: "transparent",
+    width: "100%",
+    fontFamily: "Open-sans",
+    fontSize: 14,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+  },
+  pickerItem: {
+    fontFamily: "Open-sans",
+    fontSize: 14,
+    width: "100%",
+    color: Colors.black
+  },
+  pickerContainer: {
+    width: "100%",
+    borderWidth: 1,
+    borderColor: Colors.lightGray,
+    borderRadius: 10,
+    overflow: "hidden",
+    
+  },
+  button: {
+    backgroundColor: Colors.white,
+    borderRadius: 4,
+    paddingTop: 12,
+    paddingBottom: 12,
+    paddingLeft: 20,
+    paddingRight: 20,
+    boxShadow: "6px 6px 10px rgba(0, 0, 0, 0.6)",
+  },
+  buttonPressed: {
+    backgroundColor: Colors.lightGray,
+  },
+  buttonWithIcon: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.blue,
+  },
+  textButton: {
+    fontFamily: "Open-sans",
+    textAlign: "center",
+    color: Colors.primary,
+    textTransform: "uppercase",
+    fontSize: 12,
+    fontWeight: 600,
+    width: 70,
+  },
+  buttonIcon: {
+    paddingLeft: 5,
+  },
+  buttonGroup: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 25,
+    width: "100%",
+    marginTop: 10
   },
 });
