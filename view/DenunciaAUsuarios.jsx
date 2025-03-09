@@ -71,29 +71,6 @@ const DenunciasScreenUsuarios = () => {
     }
   };
 
-  const fetchNameRestaurant = async (id) => {
-    try {
-      const response = await fetch(`https://backend-swii.vercel.app/api/getRestaurant/${id}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: "Bearer " + await getToken(),
-        },
-      });
-      const data = await response.json();
-      if (data && data.restaurantFound && data.restaurantFound.name) {
-        setUserNames((prevUserNames) => ({
-          ...prevUserNames,
-          [id]: data.restaurantFound.name,
-        }));
-        //console.log(`Restaurant name for ${id}:`, data.restaurantFound.name);
-      } else {
-        console.error('Unexpected response format:', data);
-      }
-    } catch (error) {
-      console.error('Error fetching restaurant data:', error);
-    }
-  };
 
   const deleteDenuncia = async (denunciaId) => {
     try {
