@@ -154,48 +154,53 @@ const DenunciasScreenLocales = () => {
       {loading ? (
         <ActivityIndicator size="large" color="#5a1a11" />
       ) : (
-        <FlatList
-          data={denuncias}
-          keyExtractor={(item) => item._id}
-          renderItem={({ item }) => (
-            <View style={styles.cardContainer}>
-              <View style={styles.card}>
-                <View style={styles.textContainer}>
-                  <View style={styles.iconCircle}>
-                    <FontAwesome name="home" size={12} color="white" />
-                  </View> 
-                  <Text><Text style={styles.bold}>Denunciante:</Text> {userNames[item.idDenunciante] || item.idDenunciante}</Text>
-                </View>
-                <View style={styles.textContainer}>
-                  <View style={styles.iconCircle}>
-                    <FontAwesome name="user" size={12} color="white" />
-                  </View> 
-                  <Text><Text style={styles.bold}>Denunciado:</Text> {userNames[item.idDenunciado] || item.idDenunciado}</Text>
-                </View>
-                <View style={styles.textContainer}>
-                  <View style={styles.iconCircle}>
-                    <FontAwesome name="question" size={12} color="white" />
-                  </View> 
-                  <Text><Text style={styles.bold}>Razón:</Text> {item.razon}</Text>
-                </View>
-                <View style={styles.textContainer}>
-                  <View style={styles.iconCircle}>
-                    <Zocial name="email" size={12} color="white" />
-                  </View> 
-                  <Text><Text style={styles.bold}>Comentario:</Text> {item.observacion}</Text>
-                </View>
-              </View>
-              <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.blockButton} onPress={() => handleAction(item._id, false)}>
-                  <Text style={styles.buttonText}>Bloquear</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.omitButton} onPress={() => handleAction(item._id, true)}>
-                  <Text style={styles.buttonText}>Omitir</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
+        <>
+          {denuncias.length === 0 && (
+            <Text style={styles.noDenunciasText}>No se han encontrado denuncias</Text>
           )}
-        />
+          <FlatList
+            data={denuncias}
+            keyExtractor={(item) => item._id}
+            renderItem={({ item }) => (
+              <View style={styles.cardContainer}>
+                <View style={styles.card}>
+                  <View style={styles.textContainer}>
+                    <View style={styles.iconCircle}>
+                      <FontAwesome name="home" size={12} color="white" />
+                    </View> 
+                    <Text><Text style={styles.bold}>Denunciante:</Text> {userNames[item.idDenunciante] || item.idDenunciante}</Text>
+                  </View>
+                  <View style={styles.textContainer}>
+                    <View style={styles.iconCircle}>
+                      <FontAwesome name="user" size={12} color="white" />
+                    </View> 
+                    <Text><Text style={styles.bold}>Denunciado:</Text> {userNames[item.idDenunciado] || item.idDenunciado}</Text>
+                  </View>
+                  <View style={styles.textContainer}>
+                    <View style={styles.iconCircle}>
+                      <FontAwesome name="question" size={12} color="white" />
+                    </View> 
+                    <Text><Text style={styles.bold}>Razón:</Text> {item.razon}</Text>
+                  </View>
+                  <View style={styles.textContainer}>
+                    <View style={styles.iconCircle}>
+                      <Zocial name="email" size={12} color="white" />
+                    </View> 
+                    <Text><Text style={styles.bold}>Comentario:</Text> {item.observacion}</Text>
+                  </View>
+                </View>
+                <View style={styles.buttonContainer}>
+                  <TouchableOpacity style={styles.blockButton} onPress={() => handleAction(item._id, false)}>
+                    <Text style={styles.buttonText}>Bloquear</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.omitButton} onPress={() => handleAction(item._id, true)}>
+                    <Text style={styles.buttonText}>Omitir</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+          />
+        </>
       )}
     </View>
   );
@@ -248,6 +253,12 @@ const styles = StyleSheet.create({
     backgroundColor: "gray",
     width: "100%",
     marginVertical: 20,
+  },
+  noDenunciasText: {
+    fontSize: 16,
+    color: "black", // Change this to a more contrasting color
+    textAlign: "center",
+    marginTop: 20,
   },
   cardContainer: {
     flexDirection: "row",
