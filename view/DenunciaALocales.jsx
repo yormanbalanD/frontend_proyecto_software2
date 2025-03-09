@@ -5,7 +5,7 @@ import { FontAwesome } from "@expo/vector-icons";
 import Zocial from '@expo/vector-icons/Zocial';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const DenunciasScreenUsuarios = () => {
+const DenunciasScreenLocales = () => {
   const router = useRouter();
   // Estado con las denuncias
   const [denuncias, setDenuncias] = useState([]);
@@ -35,7 +35,8 @@ const DenunciasScreenUsuarios = () => {
       });
       const data = await response.json();
       if (data && Array.isArray(data.denuncias)) {
-        setDenuncias(data.denuncias);
+        const filteredDenuncias = data.denuncias.filter(denuncia => denuncia.idComentario === "");
+        setDenuncias(filteredDenuncias);
       } else {
         console.error('Unexpected response format:', data);
       }
@@ -314,4 +315,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DenunciasScreenUsuarios;
+export default DenunciasScreenLocales;
