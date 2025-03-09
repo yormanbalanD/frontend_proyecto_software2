@@ -89,6 +89,7 @@ export default function Perfil() {
         correo: data.userFound.email,
         fotoPerfil: data.userFound.fotoPerfil,
       });
+      console.log(data)
     } else {
       console.log(await response.json());
       alert("Error");

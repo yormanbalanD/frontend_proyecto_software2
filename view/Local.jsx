@@ -22,6 +22,8 @@ import TabDescripcion from "../components/Local/TabDescripcion";
 import TabOpiniones from "../components/Local/TabOpiniones";
 import PlaceholderFoto from "../components/PlaceHolderFoto";
 import PlaceholderText from "../components/PlaceholderText";
+import { jwtDecode as decode } from "jwt-decode";
+import { set } from "react-hook-form";
 
 const Local = () => {
   const params = useLocalSearchParams();
@@ -34,6 +36,7 @@ const Local = () => {
   const [modalCrearComentarioVisible, setModalCrearComentarioVisible] =
     useState(false);
   const [cookies] = useCookies(["token"]);
+  const [liked, setLiked] = useState(false);
 
   const getToken = async () => {
     try {
@@ -71,6 +74,7 @@ const Local = () => {
       const data = await response.json();
       setRestaurante(data.restaurantFound);
       setComentarios(data.restaurantFound.reviews);
+      setLiked(data.liked);
     } else {
       console.log("error");
       console.log(response);
@@ -108,6 +112,61 @@ const Local = () => {
     return cantidad;
   };
 
+  const toggleLike = async () => {
+    try {
+      if (!liked) {
+        console.log("liked", liked);
+        const response = await fetch(
+          "https://backend-swii.vercel.app/api/addFavoriteRestaurant",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + (await getToken()),
+            },
+            body: JSON.stringify({
+              restaurantId: restaurante._id,
+            }),
+          }
+        );
+
+        setLiked(true);
+        if (response.status === 200) {
+          const data = await response.json();
+        } else {
+          console.log("error Liked");
+          setLiked(false);
+        }
+      } else {
+        const response = await fetch(
+          "https://backend-swii.vercel.app/api/deleteRestaurantFromLiked/" +
+            (await getUserId()),
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + (await getToken()),
+            },
+            body: JSON.stringify({
+              idRestaurants: [restaurante._id],
+            }),
+          }
+        );
+        setLiked(false);
+
+        if (response.status === 200) {
+          const data = await response.json();
+        } else {
+          console.log("error DisLiked");
+          setLiked(true);
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      setLiked(!liked);
+    }
+  };
+
   const cantidad = calcCantidadOpiniones(comentarios);
   const maxOpiniones = Math.max(...Object.values(cantidad));
 
@@ -128,9 +187,9 @@ const Local = () => {
         <View style={styles.restauranteInfo}>
           <Text style={styles.restauranteNombre}>{restaurante.name}</Text>
           <View style={styles.seccion}>
-            <Pressable style={{ marginRight: 10 }}>
+            <Pressable onPress={toggleLike} style={{ marginRight: 10 }}>
               <Icon
-                name={restaurante.liked ? "heart" : "heart-o"}
+                name={liked ? "heart" : "heart-o"}
                 type="font-awesome"
                 size={30}
                 color="#8c0e03"
