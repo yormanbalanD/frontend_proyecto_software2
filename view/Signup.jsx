@@ -19,6 +19,7 @@ import endpoints from "../utils/fetch/endpoints-importantes.json";
 import Arrow from "@/components/Arrow";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Picker } from "@react-native-picker/picker";
+import ModalDeCarga from "@/components/ModalDeCarga";
 
 export default function Signup() {
   const router = useRouter();
@@ -47,7 +48,16 @@ export default function Signup() {
     confirmPassword: "",
     fotoPerfil: "",
     description: "",
-    typo: "",
+    preguntasDeSeguridad: [
+      {
+        pregunta: "",
+        respuesta: "",
+      },
+      {
+        pregunta: "",
+        respuesta: "",
+      }
+    ],
   });
 
   const handleInputChange = (name, value) => {
@@ -154,7 +164,21 @@ export default function Signup() {
       setModalSuccess(false);
       setModalVisible(true);
       return false;
-    }    
+    }   
+    
+    if (!respuestaSeguridad1 || !respuestaSeguridad2) {
+      setModalMessage("Por favor, complete todas las preguntas y respuestas de seguridad.");
+      setModalSuccess(false);
+      setModalVisible(true);
+      return false;
+    }
+  
+    if (preguntaSeguridad1 === preguntaSeguridad2) {
+      setModalMessage("Por favor, seleccione preguntas de seguridad diferentes.");
+      setModalSuccess(false);
+      setModalVisible(true);
+      return false;
+    }
 
     //   SE ALCANZO EL LIMITE DE LA PRUEBA GRATUITA
     //  VALIDACION DESABILITADA TEMPORALMENTE
@@ -232,6 +256,13 @@ export default function Signup() {
     }
 
     setLoadingModalVisible(true);
+    setUserData({
+      ...userData,
+      preguntasDeSeguridad: [
+        { pregunta: preguntaSeguridad1, respuesta: respuestaSeguridad1 },
+        { pregunta: preguntaSeguridad2, respuesta: respuestaSeguridad2 },
+      ],
+    });
 
     await fetchData("https://backend-swii.vercel.app/api/createUser", {
       method: "POST",
@@ -244,11 +275,10 @@ export default function Signup() {
 
   const saveToken = async (value) => {
     try {
-      const value = await AsyncStorage.setItem("token", value);
-      console.log(value);
+      await AsyncStorage.setItem("token", value);
+      console.log("Token guardado correctamente");
     } catch (e) {
-      console.log(e);
-      return null;
+      console.log("Error al guardar el token:", e);
     }
   };
 
@@ -273,7 +303,16 @@ export default function Signup() {
         confirmPassword: "",
         fotoPerfil: "",
         description: "",
-        typo: "",
+        preguntasDeSeguridad: [
+          {
+            pregunta: "",
+            respuesta: "",
+          },
+          {
+            pregunta: "",
+            respuesta: "",
+          }
+        ],
       });
       saveToken(data.token);
     }
@@ -487,11 +526,7 @@ export default function Signup() {
         message={modalMessage}
         onClose={closeModal}
       />
-      {loadingModalVisible && (
-        <View style={styles.loadingModal}>
-          <ActivityIndicator size="large" color={Colors.vino} />
-        </View>
-      )}
+     <ModalDeCarga visible={loadingModalVisible} />
       {previewVisible && (
         <View style={styles.previewContainer}>
           <Image
@@ -637,16 +672,6 @@ const styles = StyleSheet.create({
     gap: 25,
     width: "100%",
     marginTop: 10
-  },
-  loadingModal: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
   },
   fotoPerfil: {
     width: 400,

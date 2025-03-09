@@ -17,6 +17,7 @@ import { useCookies } from "react-cookie";
 import ModalNotificacion from "@/components/ModalNotificacion";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import ModalDeCarga from "@/components/ModalDeCarga"; // Importa el componente ModalDeCarga
 
 const styles = StyleSheet.create({
   button: {
@@ -107,6 +108,7 @@ export default function Login() {
   const [modalVisible, setModalVisible] = React.useState(false); // Estado para el modal
   const [modalMessage, setModalMessage] = React.useState(""); // Mensaje del modal
   const [modalSuccess, setModalSuccess] = React.useState(false); // Éxito del modal
+  const [loading, setLoading] = React.useState(false); // Estado para el modal de carga
 
   const validateEmail = (email) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Expresión regular para validar el correo
@@ -128,6 +130,8 @@ export default function Login() {
       setModalVisible(true);
       return;
     }
+
+    setLoading(true); // Mostrar el modal de carga
 
     try {
       const response = await fetch(
@@ -171,6 +175,8 @@ export default function Login() {
       setModalMessage("Error de red. Por favor, intenta de nuevo."); // Mensaje de error
       setModalSuccess(false); // Indicar que hubo un error
       setModalVisible(true);
+    } finally {
+      setLoading(false); // Ocultar el modal de carga
     }
   };
 
@@ -331,6 +337,7 @@ export default function Login() {
           }
         }}
       />
+      <ModalDeCarga visible={loading} />
     </ImageBackground>
   );
 }
