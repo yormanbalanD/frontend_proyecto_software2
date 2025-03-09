@@ -1,21 +1,116 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { FontAwesome } from "@expo/vector-icons";
 import Zocial from '@expo/vector-icons/Zocial';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const DenunciasScreenUsuarios = () => {
   const router = useRouter();
-
   // Estado con las denuncias
-  const [denuncias, setDenuncias] = useState([
-    { id: "1", denunciante: "Saray Hernández", denunciado: "Mario Gomez", razon: "inapropiado", comentario: "   " },
-    
-  ]);
+  const [denuncias, setDenuncias] = useState([]);
+  const [userNames, setUserNames] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  const getToken = async () => {
+    try {
+      const value = await AsyncStorage.getItem("token");
+      if (value != null) {
+        return value;
+      }
+    } catch (e) {
+      console.log(e);
+      return null;
+    }
+  };
+
+  const fetchDenuncias = async () => {
+    try {
+      const response = await fetch('https://backend-swii.vercel.app/api/getDenuncias', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: "Bearer " + await getToken(),
+        },
+      });
+      const data = await response.json();
+      if (data && Array.isArray(data.denuncias)) {
+        const filteredDenuncias = data.denuncias.filter(denuncia => denuncia.idComentario !== "");
+        setDenuncias(filteredDenuncias);
+        console.log(filteredDenuncias);
+      } else {
+        console.error('Unexpected response format:', data);
+      }
+    } catch (error) {
+      console.error('Error fetching denuncias:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUserData = async (id) => {
+    try {
+      const response = await fetch(`https://backend-swii.vercel.app/api/getUser/${id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: "Bearer " + await getToken(),
+        },
+      });
+      const data = await response.json();
+      if (data && data.userFound && data.userFound.name) {
+        setUserNames((prevUserNames) => ({
+          ...prevUserNames,
+          [id]: data.userFound.name,
+        }));
+      } else {
+        console.error('Unexpected response format:', data);
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    }
+  };
+
+  const deleteDenuncia = async (denunciaId) => {
+    try {
+      const response = await fetch(`https://backend-swii.vercel.app/api/eliminarDenuncia/${denunciaId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: "Bearer " + await getToken(),
+        },
+      });
+      if (response.ok) {
+        console.log(`Denuncia ${denunciaId} eliminada exitosamente`);
+        setDenuncias((prevDenuncias) => prevDenuncias.filter((denuncia) => denuncia._id !== denunciaId));
+      } else {
+        console.error('Error eliminando la denuncia:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error eliminando la denuncia:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchDenuncias();
+  }, []);
+
+  useEffect(() => {
+    if (denuncias.length > 0) {
+      denuncias.forEach((denuncia) => {
+        fetchUserData(denuncia.idDenunciante);
+        fetchUserData(denuncia.idComentario);// Resulta ser que el id del comentario es el id del usuario denunciado bastante equisde
+      });
+    }
+  }, [denuncias]);
 
   // Función para eliminar una denuncia al bloquear u omitir
-  const handleAction = (id) => {
-    setDenuncias(denuncias.filter((denuncia) => denuncia.id !== id));
+  const handleAction = (id, isOmit) => {
+    if (isOmit) {
+      deleteDenuncia(id);
+    } else {
+      setDenuncias(denuncias.filter((denuncia) => denuncia._id !== id));
+    }
   };
 
   return (
@@ -33,49 +128,58 @@ const DenunciasScreenUsuarios = () => {
       <Text style={styles.subheading}>Usuarios</Text>
       <View style={styles.separator} />
 
-      {/* Lista de denuncias */}
-      <FlatList
-        data={denuncias}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.cardContainer}>
-            <View style={styles.card}>
-              <View style={styles.textContainer}>
-                <View style={styles.iconCircle}>
-                  <FontAwesome name="home" size={12} color="white" />
-                </View> 
-                <Text><Text style={styles.bold}>Denunciante:</Text> {item.denunciante}</Text>
-              </View>
-              <View style={styles.textContainer}>
-                <View style={styles.iconCircle}>
-                  <FontAwesome name="user" size={12} color="white" />
-                </View> 
-                <Text><Text style={styles.bold}>Denunciado:</Text> {item.denunciado}</Text>
-              </View>
-              <View style={styles.textContainer}>
-                <View style={styles.iconCircle}>
-                  <FontAwesome name="question" size={12} color="white" />
-                </View> 
-                <Text><Text style={styles.bold}>Razón:</Text> {item.razon}</Text>
-              </View>
-              <View style={styles.textContainer}>
-                <View style={styles.iconCircle}>
-                  <Zocial name="email" size={12} color="white" />
-                </View> 
-                <Text><Text style={styles.bold}>Comentario:</Text> {item.comentario}</Text>
-              </View>
-            </View>
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity style={styles.blockButton} onPress={() => handleAction(item.id)}>
-                <Text style={styles.buttonText}>Bloquear</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.omitButton} onPress={() => handleAction(item.id)}>
-                <Text style={styles.buttonText}>Omitir</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-      />
+      {loading ? (
+        <ActivityIndicator size="large" color="#5a1a11" />
+      ) : (
+        <>
+          {denuncias.length === 0 ? (
+            <Text style={styles.noDenunciasText}>No se han encontrado denuncias</Text>
+          ) : (
+            <FlatList
+              data={denuncias}
+              keyExtractor={(item) => item._id}
+              renderItem={({ item }) => (
+                <View style={styles.cardContainer}>
+                  <View style={styles.card}>
+                    <View style={styles.textContainer}>
+                      <View style={styles.iconCircle}>
+                        <FontAwesome name="home" size={12} color="white" />
+                      </View> 
+                      <Text><Text style={styles.bold}>Denunciante:</Text> {userNames[item.idDenunciante] || item.idDenunciante}</Text>
+                    </View>
+                    <View style={styles.textContainer}>
+                      <View style={styles.iconCircle}>
+                        <FontAwesome name="user" size={12} color="white" />
+                      </View> 
+                      <Text><Text style={styles.bold}>Denunciado:</Text> {userNames[item.idComentario] || item.idComentario}</Text>
+                    </View>
+                    <View style={styles.textContainer}>
+                      <View style={styles.iconCircle}>
+                        <FontAwesome name="question" size={12} color="white" />
+                      </View> 
+                      <Text><Text style={styles.bold}>Razón:</Text> {item.razon}</Text>
+                    </View>
+                    <View style={styles.textContainer}>
+                      <View style={styles.iconCircle}>
+                        <Zocial name="email" size={12} color="white" />
+                      </View> 
+                      <Text><Text style={styles.bold}>Comentario:</Text> {item.observacion}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.buttonContainer}>
+                    <TouchableOpacity style={styles.blockButton} onPress={() => handleAction(item._id, false)}>
+                      <Text style={styles.buttonText}>Bloquear</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.omitButton} onPress={() => handleAction(item._id, true)}>
+                      <Text style={styles.buttonText}>Omitir</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            />
+          )}
+        </>
+      )}
     </View>
   );
 };
@@ -191,6 +295,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: 20,
     height: 20,
+  },
+  noDenunciasText: {
+    fontSize: 16,
+    color: "black",
+    textAlign: "center",
+    marginTop: 20,
   },
 });
 
