@@ -61,7 +61,7 @@ export default function AsideMainPage({ visible, setVisible }) {
   const [typo, setTypo] = useState("admin");
 
   if (!fontsLoaded) {
-    return null;
+    console.log("waiting for fonts");
   }
 
   const getToken = async () => {
@@ -85,7 +85,7 @@ export default function AsideMainPage({ visible, setVisible }) {
   };
 
   useEffect(() => {
-    // getUserTypo();
+    getUserTypo();
   }, []);
 
   return (
