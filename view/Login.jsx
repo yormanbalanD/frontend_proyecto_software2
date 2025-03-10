@@ -336,19 +336,18 @@ const styles = StyleSheet.create({
   logoContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "flex-start",
+    justifyContent: "center",
     width: "100%",
-    marginLeft: 90,
   },
   logoImage: {
-    width: "12%",
-    height: "70%",
+    width: "13%",
+    height: "71%",
     resizeMode: "contain"
   },
-  logoText: {
+  logoText: { 
     color: '#FFF',
     fontFamily: 'League-Gothic',
-    fontSize: 70,    
+    fontSize: 90,    
   },
   backgroundImage: {
     flex: 1,

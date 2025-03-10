@@ -584,6 +584,8 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
+    overflowY: "scroll",
+    maxHeight: 1000
   },
   logoContainer: {
     flexDirection: "row",
