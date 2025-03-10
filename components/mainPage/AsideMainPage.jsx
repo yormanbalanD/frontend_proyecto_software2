@@ -1,8 +1,56 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, Modal, StyleSheet } from "react-native";
 import { useFonts } from "expo-font";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { jwtDecode as decode } from "jwt-decode";
+
+const linkUser = [
+  {
+    label: "Perfil",
+    link: "/perfil",
+  },
+  {
+    label: "Historial",
+    link: "/historial",
+  },
+  {
+    label: "Me gusta",
+    link: "/megusta",
+  },
+  {
+    label: "Locales",
+    link: "/localpropio",
+  },
+];
+
+const linkAdmin = [
+  {
+    label: "Perfil",
+    link: "/perfil",
+  },
+  {
+    label: "Historial",
+    link: "/historial",
+  },
+  {
+    label: "Me gusta",
+    link: "/megusta",
+  },
+  {
+    label: "Denuncias Locales",
+    link: "/denunciaslocales",
+  },
+  {
+    label: "Denuncias Comentarios",
+    link: "/denunciasusuarios",
+  },
+  {
+    label: "Buscar Usuarios",
+    link: "/buscarusuarios",
+  },
+];
 
 export default function AsideMainPage({ visible, setVisible }) {
   const router = useRouter();
@@ -10,10 +58,35 @@ export default function AsideMainPage({ visible, setVisible }) {
     "League-Gothic": require("../../assets/fonts/LeagueGothic-Regular.ttf"),
     "Open-Sans": require("../../assets/fonts/OpenSans-Regular.ttf"),
   });
+  const [typo, setTypo] = useState("admin");
 
   if (!fontsLoaded) {
     return null;
   }
+
+  const getToken = async () => {
+    try {
+      const value = await AsyncStorage.getItem("token");
+      if (value != null) {
+        return value;
+      }
+    } catch (e) {
+      console.log(e);
+      return null;
+    }
+  };
+
+  const getUserTypo = async () => {
+    const token = await getToken();
+    if (!token) return null;
+
+    const decoded = decode(token);
+    setTypo(decoded.typo);
+  };
+
+  useEffect(() => {
+    // getUserTypo();
+  }, []);
 
   return (
     <Modal transparent visible={visible} animationType="slide">
@@ -38,42 +111,31 @@ export default function AsideMainPage({ visible, setVisible }) {
             />
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={() => {
-              setVisible(false);
-              router.push("/perfil");
-            }}
-          >
-            <Text style={styles.menuText}>Perfil</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={() => {
-              setVisible(false);
-              router.push("/historial");
-            }}
-          >
-            <Text style={styles.menuText}>Historial</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={() => {
-              setVisible(false);
-              router.push("/megusta");
-            }}
-          >
-            <Text style={styles.menuText}>Me gusta</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={() => {
-              setVisible(false)
-              router.push("/localpropio");
-            }}
-          >
-            <Text style={styles.menuText}>Locales</Text>
-          </TouchableOpacity>
+          {typo && typo != "admin" && linkUser.map((item, index) => (
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setVisible(false);
+                router.push(item.link);
+              }}
+              key={item.link}
+            >
+              <Text style={styles.menuText}>{item.label}</Text>
+            </TouchableOpacity>
+          ))}
+
+          {typo && typo == "admin" && linkAdmin.map((item, index) => (
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setVisible(false);
+                router.push(item.link);
+              }}
+              key={item.link}
+            >
+              <Text style={styles.menuText}>{item.label}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
       </View>
     </Modal>

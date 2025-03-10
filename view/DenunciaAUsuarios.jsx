@@ -39,10 +39,10 @@ const DenunciasScreenUsuarios = () => {
         setDenuncias(filteredDenuncias);
         console.log(filteredDenuncias);
       } else {
-        console.error('Unexpected response format:', data);
+        console.log('Unexpected response format:', data);
       }
     } catch (error) {
-      console.error('Error fetching denuncias:', error);
+      console.log('Error fetching denuncias:', error);
     } finally {
       setLoading(false);
     }
@@ -64,10 +64,10 @@ const DenunciasScreenUsuarios = () => {
           [id]: data.userFound.name,
         }));
       } else {
-        console.error('Unexpected response format:', data);
+        console.log('Unexpected response format:', data);
       }
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      console.log('Error fetching user data:', error);
     }
   };
 

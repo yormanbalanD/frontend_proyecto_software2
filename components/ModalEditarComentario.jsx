@@ -17,7 +17,7 @@ import * as Location from "expo-location";
 import { useCookies } from "react-cookie";
 import * as ImagePicker from "expo-image-picker";
 import Fontisto from "@expo/vector-icons/Fontisto";
-import PlaceholderFotoPerfil from "../components/PlaceholderFotoPerfil";
+import PlaceholderFotoPerfil from "./PlaceholderFotoPerfil";
 import Icon from "@expo/vector-icons/FontAwesome";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { set } from "react-hook-form";
@@ -40,13 +40,14 @@ const StarRating = ({ setStarts, stars }) => {
   );
 };
 
-export default function ModalCrearComentario({
+export default function ModalEditarComentario({
   visible,
   onClose,
   restaurante,
+  comentario,
 }) {
   const [comment, setComment] = useState("");
-  const [stars, setStars] = useState(0);
+  const [stars, setStars] = useState("");
   const [fotoPerfil, setFotoPerfil] = useState("");
   const [nombre, setNombre] = useState("");
   const [codigo, setCodigo] = useState("");
@@ -77,8 +78,8 @@ export default function ModalCrearComentario({
   };
 
   const setDefaultValues = () => {
-    setComment("");
-    setStars(0);
+    setComment(comentario.comment);
+    setStars(comentario.calification);
   };
 
   const getUser = async () => {
@@ -105,11 +106,10 @@ export default function ModalCrearComentario({
     }
   };
 
-  const ponerComentario = async () => {
-    console.log(visible)
+  const editarComentario = async () => {
     try {
       const response = await fetch(
-        "https://backend-swii.vercel.app/api/addComment/" + restaurante._id,
+        "https://backend-swii.vercel.app/api/updateComment/" + restaurante._id,
         {
           method: "POST",
           headers: {
@@ -123,29 +123,30 @@ export default function ModalCrearComentario({
         }
       );
 
-      console.log(response);
-
       if (response.status == 201 || response.status == 200) {
-        console.log("Finalizo")
+        console.log("Finalizo");
         const data = await response.json();
         setModalPeticion({
           visible: true,
-          message: "Comentario agregado.",
+          message: "Comentario editado.",
           success: true,
         });
       } else {
+        console.log("Error Editar Comentario")
+        console.log(response)
         console.log(await response.json());
         setModalPeticion({
           visible: true,
-          message: "Error al agregar comentario.",
+          message: "Error al editar comentario.",
           success: false,
         });
       }
     } catch (err) {
+      console.log("Error Editar Comentario")
       console.log(err);
       setModalPeticion({
         visible: true,
-        message: "Sucedio un error fulminante al agregar el comentario.",
+        message: "Sucedio un error fulminante al editar el comentario.",
         success: false,
       });
     }
@@ -154,6 +155,13 @@ export default function ModalCrearComentario({
   useEffect(() => {
     getUser();
   }, []);
+
+  useEffect(() => {
+    if(comentario){
+      setComment(comentario.comment);
+      setStars(comentario.calification);
+    }
+  }, [comentario]);
 
   return (
     <>
@@ -292,11 +300,11 @@ export default function ModalCrearComentario({
                     },
                   ]}
                   onPress={() => {
-                    ponerComentario();
+                    editarComentario();
                   }}
                 >
                   <Text style={{ ...styles.botonTexto, color: "#C14600" }}>
-                    Comentar
+                    Editar
                   </Text>
                 </Pressable>
               )}

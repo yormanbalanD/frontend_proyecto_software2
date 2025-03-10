@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, Pressable, TextInput } from "react-native";
 import { useState } from "react";
 
-export default function ReportLocal() {
+export default function ReportLocal({ idRestaurante }) {
   const [textComment, setTextComment] = useState("");
   const [selectedOption, setSelectedOption] = useState(null); 
   const [message, setMessage] = useState('')
@@ -128,7 +128,7 @@ export default function ReportLocal() {
     </Pressable>
   );
 
-  const handleSubmit = async (idRestaurante) => {
+  const handleSubmit = async () => {
     if(selectedOption === null){
       setMessage("Selecciona el tipo de denuncia ")
       setColor("red")
@@ -144,7 +144,7 @@ export default function ReportLocal() {
             Authorization: "Bearer " + token,
           },
           body: {
-            observacion: data.observation,
+            observacion: textComment,
             razon: selectedOption,
           },
         }

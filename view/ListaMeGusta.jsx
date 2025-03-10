@@ -42,12 +42,13 @@ export default function ListaMeGusta() {
   const getListaMeGusta = async () => {
     setLoading(true);
     const response = await fetch(
-      "https://backend-swii.vercel.app/api/getRestaurantsLiked/" + await getUserId(),
+      "https://backend-swii.vercel.app/api/getRestaurantsLiked/" +
+        (await getUserId()),
       {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: "Bearer " + await getToken(),
+          Authorization: "Bearer " + (await getToken()),
         },
       }
     );
@@ -98,7 +99,7 @@ export default function ListaMeGusta() {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: "Bearer " + await getToken(),
+          Authorization: "Bearer " + (await getToken()),
         },
         body: JSON.stringify({ idRestaurants: [restaurantId] }),
       }

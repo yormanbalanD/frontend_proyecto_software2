@@ -24,6 +24,9 @@ import PlaceholderFoto from "../components/PlaceHolderFoto";
 import PlaceholderText from "../components/PlaceholderText";
 import { jwtDecode as decode } from "jwt-decode";
 import { set } from "react-hook-form";
+import ModalEditarComentario from "../components/ModalEditarComentario";
+
+import ReportComment from "../view/ReportComment";
 
 const Local = () => {
   const params = useLocalSearchParams();
@@ -37,6 +40,10 @@ const Local = () => {
     useState(false);
   const [cookies] = useCookies(["token"]);
   const [liked, setLiked] = useState(false);
+  const [comentarioAEditar, setComentarioAEditar] = useState(null);
+  const [comentarioADenunciar, setComentarioADenunciar] = useState(null);
+  const [modalEditarComentario, setModalEditarComentario] = useState(false);
+  const [modalReportComentario, setModalReportComentario] = useState(false);
 
   const getToken = async () => {
     try {
@@ -115,7 +122,6 @@ const Local = () => {
   const toggleLike = async () => {
     try {
       if (!liked) {
-        console.log("liked", liked);
         const response = await fetch(
           "https://backend-swii.vercel.app/api/addFavoriteRestaurant",
           {
@@ -296,7 +302,11 @@ const Local = () => {
           {/* Opiniones */}
           <TabOpiniones
             restaurante={restaurante}
+            setModalEditarComentarioVisible={setModalEditarComentario}
             setModalCrearComentarioVisible={setModalCrearComentarioVisible}
+            setComentarioAEditar={setComentarioAEditar}
+            setModalReportComentario={setModalReportComentario}
+            setComentarioADenunciar={setComentarioADenunciar}
           />
         </TabView>
       </SafeAreaView>
@@ -305,6 +315,18 @@ const Local = () => {
         visible={modalCrearComentarioVisible}
         onClose={() => setModalCrearComentarioVisible(false)}
       />
+      <ModalEditarComentario
+        restaurante={restaurante}
+        onClose={() => {
+          setComentarioAEditar(null);
+          setModalEditarComentario(false);
+        }}
+        visible={modalEditarComentario}
+        comentario={comentarioAEditar}
+      />
+      <ReportComment visible={modalReportComentario} onClose={() => {
+        setModalReportComentario(false)
+      }} idRestaurante={restaurante.description ? restaurante._id: ""} idComentario={comentarioADenunciar != null ? comentarioADenunciar._id : ""} />
     </SafeAreaProvider>
   );
 };

@@ -17,9 +17,14 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import StarRating from "./StarRating";
 import PlaceholderFotoPerfil from "../PlaceholderFotoPerfil";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { jwtDecode as decode } from "jwt-decode";
+import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
+import SimpleLineIcons from "@expo/vector-icons/SimpleLineIcons";
+import PlaceholderText from "../PlaceholderText";
 
-function RenderComentario({ item }) {
+function RenderComentario({ item, setModal, setComentarioADenunciar }) {
   const [fotoPerfil, setFotoPerfil] = useState(null);
+  const [denunciarVisible, setDenunciarVisible] = useState(false);
   const getToken = async () => {
     try {
       const value = await AsyncStorage.getItem("token");
@@ -62,7 +67,7 @@ function RenderComentario({ item }) {
       <View style={styles.cardTexto}>
         <Text style={styles.nombreCc}>{item.userName}</Text>
         <Text style={styles.comentario}>{item.comment}</Text>
-        <StarRating rating={item.calificacion} />
+        <StarRating rating={item.calification} />
       </View>
       <View style={styles.logoContainerComent}>
         {fotoPerfil == null ? (
@@ -78,6 +83,40 @@ function RenderComentario({ item }) {
           />
         )}
       </View>
+      <TouchableOpacity
+        style={{
+          position: "absolute",
+          right: 10,
+          top: 9,
+        }}
+        onPress={() => {
+          setDenunciarVisible(!denunciarVisible);
+        }}
+      >
+        <SimpleLineIcons name="options" size={24} color="white" />
+      </TouchableOpacity>
+      {denunciarVisible && (
+        <TouchableOpacity
+          onPress={() => { 
+            setDenunciarVisible(false);
+            setModal(true);
+            setComentarioADenunciar(item);
+          }}
+          style={{
+            position: "absolute",
+            top: 5,
+            right: 38,
+            borderWidth: 1,
+            borderColor: "#00000098",
+            borderRadius: 4,
+            paddingVertical: 15,
+            paddingHorizontal: 20,
+            backgroundColor: "#FFF",
+          }}
+        >
+          <Text style={{ fontWeight: 500 }}>Denunciar Comentario</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -90,7 +129,7 @@ const RatingBar = ({ rating, count, totalReviews }) => {
         <View
           style={[
             styles.barraCalificacionRelleno,
-            { width: `${(count / totalReviews) * 100}%` },
+            { width: count > 0 ? `${(count / totalReviews) * 100}%` : 0 },
           ]}
         />
       </View>
@@ -101,6 +140,10 @@ const RatingBar = ({ rating, count, totalReviews }) => {
 export default function TabOpiniones({
   restaurante,
   setModalCrearComentarioVisible,
+  setModalEditarComentarioVisible,
+  setComentarioAEditar,
+  setModalReportComentario,
+  setComentarioADenunciar,
 }) {
   const [comentarios, setComentarios] = useState([]);
 
@@ -124,13 +167,21 @@ export default function TabOpiniones({
     return decoded.sub;
   };
 
+  const getUserTypo = async () => {
+    const token = await getToken();
+    if (!token) return null;
+
+    const decoded = decode(token);
+    return decoded.sub;
+  };
+
   useEffect(() => {
     if (!restaurante.reviews) return;
     setComentarios(restaurante.reviews);
   }, [restaurante]);
 
   return (
-    <TabView.Item>
+    <TabView.Item style={{ flex: 1 }}>
       <ScrollView>
         <View style={styles.total}>
           <View style={styles.CalificacionDistribucionContainer}>
@@ -172,16 +223,20 @@ export default function TabOpiniones({
           </View>
 
           <View style={styles.puntuacionContainer}>
-            <Text style={{ fontSize: 40, margin: 0, lineHeight: 45 }}>
-              {comentarios.length > 0 &&
-                (
-                  comentarios.reduce(
-                    (a, b) => parseInt(a) + parseInt(b.calification),
-                    0
-                  ) / comentarios.length
-                ).toFixed(1)}
-              {comentarios.length == 0 && "0"}
-            </Text>
+            {restaurante.description ? (
+              <Text style={{ fontSize: 40, margin: 0, lineHeight: 45 }}>
+                {comentarios.length > 0 &&
+                  (
+                    comentarios.reduce(
+                      (a, b) => parseInt(a) + parseInt(b.calification),
+                      0
+                    ) / comentarios.length
+                  ).toFixed(1)}
+                {comentarios.length == 0 && "0"}
+              </Text>
+            ) : (
+              <PlaceholderText width={10} fontSize={40} />
+            )}
 
             <StarRating
               rating={Math.round(
@@ -195,23 +250,53 @@ export default function TabOpiniones({
                   : 0
               )}
             />
-            <Text style={{ paddingBottom: 20 }}>
-              {comentarios.length} opiniones
-            </Text>
+            {restaurante.description ? (
+              <Text style={{ paddingBottom: 20 }}>
+                {comentarios.length} opiniones
+              </Text>
+            ) : (
+              <PlaceholderText width={50} fontSize={13} />
+            )}
 
-            <TouchableOpacity
-              onPress={() => setModalCrearComentarioVisible(true)}
-              style={styles.botonComentario}
-            >
-              <Icon name="comment" size={15} color="#74C0FC" />
-              <Text style={styles.botonTexto}>Comentar</Text>
-            </TouchableOpacity>
+            {comentarios.filter(
+              async (item) => item.idUser == (await getUserId())
+            ).length > 0 ? (
+              <TouchableOpacity
+                onPress={() => {
+                  setComentarioAEditar(
+                    comentarios.filter(
+                      async (item) => item.idUser == (await getUserId())
+                    )[0]
+                  );
+                  setModalEditarComentarioVisible(true);
+                }}
+                style={styles.botonComentario}
+              >
+                <Icon name="comment" size={15} color="#74C0FC" />
+                <Text style={styles.botonTexto}>Editar</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                onPress={() => setModalCrearComentarioVisible(true)}
+                style={styles.botonComentario}
+              >
+                <Icon name="comment" size={15} color="#74C0FC" />
+                <Text style={styles.botonTexto}>Comentar</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
         <View>
           <ScrollView>
-            {comentarios.map((item) => {
-              return <RenderComentario item={item} key={item._id} />;
+            {comentarios.map((item, index) => {
+              return (
+                <RenderComentario
+                  setComentarioADenunciar={setComentarioADenunciar}
+                  setModal={setModalReportComentario}
+                  item={item}
+                  key={item._id + index}
+                />
+              );
             })}
           </ScrollView>
         </View>
@@ -229,7 +314,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginVertical: 4,
   },
-
   barraCalificacionFondo: {
     flex: 1,
     height: 10,
@@ -241,20 +325,19 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     padding: 1,
   },
-
   barraCalificacionRelleno: {
     height: "100%",
     backgroundColor: "#f4b400",
     borderRadius: 5,
   },
-
   total: {
     flexDirection: "row",
     gap: 10,
     borderBottomWidth: 0.5,
     borderBottomColor: "#00000029",
     paddingVertical: 13,
-    paddingHorizontal: 10
+    paddingHorizontal: 10,
+    flex: 1,
   },
   puntuacionContainer: {
     alignItems: "center",
@@ -326,6 +409,7 @@ const styles = StyleSheet.create({
     color: "#000",
     fontSize: 16,
     fontWeight: "bold",
+    textAlign: "center",
   },
   fotoPerfil: {
     width: "100%",

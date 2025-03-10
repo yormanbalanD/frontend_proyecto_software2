@@ -20,7 +20,7 @@ import PlaceholderFoto from "../PlaceHolderFoto";
 const renderImagen = ({ item }) => {
   return (
     <View style={styles.imageLocalContainer}>
-      <Image source={item} style={styles.image} />
+      <Image source={{uri: item}} style={styles.image} />
     </View>
   );
 };
@@ -34,7 +34,6 @@ export default function TabDescripcion({ restaurante }) {
       currentIndex < flatListRef.current.props.data.length - 1
         ? currentIndex + 1
         : 0;
-    console.log(nextIndex);
     setCurrentIndex(nextIndex);
     flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
   };
@@ -120,7 +119,7 @@ export default function TabDescripcion({ restaurante }) {
                   ref={flatListRef}
                   data={restaurante.fotos}
                   renderItem={renderImagen}
-                  keyExtractor={(item) => item.slice(0, 100)}
+                  keyExtractor={(item, i) => item.slice(0, 100) + i}
                   horizontal
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.lista}
@@ -178,6 +177,11 @@ export default function TabDescripcion({ restaurante }) {
             )}
           </View>
         </View>
+        <View>
+          <View>
+            
+          </View>
+        </View>
       </ScrollView>
     </TabView.Item>
   );
@@ -203,6 +207,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     gap: 5,
+    // paddingBottom: 10
   },
   lista: {
     height: 100,
@@ -211,6 +216,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     color: "black",
     backgroundColor: "currentColor",
+    paddingBottom: 10
   },
   image: {
     marginTop: 10,
@@ -227,4 +233,7 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     backgroundColor: "#8c0e03",
   },
+  imageLocalContainer: {
+    marginRight: 10,
+  }
 });

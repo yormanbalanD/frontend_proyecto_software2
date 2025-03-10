@@ -93,15 +93,16 @@ export default function CameraScreen() {
         angulo.toFixed(0) +
         "/5000",
       {
-        method: "GET",
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: "Bearer " + await getToken(),
+          Authorization: "Bearer " + (await getToken()),
         },
+        body: JSON.stringify({
+          foto: base64,
+        }),
       }
     );
-
-    console.log(coords);
 
     if (response.status === 200) {
       const data = await response.json();
@@ -112,10 +113,10 @@ export default function CameraScreen() {
         .sort((a, b) => a.distance - b.distance)
         .slice(0, 4);
 
-        console.log(restaurantes);
+      console.log(restaurantes);
       setRestaurantes(restaurantes);
     } else {
-      console.log("error");
+      console.log("error", await response.json());
       setVisibleModal(false);
       cameraRef.current.resumePreview();
     }

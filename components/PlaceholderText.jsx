@@ -5,6 +5,7 @@ import {
   StyleSheet,
   useAnimatedValue,
   Platform,
+  View
 } from "react-native";
 
 function Web({ width, fontSize, style }) {

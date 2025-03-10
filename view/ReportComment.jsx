@@ -1,18 +1,33 @@
-import { View, Text, StyleSheet, Pressable, TextInput } from "react-native";
-import { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  TextInput,
+  Modal,
+  TouchableHighlight,
+} from "react-native";
+import { useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { jwtDecode as decode } from "jwt-decode";
+import ModalNotificacion from "@/components/ModalNotificacion";
 
-export default function ReportComment() {
+export default function ReportComment({
+  idRestaurante,
+  idComentario,
+  visible,
+  onClose,
+}) {
   const [textComment, setTextComment] = useState("");
-  const [selectedOption, setSelectedOption] = useState(null); 
-  const [message, setMessage] = useState('')
-  const [color, setColor] = useState("")
-  const [token, setToken] = useState("")
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [message, setMessage] = useState("");
+  const [color, setColor] = useState("");
+  const [token, setToken] = useState("");
   const styles = StyleSheet.create({
     container: {
-      display: "flex",
-      height: "80vh",
       justifyContent: "center",
       itemsAlign: "center",
+      height: "100%",
     },
     containerCard: {
       marginLeft: 50,
@@ -22,16 +37,15 @@ export default function ReportComment() {
       backgroundColor: "#fff9f1",
     },
     header: {
-      display: "flex",
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: "#8c0e02",
-      height: "40px",
+      paddingVertical: 10,
       width: "100%",
     },
     headerText: {
       color: "white",
-      fontSize: "17px",
+      fontSize: 17,
       fontWeight: "bold",
     },
     button: {
@@ -46,10 +60,10 @@ export default function ReportComment() {
     },
     input: {
       width: "100%",
-      height: 30,
+      paddingVertical: 5,
+      paddingHorizontal: 16,
       borderWidth: 0.2,
       fontSize: 8,
-      paddingLeft: 16,
     },
     checkbox: {
       width: 6,
@@ -67,32 +81,35 @@ export default function ReportComment() {
       backgroundColor: "#1f6bdc",
     },
     checkboxContainer: {
-      marginLeft: "20%",
-      display: "flex",
       flexDirection: "row",
       alignItems: "center",
       marginBottom: 8,
     },
   });
- 
+  const [modalPeticion, setModalPeticion] = useState({
+    visible: false,
+    message: "",
+    success: false,
+  });
+
   const getToken = async () => {
     try {
       const value = await AsyncStorage.getItem("token");
       if (value != null) {
-        return value;
+        setToken(value);
+      } else {
+        throw new Error("Token No encontrado");
       }
-
-      setToken(value)
     } catch (e) {
       console.log(e);
       return null;
     }
   };
 
- useEffect(() => {
-  getToken()
- }, [token])
- 
+  useEffect(() => {
+    getToken();
+  }, []);
+
   const handleOptionSelect = (option) => {
     setSelectedOption(option);
   };
@@ -126,109 +143,150 @@ export default function ReportComment() {
     </Pressable>
   );
 
-  const handleSubmit = async (idRestaurante, idComentario) => {
-    if(selectedOption === null){
-      setMessage("Selecciona el tipo de denuncia ")
-      setColor("red")
+  const handleSubmit = async () => {
+    if (selectedOption === null) {
+      setMessage("Selecciona el tipo de denuncia ");
+      setColor("red");
     }
-    
+
+    console.log(token);
+
     try {
-        await fetch(
-        `https://backend-swii.vercel.app/api/denunciarRestaurante/${idRestaurante}/${idComentario}`,
+      const response = await fetch(
+        `https://backend-swii.vercel.app/api/denunciarComentario/${idRestaurante}/${idComentario}/`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: "Bearer " + token,
           },
-          body: {
-            observacion: data.observation,
+          body: JSON.stringify({
+            observacion: textComment,
             razon: selectedOption,
-          },
+          }),
         }
       );
-      setColor("green")
-      setMessage("Envio Exitoso")
+
+      if (response.status == 200) {
+        setModalPeticion({
+          visible: true,
+          message: "Comentario denunciado exitosamente.",
+          success: true,
+        });
+        console.log(await response.json());
+      } else {
+        setModalPeticion({
+          visible: true,
+          message: "Error al denunciar comentario.",
+          success: false,
+        });
+        console.log(response);
+        console.log(await response.json());
+      }
     } catch (error) {
-      setColor("red")
-      setMessage("Ocurrio un error")
-      throw new Error(error);
+      setModalPeticion({
+        visible: true,
+        message: "Error Fulminante al denunciar comentario.",
+        success: false,
+      });
+      console.log(error);
     }
   };
 
   return (
-      <View style={styles.container}>
-        <View style={styles.containerCard}>
-          <View style={styles.header}>
-            <Text style={styles.headerText}>Denunciar este comentario</Text>
-          </View>
+    <>
+      <Modal transparent visible={visible} animationType="slide">
+        <Pressable
+          onPress={onClose}
+          style={{
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0, 0, 0, 0.6)",
+            position: "absolute",
+          }}
+        />
+        <View style={styles.container}>
+          <View style={styles.containerCard}>
+            <View style={styles.header}>
+              <Text style={styles.headerText}>Denunciar este comentario</Text>
+            </View>
 
-          <View
-            style={{
-              width: "100%",
-              paddingLeft: 15,
-              marginTop: 16,
-              display: "flex",
-              itemsAlign: "center",
-              justifyContent: "center",
-            }}
-          >
-            {renderCheckbox("inapropiado", "Contenido inapropiado")}
-            {renderCheckbox("engañoso", "Negocio Engañoso")}
-            {renderCheckbox("estafa", "Estafa")}
-            {renderCheckbox("sexual", "Contenido Sexual")}
-          </View>
+            <View style={{ paddingVertical: 20 }}>
+              <View
+                style={{
+                  width: "100%",
+                  justifyContent: "center",
+                }}
+              >
+                {renderCheckbox("inapropiado", "Contenido inapropiado")}
+                {renderCheckbox("engañoso", "Negocio Engañoso")}
+                {renderCheckbox("estafa", "Estafa")}
+                {renderCheckbox("sexual", "Contenido Sexual")}
+              </View>
 
-          <View
-            style={{
-              display: "flex",
-              width: "100%",
-              paddingLeft: 15,
-              paddingRight: 15,
-            }}
-          >
-            <Text
-              style={{
-                fontWeight: "normal",
-                fontSize: 10,
-                marginBottom: 15,
-                marginTop: 15,
-              }}
-            >
-              Comentario
-            </Text>
-            <TextInput
-              style={styles.input}
-              onChangeText={setTextComment}
-              value={textComment}
-              placeholder="Comparte detalles sobre tu denuncia (opcional)"
-            />
-          </View>
-          <View
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              gap: 16,
-              marginTop: 30,
-            }}
-          >
-            <Pressable style={styles.button}>
-              <Text
-                style={{ color: "#545351", fontWeight: "bold", fontSize: 12 }}
+              <View
+                style={{
+                  width: "100%",
+                }}
               >
-                Cancelar
-              </Text>
-            </Pressable>
-            <Pressable  style={styles.button} onPress={handleSubmit}>
-              <Text
-                style={{ color: "#545351", fontWeight: "bold", fontSize: 12 }}
+                <Text
+                  style={{
+                    fontWeight: 500,
+                    fontSize: 10,
+                    marginBottom: 15,
+                    marginTop: 15,
+                  }}
+                >
+                  Comentario
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  onChangeText={setTextComment}
+                  value={textComment}
+                  placeholder="Comparte detalles sobre tu denuncia (opcional)"
+                />
+              </View>
+              <View
+                style={{
+                  flexDirection: "row",
+                  gap: 16,
+                  marginTop: 30,
+                  justifyContent: "center",
+                }}
               >
-                Denunciar
-              </Text>
-            </Pressable>
+                <TouchableHighlight
+                  onPress={() => {
+                    setTextComment("");
+                    setSelectedOption(null);
+                    onClose();
+                  }}
+                  style={styles.button}
+                >
+                  <Text
+                    style={{ color: "#545351", fontWeight: 600, fontSize: 12 }}
+                  >
+                    Cancelar
+                  </Text>
+                </TouchableHighlight>
+                <TouchableHighlight
+                  style={styles.button}
+                  onPress={handleSubmit}
+                >
+                  <Text
+                    style={{ color: "#545351", fontWeight: 600, fontSize: 12 }}
+                  >
+                    Denunciar
+                  </Text>
+                </TouchableHighlight>
+              </View>
+            </View>
           </View>
-           {message.length > 0 && <p style={{fontSize: "0.90rem", color: `${color}`}}>¡ {message} !</p>}
         </View>
-      </View>
+      </Modal>
+      <ModalNotificacion isVisible={modalPeticion.visible} isSuccess={modalPeticion.success} message={modalPeticion.message} onClose={() => {
+        setModalPeticion({ visible: false, message: "", success: false });
+        onClose()
+      }} />
+    </>
   );
 }
