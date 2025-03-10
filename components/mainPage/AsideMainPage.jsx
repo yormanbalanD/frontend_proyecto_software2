@@ -50,6 +50,10 @@ const linkAdmin = [
     label: "Buscar Usuarios",
     link: "/buscarusuarios",
   },
+  {
+    label: "Buscar Locales",
+    link: "/buscarlocales",
+  }
 ];
 
 export default function AsideMainPage({ visible, setVisible }) {

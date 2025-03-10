@@ -91,7 +91,7 @@ export default function CameraScreen() {
         coords.longitude +
         "/" +
         angulo.toFixed(0) +
-        "/5000",
+        "/50000",
       {
         method: "POST",
         headers: {
