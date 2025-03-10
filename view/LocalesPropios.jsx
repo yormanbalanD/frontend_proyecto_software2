@@ -61,6 +61,10 @@ const getUserId = async () => {
     if (response.status === 200) {
       const data = await response.json();
       console.log(data);
+      if(!data.restaurantsFound){
+        setLoading(false);
+        setRestaurants([]);
+      }
       // Procesamos los datos para agregar promedio de calificación y cantidad de comentarios
       const processedRestaurants = data.restaurantsFound.map((restaurant) => {
         const reviews = restaurant.reviews || []; // Si no tiene reviews, ponemos un array vacío
