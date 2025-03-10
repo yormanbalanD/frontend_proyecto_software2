@@ -18,84 +18,7 @@ import ModalNotificacion from "@/components/ModalNotificacion";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ModalDeCarga from "@/components/ModalDeCarga"; // Importa el componente ModalDeCarga
-
-const styles = StyleSheet.create({
-  button: {
-    backgroundColor: "#8c0e03", // Custom red color
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: "white",
-    borderStyle: "dotted",
-  },
-  textButton: {
-    color: Colors.white,
-    textTransform: "uppercase",
-    fontWeight: "bold",
-    fontFamily: "Helios Extended",
-    fontSize: 14,
-    fontWeight: "700",
-    letterSpacing: 0.5,
-  },
-  container: {
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: 25,
-    padding: 30,
-    width: "75%",
-    justifyContent: "center",
-  },
-  textInput: {
-    color: Colors.white,
-    backgroundColor: "transparent",
-    width: "100%",
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.white,
-    paddingLeft: 15,
-    paddingTop: 12,
-    paddingBottom: 12,
-    paddingRight: 15,
-    fontFamily: "Open Sans",
-    outline: "none",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: Colors.white,
-    fontFamily: "Helios Extended",
-    textAlign: "left",
-    width: "100%",
-    letterSpacing: 0.7,
-  },
-  logoText: {
-    fontSize: 60,
-    fontWeight: "bold",
-    color: "#FFF",
-    fontFamily: "League-Gothic",
-  },
-  logoContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 10,
-  },
-  logoImage: {
-    height: 80,
-    width: 60,
-  },
-  backgroundImage: {
-    flex: 1,
-    resizeMode: "cover",
-    justifyContent: "center",
-    alignItems: "center",
-    height: "100%",
-    width: "100%",
-  },
-});
+import { useFonts } from "expo-font";
 
 export default function Login() {
   const navigate = useRouter();
@@ -114,6 +37,17 @@ export default function Login() {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Expresión regular para validar el correo
     return re.test(String(email).toLowerCase());
   };
+
+  const [fontsLoaded] = useFonts({
+    "League-Gothic": require("@/assets/fonts/LeagueGothic-Regular.ttf"),
+    "Open-Sans": require("../assets/fonts/OpenSans-Regular.ttf"),
+    "OpenSans-Bold": require("../assets/fonts/OpenSans-Bold.ttf"),
+    "Helios-Bold": require("../assets/fonts/HeliosExtC-Bold.ttf"),
+  });
+
+  if (!fontsLoaded) {
+    console.log("no cargado");
+  }
 
   const iniciarSesion = async () => {
     // Validaciones
@@ -184,11 +118,16 @@ export default function Login() {
     console.log(email);
   }, [email]);
 
+  useEffect(() => {
+    console.log(fontsLoaded);
+  }, [fontsLoaded]);
+
   return (
-    <ImageBackground
-      source={require("@/assets/images/iniciar_sesion.png")}
-      style={styles.backgroundImage}
-    >
+    <View style={{ flex: 1 }}>
+      <ImageBackground
+        source={require("@/assets/images/iniciar_sesion.png")}
+        style={styles.backgroundImage}
+      />
       <View
         style={{
           height: "100%",
@@ -338,6 +277,85 @@ export default function Login() {
         }}
       />
       <ModalDeCarga visible={loading} />
-    </ImageBackground>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  button: {
+    backgroundColor: "#8c0e03", // Custom red color
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: "white",
+    borderStyle: "dashed",
+  },
+  textButton: {
+    color: Colors.white,
+    textTransform: "uppercase",
+    fontWeight: "bold",
+    fontFamily: "Helios Extended",
+    fontSize: 14,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+  },
+  container: {
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: 25,
+    padding: 30,
+    width: "75%",
+    justifyContent: "center",
+  },
+  textInput: {
+    color: Colors.white,
+    backgroundColor: "transparent",
+    width: "100%",
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.white,
+    paddingLeft: 15,
+    paddingTop: 12,
+    paddingBottom: 12,
+    paddingRight: 15,
+    fontFamily: "Open Sans",
+    outline: "none",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: Colors.white,
+    fontFamily: "Helios Extended",
+    textAlign: "left",
+    width: "100%",
+    letterSpacing: 0.7,
+  },
+  logoText: {
+    fontSize: 60,
+    fontWeight: "bold",
+    color: "#FFF",
+    fontFamily: "Helios-Bold",
+  },
+  logoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+  },
+  logoImage: {
+    height: 80,
+    width: 60,
+  },
+  backgroundImage: {
+    flex: 1,
+    resizeMode: "cover",
+    justifyContent: "center",
+    alignItems: "center",
+    height: "100%",
+    width: "100%",
+    position: "absolute",
+  },
+});
