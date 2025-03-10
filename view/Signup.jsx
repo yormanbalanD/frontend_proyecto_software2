@@ -215,6 +215,17 @@ export default function Signup() {
     return true;
   };
 
+  const updatePreguntasUserData = async () => {
+    setUserData({
+      ...userData,
+      preguntasDeSeguridad: [
+        { pregunta: preguntaSeguridad1, respuesta: respuestaSeguridad1 },
+        { pregunta: preguntaSeguridad2, respuesta: respuestaSeguridad2 },
+      ],      
+    });
+    return true;
+  }
+
   const seleccionarImagen = async () => {
     // Pedir permiso de acceso a la galería
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -250,19 +261,18 @@ export default function Signup() {
     setPreviewVisible(false);
   };
 
-  const handleSignup = async () => {    
+  const handleSignup = async () => {        
     if (!(await validarFormulario())) {      
+      console.log(userData)
+      return;
+    }
+
+    if(!(await updatePreguntasUserData())) {
       return;
     }
 
     setLoadingModalVisible(true);
-    setUserData({
-      ...userData,
-      preguntasDeSeguridad: [
-        { pregunta: preguntaSeguridad1, respuesta: respuestaSeguridad1 },
-        { pregunta: preguntaSeguridad2, respuesta: respuestaSeguridad2 },
-      ],
-    });
+    
 
     await fetchData("https://backend-swii.vercel.app/api/createUser", {
       method: "POST",
@@ -344,24 +354,30 @@ export default function Signup() {
       <View style={styles.container}>
         <View style={styles.inputContainer}>
           <Text style={styles.titulo}>Registrarse</Text>
-          <TextInput
-            placeholderTextColor={"#acacac"}
-            style={[styles.textInput, nombreFocused && styles.inputFocused]}
-            placeholder="Nombre Del Usuario"
-            value={userData.name}
-            onFocus={() => setNombreFocused(true)}
-            onBlur={() => setNombreFocused(false)}
-            onChangeText={(value) => handleInputChange("name", value)}
-          />
-          <TextInput
-            placeholderTextColor={"#acacac"}
-            style={[styles.textInput, correoFocused && styles.inputFocused]}
-            value={userData.email}
-            placeholder="Correo"
-            onFocus={() => setCorreoFocused(true)}
-            onBlur={() => setCorreoFocused(false)}
-            onChangeText={(value) => handleInputChange("email", value)}
-          />
+          <View style={styles.textInputContainer}>
+            <TextInput
+              placeholderTextColor={"#acacac"}
+              style={[styles.textInput, nombreFocused && styles.inputFocused]}
+              placeholder="Nombre Del Usuario"
+              value={userData.name}
+              onFocus={() => setNombreFocused(true)}
+              onBlur={() => setNombreFocused(false)}
+              onChangeText={(value) => handleInputChange("name", value)}
+            />
+            <Text style={styles.flag}>*</Text>
+          </View>
+          <View style={styles.textInputContainer}>
+            <TextInput
+              placeholderTextColor={"#acacac"}
+              style={[styles.textInput, correoFocused && styles.inputFocused]}
+              value={userData.email}
+              placeholder="Correo"
+              onFocus={() => setCorreoFocused(true)}
+              onBlur={() => setCorreoFocused(false)}
+              onChangeText={(value) => handleInputChange("email", value)}
+            />
+            <Text style={styles.flag}>*</Text>
+          </View>
           <View style={styles.passwordContainer}>
             <TextInput
               placeholderTextColor={"#acacac"}
@@ -377,6 +393,7 @@ export default function Signup() {
               onBlur={() => setPasswordFocused(false)}
               onChangeText={(value) => handleInputChange("password", value)}
             />
+            <Text style={styles.flag}>*</Text>
             {verPassword ? (
               <Pressable
                 onPress={() => setVerPassword(false)}
@@ -410,6 +427,7 @@ export default function Signup() {
                 handleInputChange("confirmPassword", value)
               }
             />
+            <Text style={styles.flag}>*</Text>
             {verConfirmarPassword ? (
               <Pressable
                 onPress={() => setVerConfirmarPassword(false)}
@@ -438,13 +456,16 @@ export default function Signup() {
               ))}
             </Picker>
           </View>
-          <TextInput
-            placeholderTextColor={"#acacac"}
-            style={styles.textInput}
-            placeholder="Respuesta"
-            value={respuestaSeguridad1}
-            onChangeText={(value) => setRespuestaSeguridad1(value)}
-          />
+          <View style={styles.textInputContainer}>
+            <TextInput
+              placeholderTextColor={"#acacac"}
+              style={styles.textInput}
+              placeholder="Respuesta"
+              value={respuestaSeguridad1}
+              onChangeText={(value) => setRespuestaSeguridad1(value)}
+            />
+            <Text style={styles.flag}>*</Text>
+          </View>
           <View style={styles.pickerContainer}>
             <Picker
               selectedValue={preguntaSeguridad2}
@@ -458,13 +479,16 @@ export default function Signup() {
               ))}
             </Picker>
           </View >
-          <TextInput
-            placeholderTextColor={"#acacac"}
-            style={styles.textInput}
-            placeholder="Respuesta"
-            value={respuestaSeguridad2}
-            onChangeText={(value) => setRespuestaSeguridad2(value)}
-          />
+          <View style={styles.textInputContainer}>
+            <TextInput
+              placeholderTextColor={"#acacac"}
+              style={styles.textInput}
+              placeholder="Respuesta"
+              value={respuestaSeguridad2}
+              onChangeText={(value) => setRespuestaSeguridad2(value)}
+            />
+            <Text style={styles.flag}>*</Text>
+          </View>
         </View>
 
         <Pressable
@@ -564,18 +588,19 @@ const styles = StyleSheet.create({
   logoContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
     width: "100%",
+    marginLeft: 20,
   },
   logoImage: {
-    width: "10%",
+    width: "12%",
     height: "70%",
-    resizeMode: "center"
+    resizeMode: "contain"
   },
   logoText: {
     color: '#FFF',
     fontFamily: 'League-Gothic',
-    fontSize: 60,    
+    fontSize: 70,    
   },
   container: {
     flexDirection: "column",
@@ -584,7 +609,7 @@ const styles = StyleSheet.create({
     padding: 20,
     width: "90%",
     gap: 10,
-    borderRadius: 20
+    borderRadius: 5
   },
   inputContainer: {
     flexDirection: "column",
@@ -593,8 +618,8 @@ const styles = StyleSheet.create({
   },
   titulo: {
     color: Colors.white,
-    fontFamily: "HeliosExt-Regular",
-    fontSize: 26,
+    fontFamily: "Helios-Bold",
+    fontSize: 24,
   },
   textInput: {
     fontFamily: "Open-sans",
@@ -608,7 +633,19 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
     color: Colors.white,
     fontSize: 14,
-  },  
+  },
+  textInputContainer: {
+    margin: 0,
+    padding: 0,
+    width: "100%",
+    maxHeight: 40,
+  },
+  flag: {
+    color: Colors.lightGray,
+    position: "absolute",
+    right: 5,
+    bottom: 0
+  }, 
   passwordContainer: {
     justifyContent: "center",
     margin: 0
@@ -623,14 +660,12 @@ const styles = StyleSheet.create({
     width: "100%",
     fontFamily: "Open-sans",
     fontSize: 14,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
   },
   pickerItem: {
     fontFamily: "Open-sans",
     fontSize: 14,
     width: "100%",
-    color: Colors.black
+    color: Colors.black,
   },
   pickerContainer: {
     width: "100%",
@@ -638,30 +673,37 @@ const styles = StyleSheet.create({
     borderColor: Colors.lightGray,
     borderRadius: 10,
     overflow: "hidden",
-    
+    height: 40,
+    justifyContent: "center"
   },
   button: {
     backgroundColor: Colors.white,
-    borderRadius: 4,
-    paddingTop: 12,
-    paddingBottom: 12,
-    paddingLeft: 20,
-    paddingRight: 20,
+    borderRadius: 10,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
     boxShadow: "6px 6px 10px rgba(0, 0, 0, 0.6)",
+    borderWidth: 2,
+    borderColor: Colors.white,
+    borderStyle: "dashed",
   },
   buttonWithIcon: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: Colors.blue,
+    borderWidth: .8,
+    borderColor: Colors.white,
+    borderStyle: "dashed",
+    paddingVertical: 8,
+    paddingHorizontal: 10,
   },
   textButton: {
     fontFamily: "Open-sans",
     textAlign: "center",
     color: Colors.primary,
     textTransform: "uppercase",
-    fontSize: 12,
-    fontWeight: 600,
-    width: 70,
+    fontSize: 13,
+    fontWeight: "700",
+    letterSpacing: 0.7,
   },
   buttonIcon: {
     paddingLeft: 5,
