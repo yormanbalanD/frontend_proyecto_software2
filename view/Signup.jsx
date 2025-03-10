@@ -6,6 +6,7 @@ import {
   Pressable,
   TextInput,
   ImageBackground,
+  ActivityIndicator,
 } from "react-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
@@ -18,6 +19,7 @@ import endpoints from "../utils/fetch/endpoints-importantes.json";
 import Arrow from "@/components/Arrow";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Picker } from "@react-native-picker/picker";
+import ModalDeCarga from "@/components/ModalDeCarga";
 
 export default function Signup() {
   const router = useRouter();
@@ -30,8 +32,13 @@ export default function Signup() {
   const [nombreFocused, setNombreFocused] = React.useState(false);
   const [correoFocused, setCorreoFocused] = React.useState(false);
   const [PasswordFocused, setPasswordFocused] = React.useState(false);
-  const [confirmarPasswordFocused, setConfirmarPasswordFocused] =
-    React.useState(false);
+  const [confirmarPasswordFocused, setConfirmarPasswordFocused] = React.useState(false);
+
+  const [loadingModalVisible, setLoadingModalVisible] = useState(false);
+
+  //Handle preview
+  const [selectedImage, setSelectedImage] = useState(null); 
+  const [previewVisible, setPreviewVisible] = useState(false);
 
   // Estados para el formulario y userData
   const [userData, setUserData] = useState({
@@ -41,7 +48,16 @@ export default function Signup() {
     confirmPassword: "",
     fotoPerfil: "",
     description: "",
-    typo: "",
+    preguntasDeSeguridad: [
+      {
+        pregunta: "",
+        respuesta: "",
+      },
+      {
+        pregunta: "",
+        respuesta: "",
+      }
+    ],
   });
 
   const handleInputChange = (name, value) => {
@@ -118,30 +134,6 @@ export default function Signup() {
       );
       setModalSuccess(false);
       setModalVisible(true);
-    }
-
-    const emailValidationUrl = `https://emailverification.whoisxmlapi.com/api/v3?apiKey=at_iFCVm77T67rg3vK28nnSUdCUNkpwW&emailAddress=${userData.email}`;
-    const emailValidationOptions = {
-      method: "GET",
-      headers: { accept: "application/json" },
-    };
-
-    await validateEmail(emailValidationUrl, emailValidationOptions); // Llama a useFetch
-
-    if (emailValidationError) {
-      setModalMessage(
-        "Error al validar el correo electrónico: " +
-          (emailValidationError.message || "Error desconocido")
-      );
-      setModalSuccess(false);
-      setModalVisible(true);
-      return false;
-    }
-
-    if (emailValidationData && emailValidationData.smtpCheck !== "true") {
-      setModalMessage("El correo electrónico no existe o no es válido.");
-      setModalSuccess(false);
-      setModalVisible(true);
       return false;
     }
 
@@ -172,39 +164,105 @@ export default function Signup() {
       setModalSuccess(false);
       setModalVisible(true);
       return false;
+    }   
+    
+    if (!respuestaSeguridad1 || !respuestaSeguridad2) {
+      setModalMessage("Por favor, complete todas las preguntas y respuestas de seguridad.");
+      setModalSuccess(false);
+      setModalVisible(true);
+      return false;
     }
+  
+    if (preguntaSeguridad1 === preguntaSeguridad2) {
+      setModalMessage("Por favor, seleccione preguntas de seguridad diferentes.");
+      setModalSuccess(false);
+      setModalVisible(true);
+      return false;
+    }
+
+    //   SE ALCANZO EL LIMITE DE LA PRUEBA GRATUITA
+    //  VALIDACION DESABILITADA TEMPORALMENTE
+
+    // setLoadingModalVisible(true); 
+
+    // const emailValidationUrl = `https://emailverification.whoisxmlapi.com/api/v3?apiKey=at_iFCVm77T67rg3vK28nnSUdCUNkpwW&emailAddress=${userData.email}`;
+    // const emailValidationOptions = {
+    //   method: "GET",
+    //   headers: { accept: "application/json" },
+    // };
+
+    // await validateEmail(emailValidationUrl, emailValidationOptions); 
+
+    // if (emailValidationError) {
+    //   setModalMessage(
+    //     "Error al validar el correo electrónico: " +
+    //       (emailValidationError.message || "Error desconocido")        
+    //   );      
+    //   setModalSuccess(false);
+    //   setModalVisible(true);
+    //   setLoadingModalVisible(false);
+    //   return false;
+    // }
+
+    // if (emailValidationData && emailValidationData.smtpCheck !== "true") {
+    //   setModalMessage("El correo electrónico no existe o no es válido.");
+    //   setModalSuccess(false);
+    //   setModalVisible(true);
+    //   setLoadingModalVisible(false);
+    //   return false;
+    // }   
+        
     return true;
   };
 
   const seleccionarImagen = async () => {
-      // Pedir permiso de acceso a la galería
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== "granted") {
-        alert("Se requiere permiso para acceder a la galería.");
-        return;
-      }
-  
-      // Abrir la galería
-      const resultado = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: "images",
-        allowsEditing: true,
-        base64: true,
-        quality: 0.6, // Calidad de la imagen (1 = máxima calidad)
-        allowsMultipleSelection: false,
-      });
-  
-      // Si el usuario no cancela, guardar la imagen seleccionada
-      if (!resultado.canceled) {
-        setFotoPerfil(
-          `data:${resultado.assets[0].mimeType};base64,${resultado.assets[0].base64}`
-        );
-      }
-    };
-
-  const handleSignup = async () => {
-    if (!(await validarFormulario())) {
+    // Pedir permiso de acceso a la galería
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      alert("Se requiere permiso para acceder a la galería.");
       return;
     }
+
+    // Abrir la galería
+    const resultado = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: "images",
+      allowsEditing: true,
+      base64: true,
+      quality: 0.6, // Calidad de la imagen (1 = máxima calidad)
+      allowsMultipleSelection: false,
+    });
+
+    // Si el usuario no cancela, guardar la imagen seleccionada
+    if (!resultado.canceled) {        
+      setSelectedImage(resultado.assets[0]); // Guarda la imagen seleccionada
+      setPreviewVisible(true);
+    }      
+  };
+
+  const aceptarImagen = () => {
+    const fotoPerfilBase64 = `data:${selectedImage.mimeType};base64,${selectedImage.base64}`;
+    setUserData({ ...userData, fotoPerfil: fotoPerfilBase64 });
+    setPreviewVisible(false);
+  };
+  
+  const rechazarImagen = () => {
+    setSelectedImage(null);
+    setPreviewVisible(false);
+  };
+
+  const handleSignup = async () => {    
+    if (!(await validarFormulario())) {      
+      return;
+    }
+
+    setLoadingModalVisible(true);
+    setUserData({
+      ...userData,
+      preguntasDeSeguridad: [
+        { pregunta: preguntaSeguridad1, respuesta: respuestaSeguridad1 },
+        { pregunta: preguntaSeguridad2, respuesta: respuestaSeguridad2 },
+      ],
+    });
 
     await fetchData("https://backend-swii.vercel.app/api/createUser", {
       method: "POST",
@@ -217,16 +275,18 @@ export default function Signup() {
 
   const saveToken = async (value) => {
     try {
-      const value = await AsyncStorage.setItem("token", value);
-      console.log(value);
+      await AsyncStorage.setItem("token", value);
+      console.log("Token guardado correctamente");
     } catch (e) {
-      console.log(e);
-      return null;
+      console.log("Error al guardar el token:", e);
     }
   };
 
   useEffect(() => {
     if (loading) return;
+    if(emailValidationLoading) return;
+
+    setLoadingModalVisible(false); 
 
     if (error) {
       setModalMessage(error.message || "Error al crear usuario.");
@@ -243,7 +303,16 @@ export default function Signup() {
         confirmPassword: "",
         fotoPerfil: "",
         description: "",
-        typo: "",
+        preguntasDeSeguridad: [
+          {
+            pregunta: "",
+            respuesta: "",
+          },
+          {
+            pregunta: "",
+            respuesta: "",
+          }
+        ],
       });
       saveToken(data.token);
     }
@@ -402,8 +471,8 @@ export default function Signup() {
           onPress={() => seleccionarImagen()}
           style={({ pressed }) => [
             styles.button,
-            pressed && styles.buttonPressed,
             styles.buttonWithIcon,
+            pressed && {backgroundColor: Colors.primary},            
           ]}
         >
           <Text style={[styles.textButton, {color: Colors.white}]}>Subir foto</Text>
@@ -424,7 +493,7 @@ export default function Signup() {
               borderRadius: 10,
               },
               {backgroundColor: Colors.vinoDark},
-              pressed && styles.buttonPressed,
+              pressed && {backgroundColor: Colors.vino},
             ]}
           >
             <Text style={[styles.textButton, {color: Colors.white, marginLeft: 30}]}>Volver</Text>
@@ -440,7 +509,7 @@ export default function Signup() {
               {padding: 15,
               borderRadius: 10,
               },
-              pressed && styles.buttonPressed, 
+              pressed && {backgroundColor: Colors.vinoDark}, 
             ]}
             onPress={() => handleSignup()}
           >
@@ -457,6 +526,30 @@ export default function Signup() {
         message={modalMessage}
         onClose={closeModal}
       />
+     <ModalDeCarga visible={loadingModalVisible} />
+      {previewVisible && (
+        <View style={styles.previewContainer}>
+          <Image
+            source={{ uri: selectedImage.uri }}
+            style={styles.fotoPerfil}
+          />
+          <View style={styles.previewButtons}>
+            <Pressable onPress={aceptarImagen} style={({ pressed }) =>[
+              styles.previewButton,
+              {backgroundColor: Colors.blue},
+              pressed && {backgroundColor: Colors.primary}]}>
+              <Text style={styles.previewButtonText}>Aceptar</Text>
+            </Pressable>
+            <Pressable onPress={rechazarImagen} style={({ pressed }) => [
+              styles.previewButton,
+              { backgroundColor: Colors.vino },
+              pressed && {backgroundColor: Colors.vinoDark},               
+            ]}>
+              <Text style={styles.previewButtonText}>Rechazar</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
     </ImageBackground>
   );
 }
@@ -556,9 +649,6 @@ const styles = StyleSheet.create({
     paddingRight: 20,
     boxShadow: "6px 6px 10px rgba(0, 0, 0, 0.6)",
   },
-  buttonPressed: {
-    backgroundColor: Colors.lightGray,
-  },
   buttonWithIcon: {
     flexDirection: "row",
     alignItems: "center",
@@ -582,5 +672,34 @@ const styles = StyleSheet.create({
     gap: 25,
     width: "100%",
     marginTop: 10
+  },
+  fotoPerfil: {
+    width: 400,
+    height: 400,
+    borderRadius: "100%",
+  },
+  previewContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  previewButtons: {
+    flexDirection: "row",
+    marginTop: 20,
+  },
+  previewButton: {
+    backgroundColor: Colors.blue,
+    paddingHorizontal: 30,
+    paddingVertical: 10,
+    borderRadius: 5,
+    marginHorizontal: 10,
+  },
+  previewButtonText: {
+    color: Colors.white,
   },
 });
