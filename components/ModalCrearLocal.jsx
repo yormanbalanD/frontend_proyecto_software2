@@ -12,7 +12,6 @@ import {
 import { MaterialIcons, Entypo } from "@expo/vector-icons";
 import { jwtDecode as decode } from "jwt-decode";
 import * as Location from "expo-location";
-import { useCookies } from "react-cookie";
 import * as ImagePicker from "expo-image-picker";
 import ModalDeCarga from "../components/ModalDeCarga"; // Importar el modal de carga
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -21,7 +20,10 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [ubicacion, setUbicacion] = useState("");
-  const [coordenadas, setCoordenadas] = useState(null);
+  const [coordenadas, setCoordenadas] = useState({
+    latitude: "",
+    longitude: "",
+  });
   const [imagenPrincipal, setImagenPrincipal] = useState(null);
   const [imagenesSecundarias, setImagenesSecundarias] = useState([]);
   const [etiquetas, setEtiquetas] = useState([]);
@@ -29,7 +31,6 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [botonHabilitado, setBotonHabilitado] = useState(false);
   const [botonTextHabilitado, setBotonTextHabilitado] = useState(false);
-  const [cookies] = useCookies(["token"]);
 
   const getToken = async () => {
     try {
@@ -52,6 +53,8 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
   };
 
   const validarInputs = () => {
+    const coordenadasRegex = /^-?\d+(\.\d+)?$/; // Permite números positivos, negativos y decimales
+
     if (!nombre.trim()) {
       onSuccess("El campo Nombre es obligatorio.", false);
       return false;
@@ -64,8 +67,22 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
       onSuccess("El campo Ubicación es obligatorio.", false);
       return false;
     }
-    if (coordenadas === null) {
-      onSuccess("Debe obtener las coordenadas para continuar.", false);
+    if (!coordenadas.latitude.trim() || !coordenadas.longitude.trim()) {
+      onSuccess("Debe ingresar las coordenadas para continuar.", false);
+      return false;
+    }
+    if (
+      !coordenadasRegex.test(coordenadas.latitude) ||
+      !coordenadasRegex.test(coordenadas.longitude)
+    ) {
+      onSuccess("Debe ingresar coordenadas numéricas.", false);
+      return false;
+    }
+    if (
+      parseFloat(coordenadas.latitude) === 0 ||
+      parseFloat(coordenadas.longitude) === 0
+    ) {
+      onSuccess("Las coordenadas no pueden ser 0.", false);
       return false;
     }
     if (imagenPrincipal === null) {
@@ -77,9 +94,21 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
   };
 
   useEffect(() => {
-    if (!nombre.trim() || !descripcion.trim() || !ubicacion.trim() || (coordenadas===null) || (imagenPrincipal===null)) {
+    const coordenadasRegex = /^-?\d+(\.\d+)?$/; // Permite números positivos, negativos y decimales
+    if (
+      !nombre.trim() ||
+      !descripcion.trim() ||
+      !ubicacion.trim() ||
+      !coordenadas.latitude.trim() ||
+      !coordenadas.longitude.trim() ||
+      imagenPrincipal === null ||
+      parseFloat(coordenadas.latitude) === 0 ||
+      parseFloat(coordenadas.longitude) === 0 ||
+      !coordenadasRegex.test(coordenadas.latitude) ||
+      !coordenadasRegex.test(coordenadas.longitude)
+    ) {
       setBotonHabilitado(true);
-      setBotonTextHabilitado(true); 
+      setBotonTextHabilitado(true);
     } else {
       setBotonHabilitado(false);
       setBotonTextHabilitado(false);
@@ -130,7 +159,7 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
       setNombre("");
       setDescripcion("");
       setUbicacion("");
-      setCoordenadas(null);
+      setCoordenadas({ latitude: "", longitude: "" });
       setImagenPrincipal(null);
       setImagenesSecundarias([]);
       setEtiquetas([]);
@@ -143,7 +172,7 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
     setNombre("");
     setDescripcion("");
     setUbicacion("");
-    setCoordenadas(null);
+    setCoordenadas({ latitude: "", longitude: "" });
     setImagenPrincipal(null);
     setImagenesSecundarias([]);
     setEtiquetas([]);
@@ -160,17 +189,22 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
       accuracy: Location.Accuracy.Highest,
     });
 
-    setCoordenadas(location.coords);
+    setCoordenadas({
+      latitude: location.coords.latitude.toString(),
+      longitude: location.coords.longitude.toString(),
+    });
   };
 
   const tomarFoto = async (tipo) => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
     if (status !== "granted") {
-      alert("Se requiere permiso para acceder a la cámara.");
+      alert("Se requiere permiso para acceder a la galería.");
       return;
     }
 
-    const resultado = await ImagePicker.launchCameraAsync({
+    const resultado = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: "images",
       allowsEditing: true,
       base64: true,
       quality: 0.4,
@@ -260,13 +294,18 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
                 />
                 <TextInput
                   style={styles.inputCoord}
-                  value={
-                    coordenadas
-                      ? `${coordenadas.latitude}, ${coordenadas.longitude}`
-                      : ""
-                  }
-                  editable={false}
+                  value={`${coordenadas.latitude}, ${coordenadas.longitude}`}
+                  onChangeText={(text) => {
+                    const [lat, lon] = text
+                      .split(",")
+                      .map((item) => item.trim());
+                    setCoordenadas({
+                      latitude: lat || "",
+                      longitude: lon || "",
+                    });
+                  }}
                 />
+                <Text style={styles.coordAsterisk}>*</Text>
               </View>
 
               <TouchableOpacity
@@ -279,7 +318,6 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
                 <Entypo name="location" size={20} color="#fff" />
               </TouchableOpacity>
 
-              
               <TouchableOpacity
                 onPress={() => tomarFoto("principal")}
                 style={styles.addButton}
@@ -303,12 +341,11 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
                 </View>
               )}
 
-             
               <TouchableOpacity
                 onPress={() => tomarFoto("secundaria")}
                 style={styles.addButton}
               >
-                <Text style={styles.addButtonText}>Tomar Más Fotos</Text>
+                <Text style={styles.addButtonText}>Agregar Más Fotos</Text>
                 <MaterialIcons name="add-a-photo" size={20} color="#fff" />
               </TouchableOpacity>
 
@@ -329,7 +366,7 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
               <Text style={styles.label} marginTop={10}>
                 Etiquetas
               </Text>
-              
+
               <View style={styles.etiquetaInputContainer}>
                 <TextInput
                   style={styles.inputEtiqueta}
@@ -363,18 +400,22 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                style={[
-                  styles.createButton,
-                  {
-                    borderColor: botonHabilitado ? "#736e69" : "#00bf62",
-                  },
-                ]}
+                  style={[
+                    styles.createButton,
+                    {
+                      borderColor: botonHabilitado ? "#736e69" : "#00bf62",
+                    },
+                  ]}
                   onPress={handleCrearLocal}
                 >
-                  <Text style={[
-                    styles.createButtonText,
-                    { color: botonTextHabilitado ? "#736e69" : "#00bf62" },
-                  ]}>Crear</Text>
+                  <Text
+                    style={[
+                      styles.createButtonText,
+                      { color: botonTextHabilitado ? "#736e69" : "#00bf62" },
+                    ]}
+                  >
+                    Crear
+                  </Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>
@@ -422,6 +463,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: "Open-Sans",
   },
+  coordAsterisk: {
+    position: "absolute",
+    right: 10,
+    top: "50%",
+    transform: [{ translateY: -2 }],
+    fontSize: 16,
+    fontFamily: "Open-Sans",
+  },
   label: {
     alignSelf: "flex-start",
     fontSize: 12,
@@ -450,6 +499,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#736e69",
     borderRadius: 5,
     paddingLeft: 30,
+    paddingRight: 25,
     paddingBottom: 4,
   },
   icon: {

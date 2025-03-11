@@ -97,7 +97,7 @@ function RenderComentario({ item, setModal, setComentarioADenunciar }) {
       </TouchableOpacity>
       {denunciarVisible && (
         <TouchableOpacity
-          onPress={() => { 
+          onPress={() => {
             setDenunciarVisible(false);
             setModal(true);
             setComentarioADenunciar(item);
@@ -146,6 +146,7 @@ export default function TabOpiniones({
   setComentarioADenunciar,
 }) {
   const [comentarios, setComentarios] = useState([]);
+  const [idUser, setIdUser] = useState(null);
 
   const getToken = async () => {
     try {
@@ -164,6 +165,7 @@ export default function TabOpiniones({
     if (!token) return null;
 
     const decoded = decode(token);
+    setIdUser(decoded.sub);
     return decoded.sub;
   };
 
@@ -178,6 +180,7 @@ export default function TabOpiniones({
   useEffect(() => {
     if (!restaurante.reviews) return;
     setComentarios(restaurante.reviews);
+    getUserId();
   }, [restaurante]);
 
   return (
@@ -258,15 +261,12 @@ export default function TabOpiniones({
               <PlaceholderText width={50} fontSize={13} />
             )}
 
-            {comentarios.filter(
-              async (item) => item.idUser == (await getUserId())
-            ).length > 0 ? (
+            {comentarios.filter(async (item) => item.idUser == idUser).length >
+            0 ? (
               <TouchableOpacity
                 onPress={() => {
                   setComentarioAEditar(
-                    comentarios.filter(
-                      async (item) => item.idUser == (await getUserId())
-                    )[0]
+                    comentarios.filter(async (item) => item.idUser == idUser)[0]
                   );
                   setModalEditarComentarioVisible(true);
                 }}

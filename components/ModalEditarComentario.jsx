@@ -111,7 +111,7 @@ export default function ModalEditarComentario({
       const response = await fetch(
         "https://backend-swii.vercel.app/api/updateComment/" + restaurante._id,
         {
-          method: "POST",
+          method: "PUT",
           headers: {
             Authorization: `Bearer ${await getToken()}`,
             "Content-Type": "application/json",

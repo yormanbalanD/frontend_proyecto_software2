@@ -16,21 +16,15 @@ import ModalDeCarga from "../components/ModalDeCarga";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Notificacion from "../components/ModalNotificacion";
 
-export default function ModalEditarLocal({
-  visible,
-  onClose,
-  localData
-}) {
+export default function ModalEditarLocal({ visible, onClose, localData }) {
   const [nombre, setNombre] = useState(localData.name);
   const [descripcion, setDescripcion] = useState(localData.description);
   const [ubicacion, setUbicacion] = useState(localData.address);
   const [coordenadas, setCoordenadas] = useState({
-    latitude: localData.latitude,
-    longitude: localData.longitude,
+    latitude: localData.latitude.toString(),
+    longitude: localData.longitude.toString(),
   });
-  const [imagenPrincipal, setImagenPrincipal] = useState(
-    localData.fotoPerfil
-  );
+  const [imagenPrincipal, setImagenPrincipal] = useState(localData.fotoPerfil);
   const [imagenesSecundarias, setImagenesSecundarias] = useState(
     localData.fotos
   );
@@ -56,6 +50,8 @@ export default function ModalEditarLocal({
   };
 
   const validarInputs = () => {
+    const coordenadasRegex = /^-?\d+(\.\d+)?$/; // Permite números positivos, negativos y decimales
+
     if (!nombre.trim()) {
       setModalMessage("El campo Nombre es obligatorio.");
       setModalSuccess(false);
@@ -74,11 +70,46 @@ export default function ModalEditarLocal({
       setModalVisible(true);
       return false;
     }
+    if (!coordenadas.latitude.trim() || !coordenadas.longitude.trim()) {
+      setModalMessage("Debe ingresar las coordenadas para continuar.");
+      setModalSuccess(false);
+      setModalVisible(true);
+      return false;
+    }
+    if (
+      !coordenadasRegex.test(coordenadas.latitude) ||
+      !coordenadasRegex.test(coordenadas.longitude)
+    ) {
+      setModalMessage("Debe ingresar coordenadas numéricas.");
+      setModalSuccess(false);
+      setModalVisible(true);
+      return false;
+    }
+    if (
+      parseFloat(coordenadas.latitude) === 0 ||
+      parseFloat(coordenadas.longitude) === 0
+    ) {
+      setModalMessage("Las coordenadas no pueden ser 0.");
+      setModalSuccess(false);
+      setModalVisible(true);
+      return false;
+    }
     return true; // Si todo está bien, retorna true
   };
 
   useEffect(() => {
-    if (!nombre.trim() || !descripcion.trim() || !ubicacion.trim()) {
+    const coordenadasRegex = /^-?\d+(\.\d+)?$/; // Permite números positivos, negativos y decimales
+    if (
+      !nombre.trim() ||
+      !descripcion.trim() ||
+      !ubicacion.trim() ||
+      !coordenadas.latitude.trim() ||
+      !coordenadas.longitude.trim() ||
+      parseFloat(coordenadas.latitude) === 0 ||
+      parseFloat(coordenadas.longitude) === 0 ||
+      !coordenadasRegex.test(coordenadas.latitude) ||
+      !coordenadasRegex.test(coordenadas.longitude)
+    ) {
       setBotonHabilitado(false);
       setBotonTextHabilitado(false);
     } else {
@@ -86,7 +117,7 @@ export default function ModalEditarLocal({
       setBotonTextHabilitado(true);
     }
     console.log(botonHabilitado);
-  }, [nombre, descripcion, ubicacion]);
+  }, [nombre, descripcion, ubicacion, coordenadas]);
 
   const actualizarLocal = async () => {
     if (!validarInputs()) return; // Si falla la validación, no ejecuta la petición
@@ -99,7 +130,7 @@ export default function ModalEditarLocal({
 
         body: JSON.stringify({
           name: nombre,
-          own: localData.own, // Suponiendo que viene del objeto localData
+          own: localData.own,
           fotoPerfil: imagenPrincipal,
           description: descripcion,
           etiquetas: etiquetas,
@@ -139,16 +170,20 @@ export default function ModalEditarLocal({
     const location = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.Highest,
     });
-    setCoordenadas(location.coords);
+    setCoordenadas({
+      latitude: location.coords.latitude.toString(),
+      longitude: location.coords.longitude.toString(),
+    });
   };
 
   const tomarFoto = async (tipo) => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      alert("Se requiere permiso para acceder a la cámara.");
+      alert("Se requiere permiso para acceder a la galería.");
       return;
     }
-    const resultado = await ImagePicker.launchCameraAsync({
+    const resultado = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: "images",
       allowsEditing: true,
       base64: true,
       quality: 0.4,
@@ -249,12 +284,17 @@ export default function ModalEditarLocal({
               />
               <TextInput
                 style={styles.inputCoord}
-                value={
-                  coordenadas
-                    ? `${coordenadas.latitude}, ${coordenadas.longitude}`
-                    : ""
-                }
-                editable={false}
+                value={`${coordenadas.latitude}, ${coordenadas.longitude}`}
+                onChangeText={(text) => {
+                  const [lat, lon] = text.split(",").map((item) => item.trim());
+                  setCoordenadas({ latitude: lat || "", longitude: lon || "" });
+                }}
+              />
+              <MaterialIcons
+                name="edit"
+                size={18}
+                color="#0e87d6"
+                style={styles.editIconCoord}
               />
             </View>
             <TouchableOpacity
@@ -400,6 +440,12 @@ const styles = StyleSheet.create({
     top: "50%",
     transform: [{ translateY: -18 }],
   },
+  editIconCoord: {
+    position: "absolute",
+    right: 10,
+    top: "50%",
+    transform: [{ translateY: -6 }],
+  },
   charCount: {
     alignSelf: "flex-end",
     fontSize: 12,
@@ -422,6 +468,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#736e69",
     borderRadius: 5,
     paddingLeft: 30,
+    paddingRight: 30,
     paddingBottom: 4,
   },
   icon: {
