@@ -16,7 +16,7 @@ import ModalDeCarga from "../components/ModalDeCarga";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Notificacion from "../components/ModalNotificacion";
 
-export default function ModalEditarLocal({ visible, onClose, localData }) {
+export default function ModalEditarLocal({ visible, onClose, localData}) {
   const [nombre, setNombre] = useState(localData.name);
   const [descripcion, setDescripcion] = useState(localData.description);
   const [ubicacion, setUbicacion] = useState(localData.address);
@@ -230,9 +230,11 @@ export default function ModalEditarLocal({ visible, onClose, localData }) {
                 style={styles.input}
                 value={nombre}
                 onChangeText={setNombre}
-                maxLength={20}
+                maxLength={100}
+                multiline
+                placeholder="Nombre"
               />
-              <Text style={styles.charCount}>{nombre.length}/20</Text>
+              <Text style={styles.charCount}>{nombre.length}/100</Text>
               <MaterialIcons
                 name="edit"
                 size={18}
@@ -246,10 +248,11 @@ export default function ModalEditarLocal({ visible, onClose, localData }) {
                 style={styles.input}
                 value={descripcion}
                 onChangeText={setDescripcion}
-                maxLength={100}
+                placeholder="Descripción"
+                maxLength={400}
                 multiline
               />
-              <Text style={styles.charCount}>{descripcion.length}/100</Text>
+              <Text style={styles.charCount}>{descripcion.length}/400</Text>
               <MaterialIcons
                 name="edit"
                 size={18}
@@ -262,11 +265,12 @@ export default function ModalEditarLocal({ visible, onClose, localData }) {
               <TextInput
                 style={styles.input}
                 value={ubicacion}
+                placeholder="Ubicación"
                 onChangeText={setUbicacion}
-                maxLength={100}
+                maxLength={200}
                 multiline
               />
-              <Text style={styles.charCount}>{ubicacion.length}/100</Text>
+              <Text style={styles.charCount}>{ubicacion.length}/200</Text>
               <MaterialIcons
                 name="edit"
                 size={18}
@@ -284,10 +288,17 @@ export default function ModalEditarLocal({ visible, onClose, localData }) {
               />
               <TextInput
                 style={styles.inputCoord}
+                maxLength={24}
                 value={`${coordenadas.latitude}, ${coordenadas.longitude}`}
                 onChangeText={(text) => {
-                  const [lat, lon] = text.split(",").map((item) => item.trim());
-                  setCoordenadas({ latitude: lat || "", longitude: lon || "" });
+                  const [lat, lon] = text
+                    .split(",")
+                    .map((item) => item.trim().slice(0, 11)); // Limita cada valor a 11 caracteres directamente
+              
+                  setCoordenadas({
+                    latitude: lat || "",
+                    longitude: lon || "",
+                  });
                 }}
               />
               <MaterialIcons
