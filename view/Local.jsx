@@ -8,8 +8,8 @@ import {
   ScrollView,
   FlatList,
   Pressable,
+  Modal,
 } from "react-native";
-import * as Font from "expo-font";
 import { Tab, TabView } from "@rneui/themed";
 import Icon from "@expo/vector-icons/FontAwesome";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
@@ -25,13 +25,59 @@ import PlaceholderText from "../components/PlaceholderText";
 import { jwtDecode as decode } from "jwt-decode";
 import { set } from "react-hook-form";
 import ModalEditarComentario from "../components/ModalEditarComentario";
-
+import { useFonts } from "expo-font";
 import ReportComment from "../view/ReportComment";
+import SimpleLineIcons from "@expo/vector-icons/SimpleLineIcons";
+import ModalEditarLocal from "../components/ModalEditarLocal";
+import ModalConfirmarAccion from "@/components/ModalConfirmarAccion";
+import ModalNotificacion from "@/components/ModalNotificacion";
+import ModalDeCarga from "@/components/ModalDeCarga";
+
+const ModalFoto = ({ foto, setDataModalFoto }) => {
+  return (
+    <Modal visible={foto != null} transparent animationType="slide">
+      <Pressable
+        onPress={() => {
+          setDataModalFoto(null);
+        }}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          backgroundColor: "#000000ac",
+          flex: 1,
+          width: "100%",
+          height: "100%",
+        }}
+      />
+      <Pressable
+        onPress={() => {
+          setDataModalFoto(null);
+        }}
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          paddingHorizontal: 20,
+          borderWidth: 1,
+        }}
+      >
+        <Image
+          source={{ uri: foto }}
+          style={{
+            width: "100%",
+            height: 500,
+            resizeMode: "contain",
+          }}
+        />
+      </Pressable>
+    </Modal>
+  );
+};
 
 const Local = () => {
   const params = useLocalSearchParams();
   const navigate = useRouter();
-  const [fontsLoaded, setFontsLoaded] = useState(false);
   const [comentarios, setComentarios] = useState([]);
   const [restaurante, setRestaurante] = useState({
     fotoPerfil: "",
@@ -44,6 +90,18 @@ const Local = () => {
   const [comentarioADenunciar, setComentarioADenunciar] = useState(null);
   const [modalEditarComentario, setModalEditarComentario] = useState(false);
   const [modalReportComentario, setModalReportComentario] = useState(false);
+  const [optionsVisible, setOptionsVisible] = useState(false);
+  const [idUser, setIdUser] = useState(null);
+  const [modalEditaLocalVisible, setModalEditaLocalVisible] = useState(false);
+  const [modalExito, setModalExito] = useState({
+    isVisible: false,
+    isSuccess: false,
+    message: "",
+  });
+  const [modalConfirmarAccionVisible, setModalConfirmarAccionVisible] =
+    useState(false);
+  const [modalCarga, setModalCarga] = useState(false);
+  const [dataModalFoto, setDataModalFoto] = useState(null);
 
   const getToken = async () => {
     try {
@@ -62,6 +120,7 @@ const Local = () => {
     if (!token) return null;
 
     const decoded = decode(token);
+    setIdUser(decoded.sub);
     return decoded.sub;
   };
 
@@ -96,7 +155,7 @@ const Local = () => {
     }
 
     getDatosDelRestaurante();
-  }, [modalCrearComentarioVisible]);
+  }, [modalCrearComentarioVisible, modalEditarComentario]);
 
   useEffect(() => {
     const loadFonts = async () => {
@@ -107,6 +166,7 @@ const Local = () => {
       setFontsLoaded(true);
     };
     loadFonts();
+    getUserId();
   }, []);
 
   const [index, setIndex] = useState(0);
@@ -173,6 +233,55 @@ const Local = () => {
     }
   };
 
+  const eliminarLocal = async () => {
+    setModalCarga(true);
+    try {
+      const response = await fetch(
+        "https://backend-swii.vercel.app/api/deleteRestaurant/" +
+          restaurante._id,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + (await getToken()),
+          },
+        }
+      );
+
+      if (response.status == 200) {
+        const data = await response.json();
+        console.log(data);
+        setModalConfirmarAccionVisible(false);
+        setModalCarga(false);
+        setModalExito({
+          isVisible: true,
+          message: "Local eliminado exitosamente",
+          isSuccess: true,
+        });
+      } else {
+        console.log("Error Eliminar Local");
+        console.log(response);
+        setModalConfirmarAccionVisible(false);
+        setModalCarga(false);
+        setModalExito({
+          isVisible: true,
+          message: "Error al eliminar local",
+          isSuccess: false,
+        });
+      }
+    } catch (err) {
+      console.log("Error Eliminar Local");
+      console.log(err);
+      setModalConfirmarAccionVisible(false);
+      setModalCarga(false);
+      setModalExito({
+        isVisible: true,
+        message: "Error fulminante al eliminar local",
+        isSuccess: false,
+      });
+    }
+  };
+
   const cantidad = calcCantidadOpiniones(comentarios);
   const maxOpiniones = Math.max(...Object.values(cantidad));
 
@@ -188,6 +297,66 @@ const Local = () => {
             style={styles.logo}
           />
           <Text style={styles.titulo}>FOODIGO</Text>
+
+          {optionsVisible && (
+            <View
+              style={{
+                position: "absolute",
+                top: 25,
+                right: 33,
+                borderWidth: 1,
+                borderColor: "#00000098",
+                borderRadius: 4,
+                backgroundColor: "#FFF",
+              }}
+            >
+              {idUser != null && idUser == restaurante.own ? (
+                <>
+                  <TouchableOpacity
+                    style={{ paddingVertical: 15, paddingHorizontal: 20 }}
+                    onPress={() => {
+                      setOptionsVisible(false);
+                      setModalEditaLocalVisible(true);
+                    }}
+                  >
+                    <Text style={{ fontWeight: 500 }}>Editar Local</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{ paddingVertical: 15, paddingHorizontal: 20 }}
+                    onPress={() => {
+                      setOptionsVisible(false);
+                      setModalConfirmarAccionVisible(true);
+                    }}
+                  >
+                    <Text style={{ fontWeight: 500 }}>Eliminar Local</Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <>
+                  <TouchableOpacity
+                    style={{ paddingVertical: 15, paddingHorizontal: 20 }}
+                    onPress={() => {}}
+                  >
+                    <Text style={{ fontWeight: 500 }}>
+                      Denunciar Comentario
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
+          )}
+
+          <TouchableOpacity
+            onPress={() => setOptionsVisible(!optionsVisible)}
+            style={{
+              position: "absolute",
+              right: 10,
+              paddingLeft: 10,
+              paddingVertical: 10,
+            }}
+          >
+            <SimpleLineIcons name="options-vertical" size={24} color="black" />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.restauranteInfo}>
@@ -263,10 +432,15 @@ const Local = () => {
           {!restaurante.fotoPerfil ? (
             <PlaceholderFoto width={"100%"} height={"100%"} />
           ) : (
-            <Image
-              source={{ uri: restaurante.fotoPerfil }}
-              style={{ ...styles.fixedImage }}
-            />
+            <TouchableOpacity
+              style={{ flex: 1, width: "100%", height: "100%" }}
+              onPress={() => setDataModalFoto(restaurante.fotoPerfil)}
+            >
+              <Image
+                source={{ uri: restaurante.fotoPerfil }}
+                style={{ ...styles.fixedImage }}
+              />
+            </TouchableOpacity>
           )}
         </View>
 
@@ -297,7 +471,7 @@ const Local = () => {
           minSwipeRatio={0.3}
         >
           {/* Descripcion */}
-          <TabDescripcion restaurante={restaurante} />
+          <TabDescripcion restaurante={restaurante} setDataModalFoto={setDataModalFoto} />
 
           {/* Opiniones */}
           <TabOpiniones
@@ -307,6 +481,7 @@ const Local = () => {
             setComentarioAEditar={setComentarioAEditar}
             setModalReportComentario={setModalReportComentario}
             setComentarioADenunciar={setComentarioADenunciar}
+            getDatosDelRestaurante={getDatosDelRestaurante}
           />
         </TabView>
       </SafeAreaView>
@@ -324,9 +499,52 @@ const Local = () => {
         visible={modalEditarComentario}
         comentario={comentarioAEditar}
       />
-      <ReportComment visible={modalReportComentario} onClose={() => {
-        setModalReportComentario(false)
-      }} idRestaurante={restaurante.description ? restaurante._id: ""} idComentario={comentarioADenunciar != null ? comentarioADenunciar._id : ""} />
+      <ReportComment
+        visible={modalReportComentario}
+        onClose={() => {
+          setModalReportComentario(false);
+        }}
+        idRestaurante={restaurante.description ? restaurante._id : ""}
+        idComentario={
+          comentarioADenunciar != null ? comentarioADenunciar.idUser : ""
+        }
+      />
+      {restaurante.own && (
+        <ModalEditarLocal
+          visible={modalEditaLocalVisible}
+          onClose={() => {
+            setRestaurante({
+              fotoPerfil: "",
+            });
+            getDatosDelRestaurante();
+            setModalEditaLocalVisible(false);
+          }}
+          localData={restaurante}
+        />
+      )}
+      <ModalConfirmarAccion
+        visible={modalConfirmarAccionVisible}
+        setVisible={setModalConfirmarAccionVisible}
+        accion={eliminarLocal}
+        message="¿Desea Eliminar este Local?"
+      />
+      <ModalNotificacion
+        isSuccess={modalExito.isSuccess}
+        message={modalExito.message}
+        isVisible={modalExito.isVisible}
+        onClose={() => {
+          setModalExito({
+            isVisible: false,
+            message: "",
+            isSuccess: false,
+          });
+          navigate.replace("mainpage");
+        }}
+      />
+      <ModalDeCarga visible={modalCarga} />
+      {restaurante.own && (
+        <ModalFoto foto={dataModalFoto} setDataModalFoto={setDataModalFoto} />
+      )}
     </SafeAreaProvider>
   );
 };
@@ -344,10 +562,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   titulo: {
-    color: "black",
     fontFamily: "League-Gothic",
+    color: "#000",
     fontSize: 50,
-    fontWeight: "bold",
+    fontWeight: 700,
     textAlign: "center",
   },
   subtitulo: {
@@ -531,61 +749,6 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     marginLeft: 40,
   },
-
-  card: {
-    backgroundColor: "#8c0e03",
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
-    elevation: 3,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    flexWrap: "wrap",
-    width: "100%",
-  },
-  logoContainerComent: {
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
-    justifyContent: "center",
-    alignItems: "center",
-
-    marginRight: 5,
-    marginTop: "5%",
-    marginBottom: "5%",
-    borderWidth: 2,
-    borderColor: "#fff",
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    overflow: "hidden",
-  },
-
-  logoImage: {
-    resizeMode: "cover",
-    width: 70,
-    height: 70,
-    borderRadius: 50,
-    resizeMode: "cover",
-    borderWidth: 3,
-    borderColor: "#fff",
-  },
-  cardTexto: {
-    justifyContent: "center",
-    alignItems: "center",
-    flex: 1,
-  },
-  nombreCc: {
-    fontSize: 16,
-    fontWeight: "bold",
-    margin: 5,
-    color: "#fff",
-  },
   calificacion: {
     alignSelf: "flex-start",
     marginVertical: 5,
@@ -598,62 +761,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginTop: 5,
-  },
-  comentario: {
-    alignItems: "center",
-    fontSize: 14,
-    color: "#fff",
-    textAlign: "center",
-  },
-
-  fototexto: {
-    textAlign: "center",
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-
-  fotoHeader: {
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-    gap: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    width: "100%",
-    paddingHorizontal: 10,
-  },
-
-  icono: {
-    width: 30,
-    height: 30,
-    margin: 5,
-  },
-  botonComentario: {
-    alignItems: "center",
-    justifyContent: "center",
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: 10,
-    padding: 5,
-    borderColor: "gray",
-    marginBottom: 10,
-  },
-  botonTexto: {
-    color: "#000",
-    fontSize: 16,
-    fontWeight: "bold",
-    flex: 1,
-  },
-  imageLocalContainer: {
-    marginBottom: 50,
-  },
-  fotoPerfil: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 50,
-    overflow: "hidden",
   },
 });
 

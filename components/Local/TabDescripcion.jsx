@@ -17,15 +17,15 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import PlaceholderText from "../PlaceholderText";
 import PlaceholderFoto from "../PlaceHolderFoto";
 
-const renderImagen = ({ item }) => {
+const RenderImagen = ({ item }) => {
   return (
     <View style={styles.imageLocalContainer}>
-      <Image source={{uri: item}} style={styles.image} />
+      <Image source={{ uri: item }} style={styles.image} />
     </View>
   );
 };
 
-export default function TabDescripcion({ restaurante }) {
+export default function TabDescripcion({ restaurante, setDataModalFoto }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef(null);
 
@@ -49,7 +49,7 @@ export default function TabDescripcion({ restaurante }) {
 
   return (
     <TabView.Item>
-      <ScrollView horizontal={false} style={{}}>
+      <ScrollView horizontal={false}>
         <View
           style={{
             paddingHorizontal: 10,
@@ -118,7 +118,14 @@ export default function TabDescripcion({ restaurante }) {
                 <FlatList
                   ref={flatListRef}
                   data={restaurante.fotos}
-                  renderItem={renderImagen}
+                  renderItem={(item) => (
+                    <Pressable
+                      style={{ marginRight: 10 }}
+                      onPress={() => setDataModalFoto(item.item)}
+                    >
+                      {<RenderImagen item={item.item} />}
+                    </Pressable>
+                  )}
                   keyExtractor={(item, i) => item.slice(0, 100) + i}
                   horizontal
                   showsHorizontalScrollIndicator={false}
@@ -178,9 +185,60 @@ export default function TabDescripcion({ restaurante }) {
           </View>
         </View>
         <View>
-          <View>
-            
-          </View>
+          {restaurante.etiquetas && restaurante.etiquetas.length > 0 && (
+            <View
+              style={{
+                paddingBottom: 20,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 20,
+                  textAlign: "center",
+                  fontWeight: "bold",
+                  marginBottom: 8,
+                }}
+              >
+                Etiquetas
+              </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  gap: 15,
+                  marginTop: 10,
+                  flexWrap: "wrap",
+                  paddingHorizontal: 10,
+                }}
+              >
+                {restaurante.etiquetas.map((etiqueta, index) => (
+                  <View
+                    key={index}
+                    style={{
+                      backgroundColor:
+                        etiqueta.length > 7
+                          ? "#9b59b6"
+                          : etiqueta.length > 6
+                          ? "#e67e22"
+                          : etiqueta.length > 5
+                          ? "#f1c40f"
+                          : "#e74c3c",
+                      paddingVertical: 8,
+                      paddingHorizontal: 13,
+                      borderRadius: 5,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: "#fff",
+                      }}
+                    >
+                      {etiqueta}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
         </View>
       </ScrollView>
     </TabView.Item>
@@ -216,7 +274,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     color: "black",
     backgroundColor: "currentColor",
-    paddingBottom: 10
+    paddingBottom: 10,
   },
   image: {
     marginTop: 10,
@@ -234,6 +292,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#8c0e03",
   },
   imageLocalContainer: {
-    marginRight: 10,
-  }
+    // marginRight: 10,
+  },
 });

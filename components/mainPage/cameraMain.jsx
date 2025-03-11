@@ -112,10 +112,9 @@ export default function CameraScreen() {
       const restaurantes = data.escaneosNear
         .sort((a, b) => a.distance - b.distance)
         .slice(0, 4);
-
-      console.log(restaurantes);
       setRestaurantes(restaurantes);
     } else {
+      console.log(response)
       console.log("error", await response.json());
       setVisibleModal(false);
       cameraRef.current.resumePreview();

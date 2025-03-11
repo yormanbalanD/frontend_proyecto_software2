@@ -16,7 +16,7 @@ import ModalDeCarga from "../components/ModalDeCarga";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Notificacion from "../components/ModalNotificacion";
 
-export default function ModalEditarLocal({ visible, onClose, localData}) {
+export default function ModalEditarLocal({ visible, onClose, localData }) {
   const [nombre, setNombre] = useState(localData.name);
   const [descripcion, setDescripcion] = useState(localData.description);
   const [ubicacion, setUbicacion] = useState(localData.address);
@@ -294,7 +294,7 @@ export default function ModalEditarLocal({ visible, onClose, localData}) {
                   const [lat, lon] = text
                     .split(",")
                     .map((item) => item.trim().slice(0, 11)); // Limita cada valor a 11 caracteres directamente
-              
+
                   setCoordenadas({
                     latitude: lat || "",
                     longitude: lon || "",
@@ -411,6 +411,7 @@ export default function ModalEditarLocal({ visible, onClose, localData}) {
         message={modalMessage}
         onClose={() => {
           setModalVisible(false);
+          onClose();
         }}
       />
     </Modal>

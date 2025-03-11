@@ -21,10 +21,20 @@ import { jwtDecode as decode } from "jwt-decode";
 import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
 import SimpleLineIcons from "@expo/vector-icons/SimpleLineIcons";
 import PlaceholderText from "../PlaceholderText";
+import ModalNotificacion from "../ModalNotificacion";
+import ModalDeCarga from "../ModalDeCarga";
 
-function RenderComentario({ item, setModal, setComentarioADenunciar }) {
+function RenderComentario({
+  item,
+  setModal,
+  setComentarioADenunciar,
+  idUser,
+  idRestaurant,
+  setModalCarga,
+  setModalExito,
+}) {
   const [fotoPerfil, setFotoPerfil] = useState(null);
-  const [denunciarVisible, setDenunciarVisible] = useState(false);
+  const [modalComentarioVisible, setModalComentarioVisible] = useState(false);
   const getToken = async () => {
     try {
       const value = await AsyncStorage.getItem("token");
@@ -55,6 +65,53 @@ function RenderComentario({ item, setModal, setComentarioADenunciar }) {
     } else {
       console.log(await response.json());
       alert("Error");
+    }
+  };
+
+  const eliminarComentario = async () => {
+    try {
+      const response = await fetch(
+        "https://backend-swii.vercel.app/api/deleteComment/" +
+          idRestaurant +
+          "/" +
+          idUser,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${await getToken()}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.status == 200) {
+        const data = await response.json();
+        console.log(data);
+        setModalCarga(false);
+        setModalExito({
+          isVisible: true,
+          message: "Comentario eliminado exitosamente",
+          isSuccess: true,
+        });
+      } else {
+        console.log("Error Eliminar Comentario");
+        console.log(response);
+        setModalCarga(false);
+        setModalExito({
+          isVisible: true,
+          message: "Error al eliminar comentario",
+          isSuccess: false,
+        });
+      }
+    } catch (err) {
+      console.log("Error Eliminar Comentario");
+      console.log(err);
+      setModalCarga(false);
+      setModalExito({
+        isVisible: true,
+        message: "Error Fulminante al eliminar comentario",
+        isSuccess: false,
+      });
     }
   };
 
@@ -90,18 +147,14 @@ function RenderComentario({ item, setModal, setComentarioADenunciar }) {
           top: 9,
         }}
         onPress={() => {
-          setDenunciarVisible(!denunciarVisible);
+          setModalComentarioVisible(!modalComentarioVisible);
         }}
       >
         <SimpleLineIcons name="options" size={24} color="white" />
       </TouchableOpacity>
-      {denunciarVisible && (
-        <TouchableOpacity
-          onPress={() => {
-            setDenunciarVisible(false);
-            setModal(true);
-            setComentarioADenunciar(item);
-          }}
+
+      {modalComentarioVisible && (
+        <View
           style={{
             position: "absolute",
             top: 5,
@@ -109,13 +162,35 @@ function RenderComentario({ item, setModal, setComentarioADenunciar }) {
             borderWidth: 1,
             borderColor: "#00000098",
             borderRadius: 4,
-            paddingVertical: 15,
-            paddingHorizontal: 20,
             backgroundColor: "#FFF",
           }}
         >
-          <Text style={{ fontWeight: 500 }}>Denunciar Comentario</Text>
-        </TouchableOpacity>
+          {idUser == item.idUser ? (
+            <TouchableOpacity
+              style={{ paddingVertical: 15, paddingHorizontal: 20 }}
+              onPress={() => {
+                setModalComentarioVisible(false);
+                setModalCarga(true);
+                eliminarComentario();
+              }}
+            >
+              <Text style={{ fontWeight: 500 }}>Eliminar Comentario</Text>
+            </TouchableOpacity>
+          ) : (
+            <>
+              <TouchableOpacity
+                style={{ paddingVertical: 15, paddingHorizontal: 20 }}
+                onPress={() => {
+                  setModalComentarioVisible(false);
+                  setModal(true);
+                  setComentarioADenunciar(item);
+                }}
+              >
+                <Text style={{ fontWeight: 500 }}>Denunciar Comentario</Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
       )}
     </View>
   );
@@ -144,9 +219,16 @@ export default function TabOpiniones({
   setComentarioAEditar,
   setModalReportComentario,
   setComentarioADenunciar,
+  getDatosDelRestaurante,
 }) {
   const [comentarios, setComentarios] = useState([]);
   const [idUser, setIdUser] = useState(null);
+  const [modalDeCarga, setModalDeCarga] = useState(false);
+  const [modalExito, setModalExito] = useState({
+    isVisible: false,
+    isSuccess: false,
+    message: "",
+  });
 
   const getToken = async () => {
     try {
@@ -184,124 +266,139 @@ export default function TabOpiniones({
   }, [restaurante]);
 
   return (
-    <TabView.Item style={{ flex: 1 }}>
-      <ScrollView>
-        <View style={styles.total}>
-          <View style={styles.CalificacionDistribucionContainer}>
-            <RatingBar
-              rating={5}
-              count={
-                comentarios.filter((item) => item.calification == 5).length
-              }
-              totalReviews={comentarios.length}
-            />
-            <RatingBar
-              rating={4}
-              count={
-                comentarios.filter((item) => item.calification == 4).length
-              }
-              totalReviews={comentarios.length}
-            />
-            <RatingBar
-              rating={3}
-              count={
-                comentarios.filter((item) => item.calification == 3).length
-              }
-              totalReviews={comentarios.length}
-            />
-            <RatingBar
-              rating={2}
-              count={
-                comentarios.filter((item) => item.calification == 2).length
-              }
-              totalReviews={comentarios.length}
-            />
-            <RatingBar
-              rating={1}
-              count={
-                comentarios.filter((item) => item.calification == 1).length
-              }
-              totalReviews={comentarios.length}
-            />
-          </View>
+    <>
+      <TabView.Item style={{ flex: 1 }}>
+        <ScrollView>
+          <View style={styles.total}>
+            <View style={styles.CalificacionDistribucionContainer}>
+              <RatingBar
+                rating={5}
+                count={
+                  comentarios.filter((item) => item.calification == 5).length
+                }
+                totalReviews={comentarios.length}
+              />
+              <RatingBar
+                rating={4}
+                count={
+                  comentarios.filter((item) => item.calification == 4).length
+                }
+                totalReviews={comentarios.length}
+              />
+              <RatingBar
+                rating={3}
+                count={
+                  comentarios.filter((item) => item.calification == 3).length
+                }
+                totalReviews={comentarios.length}
+              />
+              <RatingBar
+                rating={2}
+                count={
+                  comentarios.filter((item) => item.calification == 2).length
+                }
+                totalReviews={comentarios.length}
+              />
+              <RatingBar
+                rating={1}
+                count={
+                  comentarios.filter((item) => item.calification == 1).length
+                }
+                totalReviews={comentarios.length}
+              />
+            </View>
 
-          <View style={styles.puntuacionContainer}>
-            {restaurante.description ? (
-              <Text style={{ fontSize: 40, margin: 0, lineHeight: 45 }}>
-                {comentarios.length > 0 &&
-                  (
-                    comentarios.reduce(
-                      (a, b) => parseInt(a) + parseInt(b.calification),
-                      0
-                    ) / comentarios.length
-                  ).toFixed(1)}
-                {comentarios.length == 0 && "0"}
-              </Text>
-            ) : (
-              <PlaceholderText width={10} fontSize={40} />
-            )}
-
-            <StarRating
-              rating={Math.round(
-                comentarios.length > 0
-                  ? (
+            <View style={styles.puntuacionContainer}>
+              {restaurante.description ? (
+                <Text style={{ fontSize: 40, margin: 0, lineHeight: 45 }}>
+                  {comentarios.length > 0 &&
+                    (
                       comentarios.reduce(
                         (a, b) => parseInt(a) + parseInt(b.calification),
                         0
                       ) / comentarios.length
-                    ).toFixed(1)
-                  : 0
+                    ).toFixed(1)}
+                  {comentarios.length == 0 && "0"}
+                </Text>
+              ) : (
+                <PlaceholderText width={10} fontSize={40} />
               )}
-            />
-            {restaurante.description ? (
-              <Text style={{ paddingBottom: 20 }}>
-                {comentarios.length} opiniones
-              </Text>
-            ) : (
-              <PlaceholderText width={50} fontSize={13} />
-            )}
 
-            {comentarios.filter(async (item) => item.idUser == idUser).length >
-            0 ? (
-              <TouchableOpacity
-                onPress={() => {
-                  setComentarioAEditar(
-                    comentarios.filter(async (item) => item.idUser == idUser)[0]
-                  );
-                  setModalEditarComentarioVisible(true);
-                }}
-                style={styles.botonComentario}
-              >
-                <Icon name="comment" size={15} color="#74C0FC" />
-                <Text style={styles.botonTexto}>Editar</Text>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                onPress={() => setModalCrearComentarioVisible(true)}
-                style={styles.botonComentario}
-              >
-                <Icon name="comment" size={15} color="#74C0FC" />
-                <Text style={styles.botonTexto}>Comentar</Text>
-              </TouchableOpacity>
-            )}
+              <StarRating
+                rating={Math.round(
+                  comentarios.length > 0
+                    ? (
+                        comentarios.reduce(
+                          (a, b) => parseInt(a) + parseInt(b.calification),
+                          0
+                        ) / comentarios.length
+                      ).toFixed(1)
+                    : 0
+                )}
+              />
+              {restaurante.description ? (
+                <Text style={{ paddingBottom: 20 }}>
+                  {comentarios.length} opiniones
+                </Text>
+              ) : (
+                <PlaceholderText width={50} fontSize={13} />
+              )}
+
+              {comentarios.filter((item) => item.idUser == idUser).length >
+              0 ? (
+                <TouchableOpacity
+                  onPress={() => {
+                    setComentarioAEditar(
+                      comentarios.filter((item) => item.idUser == idUser)[0]
+                    );
+                    setModalEditarComentarioVisible(true);
+                  }}
+                  style={styles.botonComentario}
+                >
+                  <Icon name="comment" size={15} color="#74C0FC" />
+                  <Text style={styles.botonTexto}>Editar</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  onPress={() => setModalCrearComentarioVisible(true)}
+                  style={styles.botonComentario}
+                >
+                  <Icon name="comment" size={15} color="#74C0FC" />
+                  <Text style={styles.botonTexto}>Comentar</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
-        </View>
-        <View>
-          <ScrollView>
-            {comentarios.map((item, index) => {
-              return (
-                <RenderComentario
-                  setComentarioADenunciar={setComentarioADenunciar}
-                  setModal={setModalReportComentario}
-                  item={item}
-                  key={item._id + index}
-                />
-              );
-            })}
-          </ScrollView>
-        </View>
-      </ScrollView>
-    </TabView.Item>
+          <View>
+            <ScrollView>
+              {comentarios.map((item, index) => {
+                return (
+                  <RenderComentario
+                    setComentarioADenunciar={setComentarioADenunciar}
+                    setModal={setModalReportComentario}
+                    item={item}
+                    key={item.idUser}
+                    idUser={idUser}
+                    idRestaurant={restaurante._id}
+                    setModalCarga={setModalDeCarga}
+                    setModalExito={setModalExito} 
+                  />
+                );
+              })}
+            </ScrollView>
+          </View>
+        </ScrollView>
+      </TabView.Item>
+      <ModalNotificacion {...modalExito} onClose={() => {
+        getDatosDelRestaurante();
+        setModalExito({
+          isVisible: false,
+          message: "",
+          success: false,
+        })
+      }} />
+      <ModalDeCarga visible={modalDeCarga} />
+    </>
   );
 }
 

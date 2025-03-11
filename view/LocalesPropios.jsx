@@ -149,6 +149,7 @@ const getUserId = async () => {
     setNotificacionVisible(true);
 
     if (esExito) {
+      setLoading(true);
       getLocalesPropios(); // Recargar la lista de locales solo si fue exitoso
       setModalVisible(false); // Cerrar modal de creación
     }

@@ -103,12 +103,15 @@ export default function Login() {
         setModalMessage("Error en el inicio de sesión."); // Mensaje de error
         setModalSuccess(false); // Indicar que hubo un error
         setModalVisible(true);
+        console.log(errorData);
+        console.log(response)
       }
     } catch (error) {
       //console.error("Error de red:", error);
       setModalMessage("Error de red. Por favor, intenta de nuevo."); // Mensaje de error
       setModalSuccess(false); // Indicar que hubo un error
       setModalVisible(true);
+      console.log(error)
     } finally {
       setLoading(false); // Ocultar el modal de carga
     }

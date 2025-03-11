@@ -22,6 +22,7 @@ import Icon from "@expo/vector-icons/FontAwesome";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { set } from "react-hook-form";
 import ModalNotificacion from "./ModalNotificacion";
+import ModalDeCarga from "./ModalDeCarga";
 
 const StarRating = ({ setStarts, stars }) => {
   return (
@@ -51,6 +52,8 @@ export default function ModalEditarComentario({
   const [fotoPerfil, setFotoPerfil] = useState("");
   const [nombre, setNombre] = useState("");
   const [codigo, setCodigo] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const getToken = async () => {
     try {
       const value = await AsyncStorage.getItem("token");
@@ -78,8 +81,8 @@ export default function ModalEditarComentario({
   };
 
   const setDefaultValues = () => {
-    setComment(comentario.comment);
-    setStars(comentario.calification);
+    setComment("");
+    setStars(0);
   };
 
   const getUser = async () => {
@@ -107,6 +110,7 @@ export default function ModalEditarComentario({
   };
 
   const editarComentario = async () => {
+    setLoading(true);
     try {
       const response = await fetch(
         "https://backend-swii.vercel.app/api/updateComment/" + restaurante._id,
@@ -131,24 +135,28 @@ export default function ModalEditarComentario({
           message: "Comentario editado.",
           success: true,
         });
-      } else {
-        console.log("Error Editar Comentario")
         console.log(response)
+        setLoading(false);
+      } else {
+        console.log("Error Editar Comentario");
+        console.log(response);
         console.log(await response.json());
         setModalPeticion({
           visible: true,
           message: "Error al editar comentario.",
           success: false,
         });
+        setLoading(false);
       }
     } catch (err) {
-      console.log("Error Editar Comentario")
+      console.log("Error Editar Comentario");
       console.log(err);
       setModalPeticion({
         visible: true,
         message: "Sucedio un error fulminante al editar el comentario.",
         success: false,
       });
+      setLoading(false);
     }
   };
 
@@ -157,7 +165,7 @@ export default function ModalEditarComentario({
   }, []);
 
   useEffect(() => {
-    if(comentario){
+    if (comentario) {
       setComment(comentario.comment);
       setStars(comentario.calification);
     }
@@ -324,6 +332,7 @@ export default function ModalEditarComentario({
           setModalPeticion({ visible: false, message: "", success: false });
         }}
       />
+      <ModalDeCarga visible={loading} />
     </>
   );
 }
