@@ -251,11 +251,12 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
               <View style={styles.inputContainer}>
                 <TextInput
                   style={styles.input}
-                  maxLength={20}
+                  maxLength={100}
                   value={nombre}
                   onChangeText={setNombre}
+                  multiline
                 />
-                <Text style={styles.charCount}>{nombre.length}/20</Text>
+                <Text style={styles.charCount}>{nombre.length}/100</Text>
                 <Text style={styles.asterisk}>*</Text>
               </View>
 
@@ -263,12 +264,12 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
               <View style={styles.inputContainer}>
                 <TextInput
                   style={styles.input}
-                  maxLength={100}
+                  maxLength={400}
                   value={descripcion}
                   onChangeText={setDescripcion}
                   multiline
                 />
-                <Text style={styles.charCount}>{descripcion.length}/100</Text>
+                <Text style={styles.charCount}>{descripcion.length}/400</Text>
                 <Text style={styles.asterisk}>*</Text>
               </View>
 
@@ -276,12 +277,12 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
               <View style={styles.inputContainer}>
                 <TextInput
                   style={styles.input}
-                  maxLength={100}
+                  maxLength={200}
                   value={ubicacion}
                   onChangeText={setUbicacion}
                   multiline
                 />
-                <Text style={styles.charCount}>{ubicacion.length}/100</Text>
+                <Text style={styles.charCount}>{ubicacion.length}/200</Text>
                 <Text style={styles.asterisk}>*</Text>
               </View>
 
@@ -294,11 +295,13 @@ export default function ModalCrearLocal({ visible, onClose, onSuccess }) {
                 />
                 <TextInput
                   style={styles.inputCoord}
+                  maxLength={24}
                   value={`${coordenadas.latitude}, ${coordenadas.longitude}`}
                   onChangeText={(text) => {
                     const [lat, lon] = text
                       .split(",")
-                      .map((item) => item.trim());
+                      .map((item) => item.trim().slice(0, 11)); // Limita cada valor a 11 caracteres directamente
+                
                     setCoordenadas({
                       latitude: lat || "",
                       longitude: lon || "",
