@@ -14,12 +14,12 @@ export default function BuscarUsuario() {
   const [loading, setLoading] = useState(false);
 
   const getToken = async () => {
-    setLoading(true);
+
     try {
       const value = await AsyncStorage.getItem("token");
       if (value != null) {
         return value;
-      }
+      } 
     } catch (e) {
       console.log(e);
       return null;
@@ -27,6 +27,9 @@ export default function BuscarUsuario() {
   };
 
   const handleSearch = async () => {
+    setLoading(true);
+    setUsers([]);
+
     try {
       const token = await getToken();
       let response;
@@ -39,21 +42,23 @@ export default function BuscarUsuario() {
           },
         });
       } else {
-        response = await fetch(`https://backend-swii.vercel.app/api/getUserByName/${search}`, {
-          method: "GET",
+        response = await fetch(`https://backend-swii.vercel.app/api/getUserByName`, {
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: "Bearer " + token,
           },
+          body: JSON.stringify({ name: search }),
         });
       }
 
       const data = await response.json();
-      console.log(data);
+      //console.log(data);
+
       if (searchType === "id") {
         setUsers(data.userFound ? [data.userFound] : []);
       } else {
-        setUsers(Array.isArray(data.userFound) ? data.userFound : []);
+        setUsers(Array.isArray(data.usersFound) ? data.usersFound : []);
       }
       } catch (error) {
         console.error("Error al buscar usuario", error);
@@ -66,7 +71,7 @@ export default function BuscarUsuario() {
   return (
     
     <View style={styles.container}>
-      {/* Botón de regreso y logo */}
+      
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <Image source={require("@/assets/images/backButtonLocal.png")} style={styles.iconBack} />
