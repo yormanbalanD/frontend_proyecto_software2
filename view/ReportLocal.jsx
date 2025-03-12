@@ -234,7 +234,7 @@ export default function ReportLocal({ idRestaurante, visible, onClose }) {
           </View>
         </View>
       </Modal>
-      <ModalDeCarga />
+      <ModalDeCarga visible={loading} />
       <ModalNotificacion
         isVisible={modalPeticion.visible}
         isSuccess={modalPeticion.success}

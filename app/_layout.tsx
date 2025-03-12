@@ -16,10 +16,6 @@ export default function _layout() {
     "Helios-Bold": require("../assets/fonts/HeliosExtC-Bold.ttf"),
   });
 
-  if (!fontsLoaded) {
-    console.log("Fuentes no cargadas");
-    return <View />;
-  }
 
   return (
     <CookiesProvider defaultSetOptions={{ path: "/" }}>
