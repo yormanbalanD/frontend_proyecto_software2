@@ -108,7 +108,7 @@ const DenunciasScreenUsuarios = () => {
         },
         body: JSON.stringify({
           tipo: "BANEADO",
-          tiempoBaneo: 120, //variable puesta en segundos (modificar)
+          tiempoBaneo: 86400, //variable puesta en segundos equivalente a 1 dia
         }),
       });
       if (response.ok) {
