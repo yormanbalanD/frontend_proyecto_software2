@@ -32,6 +32,7 @@ import ModalEditarLocal from "../components/ModalEditarLocal";
 import ModalConfirmarAccion from "@/components/ModalConfirmarAccion";
 import ModalNotificacion from "@/components/ModalNotificacion";
 import ModalDeCarga from "@/components/ModalDeCarga";
+import ReportLocal from "./ReportLocal";
 
 const ModalFoto = ({ foto, setDataModalFoto }) => {
   return (
@@ -90,6 +91,7 @@ const Local = () => {
   const [comentarioADenunciar, setComentarioADenunciar] = useState(null);
   const [modalEditarComentario, setModalEditarComentario] = useState(false);
   const [modalReportComentario, setModalReportComentario] = useState(false);
+  const [modalReportLocal, setModalReportLocal] = useState(false);
   const [optionsVisible, setOptionsVisible] = useState(false);
   const [idUser, setIdUser] = useState(null);
   const [modalEditaLocalVisible, setModalEditaLocalVisible] = useState(false);
@@ -471,7 +473,10 @@ const Local = () => {
           minSwipeRatio={0.3}
         >
           {/* Descripcion */}
-          <TabDescripcion restaurante={restaurante} setDataModalFoto={setDataModalFoto} />
+          <TabDescripcion
+            restaurante={restaurante}
+            setDataModalFoto={setDataModalFoto}
+          />
 
           {/* Opiniones */}
           <TabOpiniones
@@ -544,6 +549,13 @@ const Local = () => {
       <ModalDeCarga visible={modalCarga} />
       {restaurante.own && (
         <ModalFoto foto={dataModalFoto} setDataModalFoto={setDataModalFoto} />
+      )}
+      {restaurante.own && (
+        <ReportLocal
+          visible={modalReportLocal}
+          idRestaurante={restaurante._id}
+          onClose={() => setModalReportLocal(false)}
+        />
       )}
     </SafeAreaProvider>
   );

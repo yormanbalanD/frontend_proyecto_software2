@@ -6,6 +6,7 @@ import Colors from "../constants/Colors";
 import { useFonts } from "expo-font";
 // import { StatusBar } from "react-native-web";
 import { CookiesProvider } from "react-cookie";
+import {  } from "expo";
 
 export default function _layout() {
   const [fontsLoaded] = useFonts({
@@ -14,6 +15,12 @@ export default function _layout() {
     "OpenSans-Bold": require("../assets/fonts/OpenSans-Bold.ttf"),
     "Helios-Bold": require("../assets/fonts/HeliosExtC-Bold.ttf"),
   });
+
+  if (!fontsLoaded) {
+    console.log("Fuentes no cargadas");
+    return <View />;
+  }
+
   return (
     <CookiesProvider defaultSetOptions={{ path: "/" }}>
       <Stack
@@ -25,6 +32,8 @@ export default function _layout() {
         <Stack.Screen name="login" />
         <Stack.Screen name="signup" />
         <Stack.Screen name="mainpage" />
+        <Stack.Screen name="local" />
+        <Stack.Screen name="perfil" />
         <Stack.Screen name="historial" />
         <Stack.Screen name="megusta" />
         <Stack.Screen name="localpropio" />

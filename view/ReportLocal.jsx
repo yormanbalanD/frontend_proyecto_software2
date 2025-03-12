@@ -1,99 +1,119 @@
-import { View, Text, StyleSheet, Pressable, TextInput } from "react-native";
-import { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  TextInput,
+  Modal,
+  Dimensions,
+} from "react-native";
+import { useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import ModalNotificacion from "@/components/ModalNotificacion";
+import ModalDeCarga from "@/components/ModalDeCarga";
 
-export default function ReportLocal({ idRestaurante }) {
+export default function ReportLocal({ idRestaurante, visible, onClose }) {
   const [textComment, setTextComment] = useState("");
-  const [selectedOption, setSelectedOption] = useState(null); 
-  const [message, setMessage] = useState('')
-  const [color, setColor] = useState("")
-  const [token, setToken] = useState("")
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [message, setMessage] = useState("");
+  const [color, setColor] = useState("");
+  const [token, setToken] = useState("");
+  const [modalPeticion, setModalPeticion] = useState({
+    visible: false,
+    message: "",
+    success: false,
+  });
+  const [loading, setLoading] = useState(false);
 
   const styles = StyleSheet.create({
-    container: {
-      display: "flex",
-      height: "80vh",
+    modalContainer: {
+      flex: 1,
       justifyContent: "center",
-      itemsAlign: "center",
-    },
-    containerCard: {
-      marginLeft: 50,
-      marginRight: 50,
       alignItems: "center",
-      height: "50vh",
+      backgroundColor: "rgba(0,0,0,0.5)",
+    },
+    container: {
+      width: Dimensions.get("window").width * 0.8,
       backgroundColor: "#fff9f1",
+      borderRadius: 10,
+      overflow: "hidden",
     },
     header: {
-      display: "flex",
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: "#8c0e02",
-      height: "40px",
+      height: 40,
       width: "100%",
     },
     headerText: {
       color: "white",
-      fontSize: "17px",
+      fontSize: 17,
       fontWeight: "bold",
     },
     button: {
       borderRadius: 2,
-      textAlign: "center",
-      color: "white",
-      width: 90,
-      height: 24,
-      justifyContent: "center",
-      alignItems: "center",
-      borderWidth: 1,
+      padding: 10,
+      backgroundColor: "#f0f0f0",
+      marginHorizontal: 5,
     },
     input: {
       width: "100%",
-      height: 30,
+      height: 40,
       borderWidth: 0.2,
-      fontSize: 8,
-      paddingLeft: 16,
-    },
-    checkbox: {
-      width: 6,
-      height: 6,
-      borderWidth: 1,
-      borderColor: "#545351",
-      borderRadius: 8,
-      backgroundColor: "#545351",
-    },
-    checkboxText: {
       fontSize: 10,
-      color: "#1e1b17",
-    },
-    checkboxChecked: {
-      backgroundColor: "#1f6bdc",
+      paddingLeft: 16,
+      marginVertical: 10,
     },
     checkboxContainer: {
-      marginLeft: "20%",
-      display: "flex",
+      marginLeft: 20,
       flexDirection: "row",
       alignItems: "center",
       marginBottom: 8,
     },
+    checkboxOuter: {
+      width: 15,
+      height: 15,
+      borderWidth: 1,
+      borderColor: "#545351",
+      borderRadius: 8,
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: 8,
+    },
+    checkboxInner: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+    },
+    messageText: {
+      fontSize: 12,
+      textAlign: "center",
+      marginVertical: 10,
+    },
+    contentContainer: {
+      padding: 15,
+    },
+    buttonsContainer: {
+      flexDirection: "row",
+      justifyContent: "center",
+      marginVertical: 15,
+    },
   });
-  
 
   const getToken = async () => {
     try {
       const value = await AsyncStorage.getItem("token");
-      if (value != null) {
-        return value;
+      if (value) {
+        setToken(value);
       }
-      setToken(value)
     } catch (e) {
       console.log(e);
-      return null;
     }
   };
 
- useEffect(() => {
-  getToken()
- }, [token])
-
+  useEffect(() => {
+    getToken();
+  }, []);
 
   const handleOptionSelect = (option) => {
     setSelectedOption(option);
@@ -104,38 +124,29 @@ export default function ReportLocal({ idRestaurante }) {
       style={styles.checkboxContainer}
       onPress={() => handleOptionSelect(option)}
     >
-      <View
-        style={{
-          width: 15,
-          height: 15,
-          borderWidth: 1,
-          borderColor: "#545351",
-          borderRadius: 8,
-          alignItems: "center",
-          justifyContent: "center",
-          marginRight: 8,
-        }}
-      >
+      <View style={styles.checkboxOuter}>
         <View
           style={[
-            styles.checkbox,
-            selectedOption === option && styles.checkboxChecked, 
+            styles.checkboxInner,
+            selectedOption === option && { backgroundColor: "#1f6bdc" },
           ]}
-        ></View>
+        />
       </View>
-
-      <Text style={styles.checkboxText}>{label}</Text>
+      <Text style={{ fontSize: 12, color: "#1e1b17" }}>{label}</Text>
     </Pressable>
   );
 
   const handleSubmit = async () => {
-    if(selectedOption === null){
-      setMessage("Selecciona el tipo de denuncia ")
-      setColor("red")
+    if (!selectedOption) {
+      setMessage("Selecciona el tipo de denuncia");
+      setColor("red");
+      return;
     }
-    
+
+    setLoading(true)
+
     try {
-        await fetch(
+      const response = await fetch(
         `https://backend-swii.vercel.app/api/denunciarRestaurante/${idRestaurante}`,
         {
           method: "POST",
@@ -143,88 +154,96 @@ export default function ReportLocal({ idRestaurante }) {
             "Content-Type": "application/json",
             Authorization: "Bearer " + token,
           },
-          body: {
+          body: JSON.stringify({
             observacion: textComment,
             razon: selectedOption,
-          },
+          }),
         }
       );
-      setColor("green")
-      setMessage("Envio Exitoso")
+
+      if(response.status == 200 || response.status == 201) {
+        setModalPeticion({
+          visible: true,
+          message: "Su denuncia sera tomada en cuenta y tomaremos acciones lo mas rapido posible",
+          success: true
+        })
+      } else {
+        setModalPeticion({
+          visible: false,
+          message: "Sucedio un error al poner la denuncia",
+          success: false
+        })
+      }
+      
     } catch (error) {
-      setColor("red")
-      setMessage("Ocurrio un error")
-      throw new Error(error);
+      setModalPeticion({
+        visible: false,
+        message: "Sucedio un error fulminante al poner la denuncia",
+        success: false
+      })
+      console.error(error);
+    } finally {
+      setLoading(false)
     }
   };
+
   return (
-    <View style={styles.container}>
-      <View style={styles.containerCard}>
-        <View style={styles.header}>
-          <Text style={styles.headerText}>Denunciar este local</Text>
-        </View>
+    <>
+      <Modal
+        visible={visible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={onClose}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.container}>
+            <View style={styles.header}>
+              <Text style={styles.headerText}>Denunciar este local</Text>
+            </View>
 
-        <View
-          style={{
-            width: "100%",
-            paddingLeft: 15,
-            marginTop: 16,
-            display: "flex",
-            itemsAlign: "center",
-            justifyContent: "center",
-          }}
-        >
-         {renderCheckbox("inapropiado", "Contenido inapropiado")}
-            {renderCheckbox("engañoso", "Negocio Engañoso")}
-            {renderCheckbox("estafa", "Estafa")}
-            {renderCheckbox("sexual", "Contenido Sexual")}
-        </View>
+            <View style={styles.contentContainer}>
+              {renderCheckbox("inapropiado", "Contenido inapropiado")}
+              {renderCheckbox("engañoso", "Negocio Engañoso")}
+              {renderCheckbox("estafa", "Estafa")}
+              {renderCheckbox("sexual", "Contenido Sexual")}
 
-        <View
-          style={{
-            display: "flex",
-            width: "100%",
-            paddingLeft: 15,
-            paddingRight: 15,
-          }}
-        >
-          <Text
-            style={{ fontWeight: "normal", fontSize: 10, marginBottom: 15, marginTop: 15 }}
-          >
-            Comentario
-          </Text>
-          <TextInput
-            style={styles.input}
-            onChangeText={setTextComment}
-            value={textComment}
-            placeholder="Comparte detalles sobre tu denuncia (opcional)"
-          />
+              <Text style={{ fontSize: 12, marginVertical: 10 }}>
+                Comentario
+              </Text>
+              <TextInput
+                style={styles.input}
+                onChangeText={setTextComment}
+                value={textComment}
+                placeholder="Comparte detalles sobre tu denuncia (opcional)"
+                multiline
+              />
+
+              <View style={styles.buttonsContainer}>
+                <Pressable style={styles.button} onPress={onClose}>
+                  <Text style={{ color: "#545351", fontWeight: "bold" }}>
+                    Cancelar
+                  </Text>
+                </Pressable>
+                <Pressable style={styles.button} onPress={handleSubmit}>
+                  <Text style={{ color: "#545351", fontWeight: "bold" }}>
+                    Denunciar
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
         </View>
-        <View
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            gap: 16,
-            marginTop: 30,
-          }}
-        >
-          <Pressable style={styles.button}>
-            <Text
-              style={{ color: "#545351", fontWeight: "bold", fontSize: 12 }}
-            >
-              Cancelar
-            </Text>
-          </Pressable>
-          <Pressable  style={styles.button} onPress={handleSubmit}>
-          <Text
-              style={{ color: "#545351", fontWeight: "bold", fontSize: 12 }}
-            >
-              Denunciar
-            </Text>
-          </Pressable>
-        </View>
-        {message.length > 0 && <p style={{fontSize: "0.90rem", color: `${color}`}}>¡ {message} !</p>}
-      </View>
-    </View>
+      </Modal>
+      <ModalDeCarga />
+      <ModalNotificacion
+        isVisible={modalPeticion.visible}
+        isSuccess={modalPeticion.success}
+        message={modalPeticion.message}
+        onClose={() => {
+          setModalPeticion({ visible: false, message: "", success: false });
+          onClose();
+        }}
+      />
+    </>
   );
 }
