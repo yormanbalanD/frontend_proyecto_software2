@@ -40,23 +40,27 @@ export default function BuscarLocal() {
           },
         });
       } else {
-        response = await fetch(`https://backend-swii.vercel.app/api/getRestaurantsByName/${search}`, {
-          method: "GET",
+        response = await fetch(`https://backend-swii.vercel.app/api/getRestaurantsByName`, {
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: "Bearer " + token,
           },
+          body: JSON.stringify({ name: search }), 
         });
       }
       
       const data = await response.json();
        console.log(response.status);
+       //console.log(data);
+       
       if (response.status === 200) {
+        console.log("Buscando usuario con:", JSON.stringify({ name: search }));
         // Procesar los restaurantes
-        const processedRestaurants = (searchType === "id" ? [data.restaurantFound] : data.userFound).map(restaurant => {
+        const processedRestaurants = (searchType === "id" ? [data.restaurantFound] : data.restaurantsFound).map(restaurant => {
           const reviews = restaurant.reviews || []; 
           const totalReviews = reviews.length;
-  
+          console.log("Buscando usuario2 con:", JSON.stringify({ name: search }));
           // Calcular promedio de calificación
           const totalCalification = reviews.reduce((sum, review) => {
             const calification = Number(review.calification);
@@ -75,6 +79,7 @@ export default function BuscarLocal() {
         });
   
         setResults(processedRestaurants);
+        
       } else {
         console.log("Error al buscar");
         setResults([]);
