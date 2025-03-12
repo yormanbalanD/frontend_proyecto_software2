@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { FontAwesome } from "@expo/vector-icons";
 import Zocial from '@expo/vector-icons/Zocial';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import ModalNotificacion from "@/components/ModalNotificacion";
 
 const DenunciasScreenLocales = () => {
   const router = useRouter();
@@ -11,6 +12,11 @@ const DenunciasScreenLocales = () => {
   const [denuncias, setDenuncias] = useState([]);
   const [userNames, setUserNames] = useState({});
   const [loading, setLoading] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+  const [modalSuccess, setModalSuccess] = useState(false);
+  const [userDataLoading, setUserDataLoading] = useState(true);
+  const [restaurantDataLoading, setRestaurantDataLoading] = useState(true);
 
   const getToken = async () => {
     try {
@@ -35,7 +41,7 @@ const DenunciasScreenLocales = () => {
       });
       const data = await response.json();
       if (data && Array.isArray(data.denuncias)) {
-        const filteredDenuncias = data.denuncias.filter(denuncia => denuncia.idComentario === "");
+        const filteredDenuncias = data.denuncias.filter(denuncia => denuncia.idComentario === "" && denuncia.tipo !== "BANEADO");
         setDenuncias(filteredDenuncias);
       } else {
         console.error('Unexpected response format:', data);
@@ -96,8 +102,8 @@ const DenunciasScreenLocales = () => {
 
   const deleteDenuncia = async (denunciaId) => {
     try {
-      const response = await fetch(`https://backend-swii.vercel.app/api/eliminarDenuncia/${denunciaId}`, {
-        method: 'POST',
+      const response = await fetch(`https://backend-swii.vercel.app/api/deleteDenuncia/${denunciaId}`, {
+        method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
           Authorization: "Bearer " + await getToken(),
@@ -114,16 +120,59 @@ const DenunciasScreenLocales = () => {
     }
   };
 
+  const processDenuncia = async (denunciaId) => {
+    try {
+      const response = await fetch(`https://backend-swii.vercel.app/api/procesarDenuncia/${denunciaId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: "Bearer " + await getToken(),
+        },
+        body: JSON.stringify({
+          tipo: "BANEADO",
+          tiempoBaneo: 120, //variable puesta en segundos (modificar)
+        }),
+      });
+      if (response.ok) {
+        console.log(`Denuncia ${denunciaId} procesada exitosamente`);
+        setModalMessage("Denuncia procesada exitosamente.");
+        setModalSuccess(true);
+        setModalVisible(true);
+      } else {
+        console.error(`Error procesando la denuncia ${denunciaId}:`, response.statusText);
+        setModalMessage("Error procesando la denuncia.");
+        setModalSuccess(false);
+        setModalVisible(true);
+      }
+    } catch (error) {
+      console.error(`Error procesando la denuncia ${denunciaId}:`, error);
+      setModalMessage("Error procesando la denuncia.");
+      setModalSuccess(false);
+      setModalVisible(true);
+    }
+  };
+
   useEffect(() => {
     fetchDenuncias();
   }, []);
 
   useEffect(() => {
     if (denuncias.length > 0) {
+      const uniqueDenunciantes = new Set();
+      const uniqueDenunciados = new Set();
+
       denuncias.forEach((denuncia) => {
-        fetchUserData(denuncia.idDenunciante);
-        fetchNameRestaurant(denuncia.idDenunciado);
+        uniqueDenunciantes.add(denuncia.idDenunciante);
+        uniqueDenunciados.add(denuncia.idDenunciado);
       });
+
+      Promise.all(
+        Array.from(uniqueDenunciantes).map((id) => fetchUserData(id))
+      ).then(() => setUserDataLoading(false));
+
+      Promise.all(
+        Array.from(uniqueDenunciados).map((id) => fetchNameRestaurant(id))
+      ).then(() => setRestaurantDataLoading(false));
     }
   }, [denuncias]);
 
@@ -131,7 +180,8 @@ const DenunciasScreenLocales = () => {
   const handleAction = (id, isOmit) => {
     if (isOmit) {
       deleteDenuncia(id);
-    } else {
+      } else {
+      processDenuncia(id);
       setDenuncias(denuncias.filter((denuncia) => denuncia._id !== id));
     }
   };
@@ -151,7 +201,7 @@ const DenunciasScreenLocales = () => {
       <Text style={styles.subheading}>Locales</Text>
       <View style={styles.separator} />
 
-      {loading ? (
+      {loading || userDataLoading || restaurantDataLoading ? (
         <ActivityIndicator size="large" color="#5a1a11" />
       ) : (
         <>
@@ -202,6 +252,12 @@ const DenunciasScreenLocales = () => {
           />
         </>
       )}
+      <ModalNotificacion
+        isVisible={modalVisible}
+        isSuccess={modalSuccess}
+        message={modalMessage}
+        onClose={() => setModalVisible(false)}
+      />
     </View>
   );
 };

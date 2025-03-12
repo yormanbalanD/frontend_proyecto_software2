@@ -4,6 +4,8 @@ import { useRouter } from "expo-router";
 import { FontAwesome } from "@expo/vector-icons";
 import Zocial from '@expo/vector-icons/Zocial';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import ModalNotificacion from "@/components/ModalNotificacion";
+
 
 const DenunciasScreenUsuarios = () => {
   const router = useRouter();
@@ -11,6 +13,11 @@ const DenunciasScreenUsuarios = () => {
   const [denuncias, setDenuncias] = useState([]);
   const [userNames, setUserNames] = useState({});
   const [loading, setLoading] = useState(true);
+  const [modalVisible, setModalVisible] = React.useState(false); // Estado para el modal
+  const [modalMessage, setModalMessage] = React.useState(""); // Mensaje del modal
+  const [modalSuccess, setModalSuccess] = React.useState(false);
+  const [userDataLoading, setUserDataLoading] = useState(true);
+
 
   const getToken = async () => {
     try {
@@ -35,7 +42,7 @@ const DenunciasScreenUsuarios = () => {
       });
       const data = await response.json();
       if (data && Array.isArray(data.denuncias)) {
-        const filteredDenuncias = data.denuncias.filter(denuncia => denuncia.idComentario !== "");
+        const filteredDenuncias = data.denuncias.filter(denuncia => denuncia.idComentario !== "" && denuncia.tipo !== "BANEADO");
         setDenuncias(filteredDenuncias);
         console.log(filteredDenuncias);
       } else {
@@ -73,8 +80,8 @@ const DenunciasScreenUsuarios = () => {
 
   const deleteDenuncia = async (denunciaId) => {
     try {
-      const response = await fetch(`https://backend-swii.vercel.app/api/eliminarDenuncia/${denunciaId}`, {
-        method: 'POST',
+      const response = await fetch(`https://backend-swii.vercel.app/api/deleteDenuncia/${denunciaId}`, {
+        method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
           Authorization: "Bearer " + await getToken(),
@@ -91,16 +98,60 @@ const DenunciasScreenUsuarios = () => {
     }
   };
 
+  const processDenuncia = async (denunciaId) => {
+    try {
+      const response = await fetch(`https://backend-swii.vercel.app/api/procesarDenuncia/${denunciaId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: "Bearer " + await getToken(),
+        },
+        body: JSON.stringify({
+          tipo: "BANEADO",
+          tiempoBaneo: 120, //variable puesta en segundos (modificar)
+        }),
+      });
+      if (response.ok) {
+        console.log(`Denuncia ${denunciaId} procesada exitosamente`);
+        setModalMessage("Denuncia procesada exitosamente."); // Mensaje de éxito
+        setModalSuccess(true); // Indicar que la operación fue exitosa
+        setModalVisible(true);
+      } else {
+        console.error(`Error procesando la denuncia ${denunciaId}:`, response.statusText);
+        setModalMessage("Error procesando la denuncia."); // Mensaje de error
+        setModalSuccess(false); // Indicar que hubo un error
+        setModalVisible(true);
+      }
+    } catch (error) {
+      console.error(`Error procesando la denuncia ${denunciaId}:`, error);
+      setModalMessage("Error procesando la denuncia."); // Mensaje de error
+      setModalSuccess(false); // Indicar que hubo un error
+      setModalVisible(true);
+    }
+  };
+
   useEffect(() => {
     fetchDenuncias();
   }, []);
 
   useEffect(() => {
+  
     if (denuncias.length > 0) {
+      const uniqueDenunciantes = new Set();
+      const uniqueDenunciados = new Set();
+
       denuncias.forEach((denuncia) => {
-        fetchUserData(denuncia.idDenunciante);
-        fetchUserData(denuncia.idComentario);// Resulta ser que el id del comentario es el id del usuario denunciado bastante equisde
+        uniqueDenunciantes.add(denuncia.idDenunciante);
+        uniqueDenunciados.add(denuncia.idComentario);
       });
+
+      Promise.all(
+        Array.from(uniqueDenunciantes).map((id) => fetchUserData(id))
+      ).then(() => setUserDataLoading(false));
+
+      Promise.all(
+        Array.from(uniqueDenunciados).map((id) => fetchUserData(id))
+      ).then(() => setUserDataLoading(false));
     }
   }, [denuncias]);
 
@@ -109,6 +160,7 @@ const DenunciasScreenUsuarios = () => {
     if (isOmit) {
       deleteDenuncia(id);
     } else {
+      processDenuncia(id);
       setDenuncias(denuncias.filter((denuncia) => denuncia._id !== id));
     }
   };
@@ -128,7 +180,7 @@ const DenunciasScreenUsuarios = () => {
       <Text style={styles.subheading}>Usuarios</Text>
       <View style={styles.separator} />
 
-      {loading ? (
+      {loading || userDataLoading ? (
         <ActivityIndicator size="large" color="#5a1a11" />
       ) : (
         <>
@@ -180,6 +232,12 @@ const DenunciasScreenUsuarios = () => {
           )}
         </>
       )}
+      <ModalNotificacion
+        isVisible={modalVisible}
+        isSuccess={modalSuccess}
+        message={modalMessage}
+        onClose={() => setModalVisible(false)}
+      />
     </View>
   );
 };
