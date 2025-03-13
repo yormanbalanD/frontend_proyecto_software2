@@ -22,6 +22,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import ModalNotificacion from "@/components/ModalNotificacion";
 import ModalCerrarSesion from "@/components/Perfil/ModalCerrarSesion";
+import ModalConfirmarAccion from "@/components/ModalConfirmarAccion"; 
 
 export default function Perfil() {
   const router = useRouter();
@@ -41,7 +42,7 @@ export default function Perfil() {
     success: false,
   });
   const [modalCerrarSesion, setModalCerrarSesion] = useState(false);
-
+  const [modalConfirmarAccion, setModalConfirmarAccion] = useState(false);
   const [modoEdicion, setModoEdicion] = useState(false);
 
   const getToken = async () => {
@@ -183,6 +184,46 @@ export default function Perfil() {
       setPassword("");
     }
   };
+/* AGREGADO*/
+  const eliminarCuenta = async () => {
+    const userId = await getUserId(); // Obtener el ID del usuario desde el token
+    const response = await fetch(
+      `https://backend-swii.vercel.app/api/deleteUser/${userId}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${await getToken()}`,
+        },
+      }
+    );
+    const responseData = await response.json();
+    console.log("Respuesta de la API:", responseData);
+    console.log("Código de estado:", response.status);
+    console.log(userId)
+    
+    if (response.status === 200) {
+      setModalNotification({
+        visible: true,
+        message: "Cuenta eliminada exitosamente",
+        success: true,
+      });
+  
+      // Cerrar sesión y redirigir a la pantalla de inicio
+      AsyncStorage.clear();
+      setTimeout(() => {
+        router.push("/");
+      }, 1500);
+    } else {
+      alert("Error al eliminar la cuenta");
+    }
+  };
+/* AGREGADO*/
+  const eliminarCuentaTest = () => {
+    console.log("Botón de eliminar cuenta presionado.");
+    setModalConfirmarAccion(false); // Cierra el modal
+  };
+  
 
   const cerrarSesion = () => {
     AsyncStorage.clear();
@@ -439,6 +480,7 @@ export default function Perfil() {
         setModoEdicion={setModoEdicion}
         setVisible={setModalOpcionesAvanzadasVisile}
         visible={modalOpcionesAvanzadasVisible}
+        setModalConfirmarAccion={setModalConfirmarAccion} /* AGREGADO*/
       />
       <ModalNotificacion
         isSuccess={modalNotification.success}
@@ -451,7 +493,17 @@ export default function Perfil() {
             success: false,
           });
         }}
+
+        /* AGREGADO*/
       />
+      <ModalConfirmarAccion
+        visible={modalConfirmarAccion}
+        setVisible={setModalConfirmarAccion}
+        accion={eliminarCuenta}
+        //accion={eliminarCuenta} // Llamará a la función cuando el usuario confirme
+        message="¿Esta seguro que desea eliminar su cuenta?"
+      />
+
       <ModalCerrarSesion
         setVisible={setModalCerrarSesion}
         cerrarSesion={cerrarSesion}
