@@ -137,7 +137,7 @@ export default function LocalesPropios() {
         </View>
       ) : restaurants.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No has creado ningun Local aun.</Text>
+          <Text style={styles.emptyText}>No has creado ningún Local aún.</Text>
         </View>
       ) : (
         <ListaRestaurantes restaurants={restaurants} />
