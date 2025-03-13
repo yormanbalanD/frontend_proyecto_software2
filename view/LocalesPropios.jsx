@@ -60,7 +60,7 @@ const getUserId = async () => {
 
     if (response.status === 200) {
       const data = await response.json();
-      console.log(data);
+
       if(!data.restaurantsFound){
         setLoading(false);
         setRestaurants([]);
@@ -135,7 +135,7 @@ const getUserId = async () => {
         </View>
       ): restaurants.length === 0 ? ( 
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No has visto ningún restaurante aún.</Text>
+          <Text style={styles.emptyText}>No has creado ningun Local aun.</Text>
         </View>
       ) : (
       <ListaRestaurantes restaurants={restaurants} />

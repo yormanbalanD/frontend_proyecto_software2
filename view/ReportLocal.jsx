@@ -33,9 +33,9 @@ export default function ReportLocal({ idRestaurante, visible, onClose }) {
       backgroundColor: "rgba(0,0,0,0.5)",
     },
     container: {
-      width: Dimensions.get("window").width * 0.8,
+      width: "80%",
       backgroundColor: "#fff9f1",
-      borderRadius: 10,
+      borderRadius: 5,
       overflow: "hidden",
     },
     header: {
@@ -75,7 +75,7 @@ export default function ReportLocal({ idRestaurante, visible, onClose }) {
       height: 15,
       borderWidth: 1,
       borderColor: "#545351",
-      borderRadius: 8,
+      borderRadius: 15,
       alignItems: "center",
       justifyContent: "center",
       marginRight: 8,
@@ -83,7 +83,7 @@ export default function ReportLocal({ idRestaurante, visible, onClose }) {
     checkboxInner: {
       width: 10,
       height: 10,
-      borderRadius: 5,
+      borderRadius: 60,
     },
     messageText: {
       fontSize: 12,
@@ -96,7 +96,7 @@ export default function ReportLocal({ idRestaurante, visible, onClose }) {
     buttonsContainer: {
       flexDirection: "row",
       justifyContent: "center",
-      marginVertical: 15,
+      marginTop: 10,
     },
   });
 
@@ -143,7 +143,7 @@ export default function ReportLocal({ idRestaurante, visible, onClose }) {
       return;
     }
 
-    setLoading(true)
+    setLoading(true);
 
     try {
       const response = await fetch(
@@ -161,29 +161,29 @@ export default function ReportLocal({ idRestaurante, visible, onClose }) {
         }
       );
 
-      if(response.status == 200 || response.status == 201) {
+      if (response.status == 200 || response.status == 201) {
         setModalPeticion({
           visible: true,
-          message: "Su denuncia sera tomada en cuenta y tomaremos acciones lo mas rapido posible",
-          success: true
-        })
+          message:
+            "Su denuncia sera tomada en cuenta y tomaremos acciones lo mas rapido posible",
+          success: true,
+        });
       } else {
         setModalPeticion({
           visible: false,
           message: "Sucedio un error al poner la denuncia",
-          success: false
-        })
+          success: false,
+        });
       }
-      
     } catch (error) {
       setModalPeticion({
         visible: false,
         message: "Sucedio un error fulminante al poner la denuncia",
-        success: false
-      })
+        success: false,
+      });
       console.error(error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   };
 
@@ -196,6 +196,16 @@ export default function ReportLocal({ idRestaurante, visible, onClose }) {
         onRequestClose={onClose}
       >
         <View style={styles.modalContainer}>
+          <Pressable
+            style={{
+              width: "100%",
+              height: "100%",
+              position: "absolute",
+              top: 0,
+              left: 0,
+            }}
+            onPress={onClose}
+          />
           <View style={styles.container}>
             <View style={styles.header}>
               <Text style={styles.headerText}>Denunciar este local</Text>

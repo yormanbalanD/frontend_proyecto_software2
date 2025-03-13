@@ -42,12 +42,13 @@ export default function Historial() {
   const getHistorial = async () => {
     setLoading(true);
     const response = await fetch(
-      "https://backend-swii.vercel.app/api/getRestaurantsShowed/" + await getUserId(),
+      "https://backend-swii.vercel.app/api/getRestaurantsShowed/" +
+        (await getUserId()),
       {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: "Bearer " + await getToken(),
+          Authorization: "Bearer " + (await getToken()),
         },
       }
     );
@@ -56,7 +57,11 @@ export default function Historial() {
 
     if (response.status === 200) {
       const data = await response.json();
-      //console.log(data);
+
+      if (!data.restaurants) {
+        setLoading(false);
+        setRestaurants([]);
+      }
       // Procesamos los datos para agregar promedio de calificación y cantidad de comentarios
       const processedRestaurants = data.restaurants.map((restaurant) => {
         const reviews = restaurant.reviews || []; // Si no tiene reviews, ponemos un array vacío
@@ -83,7 +88,9 @@ export default function Historial() {
           totalReviews,
         };
       });
-      setRestaurants(processedRestaurants);
+      const idUser = await getUserId(); 
+
+      setRestaurants(processedRestaurants.filter((item) => item.own != idUser));
     }
     setLoading(false);
   };

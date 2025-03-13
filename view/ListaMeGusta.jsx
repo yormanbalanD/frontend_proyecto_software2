@@ -57,6 +57,12 @@ export default function ListaMeGusta() {
 
     if (response.status === 200) {
       const data = await response.json();
+
+      if (!data.restaurants) {
+        setLoading(false);
+        setRestaurants([]);
+      }
+
       // Procesamos los datos para agregar promedio de calificación y cantidad de comentarios
       const processedRestaurants = data.restaurants.map((restaurant) => {
         const reviews = restaurant.reviews || []; // Si no tiene reviews, ponemos un array vacío

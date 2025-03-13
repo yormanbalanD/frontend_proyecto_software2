@@ -48,7 +48,7 @@ export default function ModalEditarComentario({
   comentario,
 }) {
   const [comment, setComment] = useState("");
-  const [stars, setStars] = useState("");
+  const [stars, setStars] = useState(1);
   const [fotoPerfil, setFotoPerfil] = useState("");
   const [nombre, setNombre] = useState("");
   const [codigo, setCodigo] = useState("");
@@ -82,7 +82,7 @@ export default function ModalEditarComentario({
 
   const setDefaultValues = () => {
     setComment("");
-    setStars(0);
+    setStars(1);
   };
 
   const getUser = async () => {

@@ -46,7 +46,7 @@ export default function ModalCrearComentario({
   restaurante,
 }) {
   const [comment, setComment] = useState("");
-  const [stars, setStars] = useState(0);
+  const [stars, setStars] = useState(1);
   const [fotoPerfil, setFotoPerfil] = useState("");
   const [nombre, setNombre] = useState("");
   const [codigo, setCodigo] = useState("");
@@ -78,7 +78,7 @@ export default function ModalCrearComentario({
 
   const setDefaultValues = () => {
     setComment("");
-    setStars(0);
+    setStars(1);
   };
 
   const getUser = async () => {

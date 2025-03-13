@@ -337,11 +337,12 @@ const Local = () => {
                 <>
                   <TouchableOpacity
                     style={{ paddingVertical: 15, paddingHorizontal: 20 }}
-                    onPress={() => {}}
+                    onPress={() => {
+                      setModalReportLocal(true);
+                      setOptionsVisible(false);
+                    }}
                   >
-                    <Text style={{ fontWeight: 500 }}>
-                      Denunciar Comentario
-                    </Text>
+                    <Text style={{ fontWeight: 500 }}>Denunciar Local</Text>
                   </TouchableOpacity>
                 </>
               )}
@@ -364,15 +365,17 @@ const Local = () => {
         <View style={styles.restauranteInfo}>
           <Text style={styles.restauranteNombre}>{restaurante.name}</Text>
           <View style={styles.seccion}>
-            <Pressable onPress={toggleLike} style={{ marginRight: 10 }}>
-              <Icon
-                name={liked ? "heart" : "heart-o"}
-                type="font-awesome"
-                size={30}
-                color="#8c0e03"
-                style={{ ...styles.iconos }}
-              />
-            </Pressable>
+            {restaurante.own && restaurante.own != idUser && (
+              <Pressable onPress={toggleLike} style={{ marginRight: 10 }}>
+                <Icon
+                  name={liked ? "heart" : "heart-o"}
+                  type="font-awesome"
+                  size={30}
+                  color="#8c0e03"
+                  style={{ ...styles.iconos }}
+                />
+              </Pressable>
+            )}
             <Icon
               name="comments"
               type="font-awesome"

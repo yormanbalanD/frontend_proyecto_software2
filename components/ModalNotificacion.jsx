@@ -1,8 +1,20 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Modal, TouchableWithoutFeedback } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+  TouchableWithoutFeedback,
+} from "react-native";
 import { Image } from "expo-image";
 
-export default function ModalNotificacion({ isVisible, isSuccess, message, onClose }) {
+export default function ModalNotificacion({
+  isVisible,
+  isSuccess,
+  message,
+  onClose,
+}) {
   return (
     <Modal
       visible={isVisible}
@@ -22,9 +34,7 @@ export default function ModalNotificacion({ isVisible, isSuccess, message, onClo
                 }
                 style={styles.modalImage}
               />
-              <Text style={styles.modalText}>
-                {message}
-              </Text>
+              <Text style={styles.modalText}>{message}</Text>
             </View>
           </View>
         </View>
@@ -47,10 +57,11 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: "#fff",
-    padding: 20,
-    alignItems: "center",
+    paddingVertical: 20,
+    paddingHorizontal: 30,
     elevation: 30,
     shadowColor: "black",
+    maxWidth: "90%",
   },
   modalRow: {
     flexDirection: "row",

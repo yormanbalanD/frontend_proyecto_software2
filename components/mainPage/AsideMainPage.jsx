@@ -23,6 +23,10 @@ const linkUser = [
     label: "Locales",
     link: "/localpropio",
   },
+  {
+    label: "Buscar Locales",
+    link: "/buscarlocales",
+  }
 ];
 
 const linkAdmin = [

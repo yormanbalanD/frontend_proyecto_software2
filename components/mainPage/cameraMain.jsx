@@ -7,7 +7,9 @@ import {
   TouchableOpacity,
   Platform,
   Button,
+  Animated,
   Pressable,
+  useAnimatedValue,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CameraView, Camera, useCameraPermissions } from "expo-camera";
@@ -28,6 +30,223 @@ const negociosRioAro = [
   },
 ];
 
+const BotonSeleccionarDistancia = ({ setDistance, distance }) => {
+  const yBloque1 = useAnimatedValue(0);
+  const yBloque2 = useAnimatedValue(0);
+  const yBloque3 = useAnimatedValue(0);
+  const [open, setOpen] = useState(false);
+
+  const abrir = () => {
+    Animated.parallel([
+      Animated.timing(yBloque1, {
+        duration: 100,
+        toValue: 70,
+        useNativeDriver: true,
+      }),
+      Animated.timing(yBloque2, {
+        duration: 100,
+        toValue: 140,
+        useNativeDriver: true,
+      }),
+      Animated.timing(yBloque3, {
+        duration: 100,
+        toValue: 210,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const cerrar = () => {
+    Animated.parallel([
+      Animated.timing(yBloque1, {
+        duration: 100,
+        toValue: 0,
+        useNativeDriver: true,
+      }),
+      Animated.timing(yBloque2, {
+        duration: 100,
+        toValue: 0,
+        useNativeDriver: true,
+      }),
+      Animated.timing(yBloque3, {
+        duration: 100,
+        toValue: 0,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  return (
+    <Animated.View
+      style={{
+        position: "absolute",
+        top: 55,
+        right: 30,
+      }}
+    >
+      <TouchableOpacity
+        style={{
+          backgroundColor: "#fff8faf1",
+          padding: 3,
+          borderRadius: 6,
+          aspectRatio: 1,
+          width: 60,
+          zIndex: distance == 20 ? 10 : 9,
+        }}
+        onPress={() => {
+          if (!open) {
+            abrir();
+            setOpen(true);
+          } else {
+            cerrar();
+            setOpen(false);
+            setDistance(20);
+          }
+        }}
+      >
+        <View
+          style={{
+            padding: 3,
+            borderWidth: 1,
+            borderRadius: 5,
+            height: "100%",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text style={{ fontSize: 19, fontWeight: 800 }}>20M</Text>
+        </View>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[
+          {
+            backgroundColor: "#fff8faf1",
+            padding: 3,
+            borderRadius: 6,
+            aspectRatio: 1,
+            width: 60,
+            zIndex: distance == 40 ? 10 : 8,
+            position: "absolute",
+          },
+          {
+            transform: [
+              {
+                translateY: yBloque1,
+              },
+            ],
+          },
+        ]}
+        onPress={() => {
+          if (!open) {
+            abrir();
+            setOpen(true);
+          } else {
+            cerrar();
+            setOpen(false);
+            setDistance(40);
+          }
+        }}
+      >
+        <View
+          style={{
+            padding: 3,
+            borderWidth: 1,
+            borderRadius: 5,
+            height: "100%",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text style={{ fontSize: 19, fontWeight: 800 }}>40M</Text>
+        </View>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[
+          {
+            backgroundColor: "#fff8faf1",
+            padding: 3,
+            borderRadius: 6,
+            aspectRatio: 1,
+            width: 60,
+            zIndex: distance == 60 ? 10 : 7,
+            position: "absolute",
+            transform: [
+              {
+                translateY: yBloque2,
+              },
+            ],
+          },
+        ]}
+        onPress={() => {
+          if (!open) {
+            abrir();
+            setOpen(true);
+          } else {
+            cerrar();
+            setOpen(false);
+            setDistance(60);
+          }
+        }}
+      >
+        <View
+          style={{
+            padding: 3,
+            borderWidth: 1,
+            borderRadius: 5,
+            height: "100%",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text style={{ fontSize: 19, fontWeight: 800 }}>60M</Text>
+        </View>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={{
+          backgroundColor: "#fff8faf1",
+          padding: 3,
+          borderRadius: 6,
+          aspectRatio: 1,
+          width: 60,
+          zIndex: distance == 80 ? 10 : 6,
+          position: "absolute",
+          transform: [
+            {
+              translateY: yBloque3,
+            },
+          ],
+        }}
+        onPress={() => {
+          if (!open) {
+            abrir();
+            setOpen(true);
+          } else {
+            cerrar();
+            setOpen(false);
+            setDistance(80);
+          }
+        }}
+      >
+        <View
+          style={{
+            padding: 3,
+            borderWidth: 1,
+            borderRadius: 5,
+            height: "100%",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text style={{ fontSize: 19, fontWeight: 800 }}>80M</Text>
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
+
 export default function CameraScreen() {
   const [facing, setFacing] = useState("back");
   const [permission, requestPermission] = useCameraPermissions();
@@ -39,6 +258,7 @@ export default function CameraScreen() {
   const [targetaSeleccionada, setTargetaSeleccionada] = useState(null);
   const [abriendose, setAbriendose] = useState(false);
   const [promedioReseñas, setPromedioReseñas] = useState(0);
+  const [distancia, setDistancia] = useState(20);
 
   /**
    *  @type {[{ _id: string; address: string; reviews: {}[]; distance: number; fotoPerfil: string; latitude: number; longitude: number; name: string; rating: number; name: string; description: string; viewed: number }[], {}]}
@@ -91,7 +311,8 @@ export default function CameraScreen() {
         coords.longitude +
         "/" +
         angulo.toFixed(0) +
-        "/50000",
+        "/" +
+        distancia,
       {
         method: "POST",
         headers: {
@@ -114,7 +335,7 @@ export default function CameraScreen() {
         .slice(0, 4);
       setRestaurantes(restaurantes);
     } else {
-      console.log(response)
+      console.log(response);
       console.log("error", await response.json());
       setVisibleModal(false);
       cameraRef.current.resumePreview();
@@ -168,6 +389,7 @@ export default function CameraScreen() {
         }}
         ref={cameraRef}
       ></CameraView>
+      <BotonSeleccionarDistancia distance={distancia} setDistance={setDistancia} />
       {visibleModal && (
         <View style={{ ...styles.fondoModal }}>
           <Pressable
