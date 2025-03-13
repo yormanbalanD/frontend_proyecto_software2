@@ -36,6 +36,7 @@ import ModalNotificacion from "@/components/ModalNotificacion";
 import ModalDeCarga from "@/components/ModalDeCarga";
 import ReportLocal from "./ReportLocal";
 import TabBrujula from "../components/Local/TabBrujula";
+import url from "@/constants/url";
 
 const ModalFoto = ({ foto, setDataModalFoto }) => {
   return (
@@ -131,7 +132,7 @@ const Local = () => {
 
   const getDatosDelRestaurante = async () => {
     const response = await fetch(
-      "https://backend-swii.vercel.app/api/getRestaurant/" + params.restaurante,
+      url + "api/getRestaurant/" + params.restaurante,
       {
         method: "GET",
         headers: {
@@ -188,19 +189,16 @@ const Local = () => {
     try {
       if (!liked) {
         setLiked(true);
-        const response = await fetch(
-          "https://backend-swii.vercel.app/api/addFavoriteRestaurant",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: "Bearer " + (await getToken()),
-            },
-            body: JSON.stringify({
-              restaurantId: restaurante._id,
-            }),
-          }
-        );
+        const response = await fetch(url + "api/addFavoriteRestaurant", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + (await getToken()),
+          },
+          body: JSON.stringify({
+            restaurantId: restaurante._id,
+          }),
+        });
 
         if (response.status === 200) {
           const data = await response.json();
@@ -211,8 +209,7 @@ const Local = () => {
       } else {
         setLiked(false);
         const response = await fetch(
-          "https://backend-swii.vercel.app/api/deleteRestaurantFromLiked/" +
-            (await getUserId()),
+          url + "api/deleteRestaurantFromLiked/" + (await getUserId()),
           {
             method: "PUT",
             headers: {
@@ -242,8 +239,7 @@ const Local = () => {
     setModalCarga(true);
     try {
       const response = await fetch(
-        "https://backend-swii.vercel.app/api/deleteRestaurant/" +
-          restaurante._id,
+        url + "api/deleteRestaurant/" + restaurante._id,
         {
           method: "DELETE",
           headers: {
@@ -314,7 +310,7 @@ const Local = () => {
                   borderColor: "#00000098",
                   borderRadius: 4,
                   backgroundColor: "#FFF",
-                  zIndex: 10
+                  zIndex: 10,
                 }}
               >
                 {idUser != null && idUser == restaurante.own ? (
@@ -464,8 +460,12 @@ const Local = () => {
                   gap: 7,
                 }}
                 onPress={() => {
-                  console.log(`https://www.google.com/maps/search/?api=1&query=${restaurante.latitude}%2C${restaurante.longitude}`)
-                  Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${restaurante.latitude}%2C${restaurante.longitude}`);
+                  console.log(
+                    `https://www.google.com/maps/search/?api=1&query=${restaurante.latitude}%2C${restaurante.longitude}`
+                  );
+                  Linking.openURL(
+                    `https://www.google.com/maps/search/?api=1&query=${restaurante.latitude}%2C${restaurante.longitude}`
+                  );
                 }}
               >
                 <Icon name="map" size={20} color="#3498db" />

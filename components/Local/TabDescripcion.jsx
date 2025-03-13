@@ -17,6 +17,7 @@ import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import PlaceholderText from "../PlaceholderText";
 import PlaceholderFoto from "../PlaceHolderFoto";
+import url from "@/constants/url";
 
 const RenderImagen = ({ item }) => {
   return (

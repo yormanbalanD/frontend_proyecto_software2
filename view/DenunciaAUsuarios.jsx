@@ -13,6 +13,7 @@ import { FontAwesome } from "@expo/vector-icons";
 import Zocial from "@expo/vector-icons/Zocial";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ModalNotificacion from "@/components/ModalNotificacion";
+import url from "@/constants/url";
 
 const getToken = async () => {
   try {
@@ -31,20 +32,17 @@ const Denuncia = ({ item, userNames, handleAction }) => {
 
   const getComentario = async () => {
     try {
-      const response = await fetch(
-        `https://backend-swii.vercel.app/api/getCommentByIdUser`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + (await getToken()),
-          },
-          body: JSON.stringify({
-            restaurantId: item.idDenunciado,
-            userId: item.idComentario,
-          }),
-        }
-      );
+      const response = await fetch(url + `api/getCommentByIdUser`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + (await getToken()),
+        },
+        body: JSON.stringify({
+          restaurantId: item.idDenunciado,
+          userId: item.idComentario,
+        }),
+      });
       if (response.ok) {
         const data = await response.json();
         setComentario(data.comment.comment);
@@ -148,16 +146,13 @@ const DenunciasScreenUsuarios = () => {
 
   const fetchDenuncias = async () => {
     try {
-      const response = await fetch(
-        "https://backend-swii.vercel.app/api/getDenuncias",
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + (await getToken()),
-          },
-        }
-      );
+      const response = await fetch(url + "api/getDenuncias", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + (await getToken()),
+        },
+      });
       const data = await response.json();
       if (data && Array.isArray(data.denuncias)) {
         const filteredDenuncias = data.denuncias.filter(
@@ -183,16 +178,13 @@ const DenunciasScreenUsuarios = () => {
 
   const fetchUserData = async (id) => {
     try {
-      const response = await fetch(
-        `https://backend-swii.vercel.app/api/getUser/${id}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + (await getToken()),
-          },
-        }
-      );
+      const response = await fetch(url + `api/getUser/${id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + (await getToken()),
+        },
+      });
       const data = await response.json();
       if (data && data.userFound && data.userFound.name) {
         setUserNames((prevUserNames) => ({
@@ -209,16 +201,13 @@ const DenunciasScreenUsuarios = () => {
 
   const deleteDenuncia = async (denunciaId) => {
     try {
-      const response = await fetch(
-        `https://backend-swii.vercel.app/api/deleteDenuncia/${denunciaId}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + (await getToken()),
-          },
-        }
-      );
+      const response = await fetch(url + `api/deleteDenuncia/${denunciaId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + (await getToken()),
+        },
+      });
       if (response.ok) {
         console.log(`Denuncia ${denunciaId} eliminada exitosamente`);
         setDenuncias((prevDenuncias) =>
@@ -234,20 +223,17 @@ const DenunciasScreenUsuarios = () => {
 
   const processDenuncia = async (denunciaId) => {
     try {
-      const response = await fetch(
-        `https://backend-swii.vercel.app/api/procesarDenuncia/${denunciaId}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + (await getToken()),
-          },
-          body: JSON.stringify({
-            tipo: "BANEADO",
-            tiempoBaneo: 86400, //variable puesta en segundos equivalente a 1 dia
-          }),
-        }
-      );
+      const response = await fetch(url + `api/procesarDenuncia/${denunciaId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + (await getToken()),
+        },
+        body: JSON.stringify({
+          tipo: "BANEADO",
+          tiempoBaneo: 86400, //variable puesta en segundos equivalente a 1 dia
+        }),
+      });
       if (response.ok) {
         console.log(`Denuncia ${denunciaId} procesada exitosamente`);
         setModalMessage("Denuncia procesada exitosamente."); // Mensaje de éxito

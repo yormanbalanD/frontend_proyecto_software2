@@ -15,6 +15,7 @@ import ModalNotificacion from "@/components/ModalNotificacion";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ModalDeCarga from "@/components/ModalDeCarga"; // Importa el componente ModalDeCarga
 import { useFonts } from "expo-font";
+import url from "@/constants/url";
 
 export default function RecuperarPassword() {
   const navigate = useRouter();
@@ -35,7 +36,6 @@ export default function RecuperarPassword() {
   const [verConfirmNuevaPassword, setVerConfirmNuevaPassword] = useState(false);
   const [userID, setUserID] = useState("");
 
-
   const preguntasSeguridad = [
     "¿Cuál es el nombre de tu primera mascota?",
     "¿Cuál es tu ciudad natal?",
@@ -50,7 +50,6 @@ export default function RecuperarPassword() {
     preguntasSeguridad[1]
   );
 
-  
   const setDefaultValues = () => {
     setResp1("");
     setResp2("");
@@ -62,8 +61,8 @@ export default function RecuperarPassword() {
     setVerNuevaPassword(false);
     setVerConfirmNuevaPassword(false);
     setUserID("");
-	setPreguntaSeguridad1(preguntasSeguridad[0]);
-	setPreguntaSeguridad2(preguntasSeguridad[1]);
+    setPreguntaSeguridad1(preguntasSeguridad[0]);
+    setPreguntaSeguridad2(preguntasSeguridad[1]);
   };
 
   const [fontsLoaded] = useFonts({
@@ -116,14 +115,11 @@ export default function RecuperarPassword() {
     setLoading(true); // Mostrar el modal de carga
 
     try {
-      const response = await fetch(
-        `https://backend-swii.vercel.app/api/changePassword/${userID}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ password: nuevaPassword }),
-        }
-      );
+      const response = await fetch(url + `api/changePassword/${userID}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: nuevaPassword }),
+      });
 
       const data = await response.json(); // Obtener la respuesta JSON
 
@@ -173,16 +169,13 @@ export default function RecuperarPassword() {
     setLoading(true); // Mostrar el modal de carga
 
     try {
-      const response = await fetch(
-        "https://backend-swii.vercel.app/api/forgotPassword",
-        {
-          method: "POST",
-          body: JSON.stringify({ email }),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await fetch(url + "api/forgotPassword", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
       const data = await response.json(); // Obtener la respuesta JSON
 

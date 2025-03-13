@@ -24,6 +24,7 @@ import SimpleLineIcons from "@expo/vector-icons/SimpleLineIcons";
 import PlaceholderText from "../PlaceholderText";
 import ModalNotificacion from "../ModalNotificacion";
 import ModalDeCarga from "../ModalDeCarga";
+import url from "@/constants/url";
 
 function RenderComentario({
   item,
@@ -49,16 +50,13 @@ function RenderComentario({
   };
 
   const getUser = async () => {
-    const response = await fetch(
-      "https://backend-swii.vercel.app/api/getUser/" + item.idUser,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${await getToken()}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await fetch(url + "api/getUser/" + item.idUser, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${await getToken()}`,
+        "Content-Type": "application/json",
+      },
+    });
 
     if (response.status == 200) {
       const data = await response.json();
@@ -72,10 +70,7 @@ function RenderComentario({
   const eliminarComentario = async () => {
     try {
       const response = await fetch(
-        "https://backend-swii.vercel.app/api/deleteComment/" +
-          idRestaurant +
-          "/" +
-          idUser,
+        url + "api/deleteComment/" + idRestaurant + "/" + idUser,
         {
           method: "DELETE",
           headers: {
@@ -382,7 +377,7 @@ export default function TabOpiniones({
                     idUser={idUser}
                     idRestaurant={restaurante._id}
                     setModalCarga={setModalDeCarga}
-                    setModalExito={setModalExito} 
+                    setModalExito={setModalExito}
                   />
                 );
               })}
@@ -390,14 +385,17 @@ export default function TabOpiniones({
           </View>
         </ScrollView>
       </TabView.Item>
-      <ModalNotificacion {...modalExito} onClose={() => {
-        getDatosDelRestaurante();
-        setModalExito({
-          isVisible: false,
-          message: "",
-          success: false,
-        })
-      }} />
+      <ModalNotificacion
+        {...modalExito}
+        onClose={() => {
+          getDatosDelRestaurante();
+          setModalExito({
+            isVisible: false,
+            message: "",
+            success: false,
+          });
+        }}
+      />
       <ModalDeCarga visible={modalDeCarga} />
     </>
   );

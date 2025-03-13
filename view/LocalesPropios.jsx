@@ -15,6 +15,7 @@ import ListaRestaurantes from "@/components/ListaRestaurantes";
 import { useCookies } from "react-cookie";
 import { jwtDecode as decode } from "jwt-decode";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import url from "@/constants/url";
 
 export default function LocalesPropios() {
   const router = useRouter();
@@ -47,16 +48,13 @@ export default function LocalesPropios() {
   };
 
   const getLocalesPropios = async () => {
-    const response = await fetch(
-      "https://backend-swii.vercel.app/api/getRestaurants",
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + (await getToken()),
-        },
-      }
-    );
+    const response = await fetch(url + "api/getRestaurants", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + (await getToken()),
+      },
+    });
 
     if (response.status === 200) {
       const data = await response.json();

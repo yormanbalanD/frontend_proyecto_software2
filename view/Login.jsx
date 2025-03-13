@@ -19,6 +19,7 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ModalDeCarga from "@/components/ModalDeCarga"; // Importa el componente ModalDeCarga
 import { useFonts } from "expo-font";
+import url from "@/constants/url";
 import { set } from "react-hook-form";
 
 export default function Login() {
@@ -69,19 +70,16 @@ export default function Login() {
     setLoading(true); // Mostrar el modal de carga
 
     try {
-      const response = await fetch(
-        "https://backend-swii.vercel.app/api/login",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            email: email, // Usar el email ingresado
-            password: password, // Usar la contraseña ingresada
-          }),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await fetch(url + "api/login", {
+        method: "POST",
+        body: JSON.stringify({
+          email: email, // Usar el email ingresado
+          password: password, // Usar la contraseña ingresada
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
       if (response.ok) {
         const data = await response.json();

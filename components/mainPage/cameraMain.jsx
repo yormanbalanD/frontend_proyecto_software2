@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
 import {
   StyleSheet,
   View,
@@ -19,6 +25,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import ModalDeCarga from "../ModalDeCarga";
 import Colors from "../../constants/Colors";
 import ModalNotificacion from "../ModalNotificacion";
+import url from "@/constants/url";
 
 const BotonSeleccionarDistancia = ({ setDistance, distance }) => {
   const yBloque1 = useAnimatedValue(0);
@@ -266,10 +273,6 @@ export default function CameraScreen() {
     }
   }, [permission]);
 
-  useEffect(() => {
-    solicitarPermisoParaElAnguloDeCamara();
-  }, []);
-
   async function solicitarPermisoParaElAnguloDeCamara() {
     let { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") return;
@@ -277,6 +280,9 @@ export default function CameraScreen() {
       setAngulo(heading.magHeading);
     });
   }
+  useEffect(() => {
+    solicitarPermisoParaElAnguloDeCamara();
+  }, []);
 
   const getCoordenadas = useCallback(async () => {
     console.log("Obteniendo coordenadas...");
@@ -287,58 +293,66 @@ export default function CameraScreen() {
     return location.coords;
   }, []);
 
-  const fetchRestaurantes = useCallback(async ({ angulo, base64 }) => {
-    setLoading(true);
-    setIsLoadingResults(true);
-    console.log("Iniciando fetchRestaurantes...");
-    const coords = await getCoordenadas();
-    console.log("Coordenadas para fetch:", coords);
+  const fetchRestaurantes = useCallback(
+    async ({ angulo, base64 }) => {
+      setLoading(true);
+      setIsLoadingResults(true);
+      console.log(angulo);
+      console.log(angulo);
+      console.log("Iniciando fetchRestaurantes...");
+      const coords = await getCoordenadas();
+      console.log("Coordenadas para fetch:", coords);
 
-    const response = await fetch(
-      "https://backend-swii.vercel.app/api/getNearbyRestaurants/" +
-        coords.latitude +
-        "/" +
-        coords.longitude +
-        "/" +
-        angulo.toFixed(0) +
-        "/" +
-        distancia,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + (await AsyncStorage.getItem("token")),
-        },
-        body: JSON.stringify({ foto: base64 }),
+      const response = await fetch(
+        url +
+          "api/getNearbyRestaurants/" +
+          coords.latitude +
+          "/" +
+          coords.longitude +
+          "/" +
+          parseInt(angulo) +
+          "/" +
+          distancia,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + (await AsyncStorage.getItem("token")),
+          },
+          body: JSON.stringify({ foto: base64 }),
+        }
+      );
+      console.log("Respuesta del servidor:", response.status);
+
+      if (response.status === 200) {
+        const data = await response.json();
+        console.log("Restaurantes obtenidos:", data);
+        setRestaurantes(
+          data.escaneosNear.sort((a, b) => a.distance - b.distance)
+        );
+        setCurrentIndex(0);
+      } else if (response.status === 404) {
+        console.log("No se encontraron restaurantes.");
+        setRestaurantes([]);
+        setCurrentIndex(0);
+        setTargetaSeleccionada(null);
+        setVisibleModal(false);
+        cameraRef.current.resumePreview();
+        setIsSuccess(false);
+        setModalMessage("No se encontraron restaurantes cercanos.");
+        setModalVisible(true);
+      } else {
+        console.error("Error obteniendo restaurantes", await response.json());
+        setIsSuccess(false);
+        setModalMessage("Error obteniendo restaurantes.");
+        setModalVisible(true);
       }
-    );
-    console.log("Respuesta del servidor:", response.status);
-
-    if (response.status === 200) {
-      const data = await response.json();
-      console.log("Restaurantes obtenidos:", data);
-      setRestaurantes(data.escaneosNear.sort((a, b) => a.distance - b.distance));
-      setCurrentIndex(0);
-    } else if (response.status === 404) {
-      console.log("No se encontraron restaurantes.");
-      setRestaurantes([]);
-      setCurrentIndex(0);
-      setTargetaSeleccionada(null);
-      setVisibleModal(false);
-      cameraRef.current.resumePreview();
-      setIsSuccess(false);
-      setModalMessage("No se encontraron restaurantes cercanos.");
-      setModalVisible(true);
-    } else {
-      console.error("Error obteniendo restaurantes", await response.json());
-      setIsSuccess(false);
-      setModalMessage("Error obteniendo restaurantes.");
-      setModalVisible(true);
-    }
-    setLoading(false);
-    setIsLoadingResults(false);
-    console.log("fetchRestaurantes finalizado.");
-  }, [getCoordenadas]);
+      setLoading(false);
+      setIsLoadingResults(false);
+      console.log("fetchRestaurantes finalizado.");
+    },
+    [getCoordenadas]
+  );
 
   const closeModal = useCallback(() => {
     setModalVisible(false);
@@ -348,7 +362,9 @@ export default function CameraScreen() {
     if (tomandoFoto || isLoadingResults || restaurantes.length > 0) return;
     setTomandoFoto(true);
     console.log("Tomando foto...");
-    const { base64 } = await cameraRef.current.takePictureAsync();
+    const { base64 } = await cameraRef.current.takePictureAsync({
+      base64: true,
+    });
     setTomandoFoto(false);
     setVisibleModal(true);
     console.log("Foto tomada, iniciando fetchRestaurantes...");
@@ -368,25 +384,34 @@ export default function CameraScreen() {
     }
   }, [currentIndex]);
 
-  const totalPages = useMemo(() => Math.ceil(restaurantes.length / 4), [restaurantes]);
+  const totalPages = useMemo(
+    () => Math.ceil(restaurantes.length / 4),
+    [restaurantes]
+  );
 
-  const renderItem = useCallback(({ item, index }) => (
-    <TargetaCamara
-      restaurante={item}
-      index={index}
-      setTargetaSeleccionada={setTargetaSeleccionada}
-      targetaSeleccionada={targetaSeleccionada}
-      abriendose={abriendose}
-      setAbriendose={setAbriendose}
-    />
-  ), [targetaSeleccionada, abriendose]);
+  const renderItem = useCallback(
+    ({ item, index }) => (
+      <TargetaCamara
+        restaurante={item}
+        index={index}
+        setTargetaSeleccionada={setTargetaSeleccionada}
+        targetaSeleccionada={targetaSeleccionada}
+        abriendose={abriendose}
+        setAbriendose={setAbriendose}
+      />
+    ),
+    [targetaSeleccionada, abriendose]
+  );
 
   const keyExtractor = useCallback((item) => item._id.toString(), []);
 
   return (
     <View style={styles.container}>
       <CameraView facing={facing} style={{ flex: 1 }} ref={cameraRef} />
-      <BotonSeleccionarDistancia distance={distancia} setDistance={setDistancia} />
+      <BotonSeleccionarDistancia
+        distance={distancia}
+        setDistance={setDistancia}
+      />
       {visibleModal && (
         <View style={styles.fondoModal}>
           <Pressable
@@ -411,17 +436,40 @@ export default function CameraScreen() {
             </Text>
           </View>
           <View style={styles.buttonsContainer}>
-            <TouchableOpacity onPress={handlePrevious} disabled={currentIndex === 0} style={styles.button}>
-              <Ionicons name="chevron-up" size={30} color={currentIndex === 0 ? Colors.gray : Colors.primary} />
+            <TouchableOpacity
+              onPress={handlePrevious}
+              disabled={currentIndex === 0}
+              style={styles.button}
+            >
+              <Ionicons
+                name="chevron-up"
+                size={30}
+                color={currentIndex === 0 ? Colors.gray : Colors.primary}
+              />
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleNext} disabled={currentIndex + 4 >= restaurantes.length} style={styles.button}>
-              <Ionicons name="chevron-down" size={30} color={currentIndex + 4 >= restaurantes.length ? Colors.gray : Colors.primary} />
+            <TouchableOpacity
+              onPress={handleNext}
+              disabled={currentIndex + 4 >= restaurantes.length}
+              style={styles.button}
+            >
+              <Ionicons
+                name="chevron-down"
+                size={30}
+                color={
+                  currentIndex + 4 >= restaurantes.length
+                    ? Colors.gray
+                    : Colors.primary
+                }
+              />
             </TouchableOpacity>
           </View>
         </View>
       )}
       {!visibleModal && (
-        <BotonRedondoCamara tomarFoto={tomarFoto} disabled={isLoadingResults || restaurantes.length > 0} />
+        <BotonRedondoCamara
+          tomarFoto={tomarFoto}
+          disabled={isLoadingResults || restaurantes.length > 0}
+        />
       )}
       <ModalDeCarga visible={loading} />
       <ModalNotificacion
@@ -453,7 +501,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   separator: {
-    height: 10, 
+    height: 10,
   },
   pageIndicatorContainer: {
     position: "absolute",

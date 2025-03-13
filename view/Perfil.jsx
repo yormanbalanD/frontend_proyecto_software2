@@ -22,6 +22,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import ModalNotificacion from "@/components/ModalNotificacion";
 import ModalCerrarSesion from "@/components/Perfil/ModalCerrarSesion";
+import url from "@/constants/url";
 
 export default function Perfil() {
   const router = useRouter();
@@ -65,16 +66,13 @@ export default function Perfil() {
   };
 
   const getUser = async () => {
-    const response = await fetch(
-      "https://backend-swii.vercel.app/api/getUser/" + (await getUserId()),
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${await getToken()}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await fetch(url + "api/getUser/" + (await getUserId()), {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${await getToken()}`,
+        "Content-Type": "application/json",
+      },
+    });
 
     if (response.status == 200) {
       const data = await response.json();
@@ -132,12 +130,11 @@ export default function Perfil() {
     if (nombre != defaultValue.nombre) {
       temp.name = nombre;
     }
-    
-    
+
     if (correo != defaultValue.correo) {
       temp.email = correo;
     }
-    
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(correo)) {
       setModalNotification({
