@@ -229,7 +229,7 @@ export default function Login() {
           >
             <Pressable
               onPress={() => {
-                navigate.push("/");
+                navigate.replace("/");
               }}
               style={({ pressed }) => [
                 styles.button,
@@ -275,7 +275,7 @@ export default function Login() {
         onClose={() => {
           setModalVisible(false);
           if (modalSuccess) {
-            navigate.push("/mainpage"); // Redirigir solo si la autenticación fue exitosa
+            navigate.replace("/mainpage"); // Redirigir solo si la autenticación fue exitosa
           }
         }}
       />

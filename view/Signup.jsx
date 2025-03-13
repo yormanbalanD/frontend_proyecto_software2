@@ -329,7 +329,7 @@ export default function Signup() {
   }, [loading, error, data]);
 
   const Signup = () => {
-    router.push("mainpage");
+    router.replace("mainpage");
   };
 
   const closeModal = () => {
@@ -510,7 +510,7 @@ export default function Signup() {
 
         <View style={styles.buttonGroup}>
           <Pressable
-            onPress={() => router.push("/")}
+            onPress={() => router.replace("/")}
             style={({ pressed }) => [
               styles.buttonWithIcon,
               {padding: 15,

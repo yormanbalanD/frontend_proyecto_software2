@@ -89,7 +89,7 @@ export default function Perfil() {
         correo: data.userFound.email,
         fotoPerfil: data.userFound.fotoPerfil,
       });
-      console.log(data)
+      console.log(data);
     } else {
       console.log(await response.json());
       alert("Error");
@@ -132,9 +132,20 @@ export default function Perfil() {
     if (nombre != defaultValue.nombre) {
       temp.name = nombre;
     }
-
+    
+    
     if (correo != defaultValue.correo) {
       temp.email = correo;
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(correo)) {
+      setModalNotification({
+        visible: true,
+        message: "El correo no es válido.",
+        success: false,
+      });
+      return;
     }
 
     if (password != "") {
