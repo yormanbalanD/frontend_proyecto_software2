@@ -8,6 +8,7 @@ import {
   ScrollView,
   FlatList,
   Pressable,
+  Dimensions,
 } from "react-native";
 import * as Font from "expo-font";
 import { Tab, TabView } from "@rneui/themed";
@@ -268,7 +269,7 @@ export default function TabOpiniones({
   return (
     <>
       <TabView.Item style={{ flex: 1 }}>
-        <ScrollView>
+        <ScrollView style={{ width: "100%" }}>
           <View style={styles.total}>
             <View style={styles.CalificacionDistribucionContainer}>
               <RatingBar

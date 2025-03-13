@@ -8,6 +8,7 @@ import {
   ScrollView,
   FlatList,
   Pressable,
+  Dimensions,
 } from "react-native";
 import * as Font from "expo-font";
 import { Tab, TabView } from "@rneui/themed";
@@ -48,7 +49,7 @@ export default function TabDescripcion({ restaurante, setDataModalFoto }) {
   };
 
   return (
-    <TabView.Item>
+    <TabView.Item style={{ width: "100%" }}>
       <ScrollView horizontal={false}>
         <View
           style={{

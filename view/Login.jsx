@@ -19,6 +19,7 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ModalDeCarga from "@/components/ModalDeCarga"; // Importa el componente ModalDeCarga
 import { useFonts } from "expo-font";
+import { set } from "react-hook-form";
 
 export default function Login() {
   const navigate = useRouter();
@@ -97,21 +98,27 @@ export default function Login() {
           setModalVisible(true);
           return;
         }
+      } else if (response.status == 404) {
+        setModalMessage("El usuario ha sido baneado.");
+        setModalSuccess(false);
+        setModalVisible(true);
       } else {
         const errorData = await response.json();
         //console.error("Error en el login:", errorData);
-        setModalMessage("Error en el inicio de sesión."); // Mensaje de error
+        setModalMessage(
+          "Error en el inicio de sesión. Compruebe su correo electrónico y contraseña"
+        ); // Mensaje de error
         setModalSuccess(false); // Indicar que hubo un error
         setModalVisible(true);
         console.log(errorData);
-        console.log(response)
+        console.log(response);
       }
     } catch (error) {
       //console.error("Error de red:", error);
       setModalMessage("Error de red. Por favor, intenta de nuevo."); // Mensaje de error
       setModalSuccess(false); // Indicar que hubo un error
       setModalVisible(true);
-      console.log(error)
+      console.log(error);
     } finally {
       setLoading(false); // Ocultar el modal de carga
     }
@@ -213,7 +220,7 @@ export default function Login() {
                   textDecorationLine: "underline",
                   textAlign: "right",
                 }}
-                href={"/"}
+                href={"/recuperarcontrasena"}
               >
                 ¿Olvidaste tu contraseña?
               </Link>
@@ -292,7 +299,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     paddingHorizontal: 10,
     borderRadius: 10,
-    borderWidth: .8,
+    borderWidth: 0.8,
     borderColor: "white",
     borderStyle: "dashed",
   },
@@ -345,12 +352,12 @@ const styles = StyleSheet.create({
   logoImage: {
     width: "13%",
     height: "71%",
-    resizeMode: "contain"
+    resizeMode: "contain",
   },
-  logoText: { 
-    color: '#FFF',
-    fontFamily: 'League-Gothic',
-    fontSize: 90,    
+  logoText: {
+    color: "#FFF",
+    fontFamily: "League-Gothic",
+    fontSize: 90,
   },
   backgroundImage: {
     flex: 1,
